@@ -2,7 +2,6 @@ package fr.mattmunich.iceBoatRacing;
 
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.scoreboard.*;
 import org.jspecify.annotations.NonNull;

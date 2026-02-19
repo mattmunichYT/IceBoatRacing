@@ -53,35 +53,43 @@ public class RaceManager {
         final int[] timesRun = {0};
         final BukkitTask[] task = new BukkitTask[1];
         task[0] = Bukkit.getScheduler().runTaskTimer(main, () -> {
+            int fromX = main.getConfig().getInt("raceLights.from.x",123456789);
+            int fromY = main.getConfig().getInt("raceLights.from.y",123456789);
+            int fromZ = main.getConfig().getInt("raceLights.from.z",123456789);
+            int toX = main.getConfig().getInt("raceLights.to.x",123456789);
+            int toY = main.getConfig().getInt("raceLights.to.y",123456789);
+            int toZ = main.getConfig().getInt("raceLights.to.z",123456789);
+            boolean raceLightsEnabled = main.getConfig().getBoolean("raceLights.enabled");
+            if(fromX == 123456789 || fromY == 123456789 || fromZ == 123456789 || toX == 123456789 || toY == 123456789 || toZ == 123456789) raceLightsEnabled = false;
             String titleContent;
             switch (timesRun[0]) {
                 case 0 -> {
                     titleContent = "§45";
-                    fillRegion(raceWorld, 805, 79, 666, 805, 79, 670, Material.BROWN_STAINED_GLASS);
+                    if (raceLightsEnabled) fillRegion(raceWorld, fromX, fromY, fromZ, toX, toY, toZ, Material.BROWN_STAINED_GLASS);
                 }
                 case 1 -> {
                     titleContent = "§c4";
-                    fillRegion(raceWorld, 805, 79, 666, 805, 79, 670, Material.RED_STAINED_GLASS);
+                    if (raceLightsEnabled) fillRegion(raceWorld, fromX, fromY, fromZ, toX, toY, toZ, Material.RED_STAINED_GLASS);
                 }
                 case 2 -> {
                     titleContent = "§e3";
-                    fillRegion(raceWorld, 805, 79, 666, 805, 79, 670, Material.ORANGE_STAINED_GLASS);
+                    if (raceLightsEnabled) fillRegion(raceWorld, fromX, fromY, fromZ, toX, toY, toZ, Material.ORANGE_STAINED_GLASS);
                 }
                 case 3 -> {
                     titleContent = "§22";
-                    fillRegion(raceWorld, 805, 79, 666, 805, 79, 670, Material.YELLOW_STAINED_GLASS);
+                    if (raceLightsEnabled) fillRegion(raceWorld, fromX, fromY, fromZ, toX, toY, toZ, Material.YELLOW_STAINED_GLASS);
                 }
                 case 4 -> {
                     titleContent = "§a1";
-                    fillRegion(raceWorld, 805, 79, 666, 805, 79, 670, Material.LIME_STAINED_GLASS);
+                    if (raceLightsEnabled) fillRegion(raceWorld, fromX, fromY, fromZ, toX, toY, toZ, Material.LIME_STAINED_GLASS);
                 }
                 case 5 -> {
                     titleContent = "§3GO!";
-                    fillRegion(raceWorld, 805, 79, 666, 805, 79, 670, Material.GREEN_STAINED_GLASS);
+                    if (raceLightsEnabled) fillRegion(raceWorld, fromX, fromY, fromZ, toX, toY, toZ, Material.GREEN_STAINED_GLASS);
                 }
                 default -> {
                     titleContent = "§cError";
-                    fillRegion(raceWorld, 805, 79, 666, 805, 79, 670, Material.BLACK_STAINED_GLASS);
+                    if (raceLightsEnabled) fillRegion(raceWorld, fromX, fromY, fromZ, toX, toY, toZ, Material.BLACK_STAINED_GLASS);
                 }
             }
 
