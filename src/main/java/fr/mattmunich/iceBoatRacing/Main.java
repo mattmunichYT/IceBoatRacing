@@ -1,10 +1,7 @@
 package fr.mattmunich.iceBoatRacing;
 
 import fr.mattmunich.iceBoatRacing.cars.CarCommand;
-import fr.mattmunich.iceBoatRacing.cars.CarListener;
 import fr.mattmunich.iceBoatRacing.cars.CarManager;
-import fr.mattmunich.iceBoatRacing.listeners.Connection;
-import fr.mattmunich.iceBoatRacing.race.RaceListener;
 import fr.mattmunich.iceBoatRacing.race.RaceData;
 import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.CheckpointCommand;
 import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.CheckpointManager;
@@ -15,8 +12,6 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.luckperms.api.LuckPerms;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.*;
@@ -43,28 +38,62 @@ public final class Main extends JavaPlugin {
     public void onEnable() {
         log("Enabling plugin...");
 
+        loadConfigs();
+
+        loadMessages();
+
+        loadCheckpoints();
+
+        loadCars();
+
+        loadRaceManager();
+
+        if (registerScoreboard()) return;
+
+        registerCommands();
+
+        log("Done enabling plugin!");
+
+        loadLuckPerms();
+    }
+
+
+    public void loadConfigs() {
         log("Configuring config files");
         saveDefaultConfig();
         saveResource("lang/en_US.yml", false);
         saveResource("lang/fr_FR.yml", false);
         log("Done configuring config files!");
+    }
 
+    private void loadMessages() {
+        log("Loading messages...");
+        messages = new Messages(this);
+        log("Done loading messages!");
+    }
+
+    private void loadCheckpoints() {
         log("Loading checkpoints...");
         saveDefaultConfig();
         checkpointManager = new CheckpointManager(this);
         checkpointManager.loadCheckpoints();
         log("Done loading checkpoints!");
+    }
 
+    private void loadCars() {
         log("Loading cars...");
-        saveDefaultConfig();
         carManager = new CarManager(this);
         carManager.loadCars();
         log("Done loading cars!");
+    }
 
+    private void loadRaceManager() {
         log("Loading race manager...");
         raceManager = new RaceManager(this,carManager);
         log("Done loading race manager!");
+    }
 
+    public boolean registerScoreboard() {
         log("Registering scoreboard...");
         ScoreboardManager scoreboardManager = Bukkit.getScoreboardManager();
         Scoreboard scoreboard = scoreboardManager.getMainScoreboard();
@@ -78,35 +107,30 @@ public final class Main extends JavaPlugin {
             if(liveSidebar == null) {
                 log("Could not find live sidebar!");
                 Bukkit.getPluginManager().disablePlugin(this);
-                return;
+                return true;
             }
             liveSidebar.displayName(getMessage("noPrefix.liveSidebarTitle"));
         }
         if(liveSidebar == null) {
             log("Could not find live sidebar!");
             Bukkit.getPluginManager().disablePlugin(this);
-            return;
+            return true;
         }
         liveSidebar.setDisplaySlot(DisplaySlot.SIDEBAR);
         log("Done registering scoreboard!");
+        return false;
+    }
 
+    private void registerCommands() {
         log("Registering commands...");
+        registerCommand("iceboatracing", "Command to manage the plugin", List.of("ibr"), new IBRCommand(this,messages));
         registerCommand("checkpoint", "Command to manage checkpoints", new CheckpointCommand(checkpointManager,this));
         registerCommand("car", "Command to manage cars", new CarCommand(this,carManager));
         registerCommand("race", "Command to manage the race", new RaceCommand(this,raceManager));
         log("Done registering commands!");
+    }
 
-        log("Registering listeners...");
-        PluginManager pm = getServer().getPluginManager();
-        pm.registerEvents(new CheckpointCommand(checkpointManager,this), this);
-        pm.registerEvents(new CarCommand(this,carManager), this);
-        pm.registerEvents(new Connection(this,carManager), this);
-        pm.registerEvents(new RaceListener(this,checkpointManager), this);
-        pm.registerEvents(new CarListener(this), this);
-        log("Done registering listeners!");
-
-        log("Done enabling plugin!");
-
+    private void loadLuckPerms() {
         Bukkit.getScheduler().runTask(this, () -> {
             log("Loading LuckPerms dependency");
             RegisteredServiceProvider<LuckPerms> provider = Bukkit.getServicesManager().getRegistration(LuckPerms.class);
@@ -118,6 +142,8 @@ public final class Main extends JavaPlugin {
             }
         });
     }
+
+
 
     @Override
     public void onDisable() {
