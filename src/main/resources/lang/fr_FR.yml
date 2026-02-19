@@ -1,0 +1,71 @@
+prefix: "<b><gradient:#8DABF3:#10CA9A>[Ice Boat Racing]</gradient></b>"
+
+noPrefix:
+  liveSidebarTitle: "§3-- §b§lCourse de bateaux §3--"
+  join: "§7[§a+§7] §b%player%"
+  quit: "§7[§c-§7] §b%player%"
+
+completedLaps: "§3%player%§b a terminé le tour n°§3%count%§b en §3%time%§b !"
+crossedSector: "§bTemps de §3%player%§b au secteur §3%count%§b : §3%time%§b"
+
+checkpoint:
+  pos:
+    1: "§bPosition 1 du checkpoint définie."
+    2: "§bPosition 2 du checkpoint définie."
+    notSet: "§cSélectionne les deux positions d'abord !\n§8ℹ Avec une pelle en bois"
+  startLineSaved: "§aLigne de départ enregistrée !\n§8ℹ Fais /checkpoint setFinish"
+  finishLineSaved: "§aLigne d'arrivée enregistrée !"
+  saved: "§aCheckpoint §2%index%§a enregistré"
+  sectorSaved: "§aSecteur §e%index% §aenregistré !"
+  notInCheckpoint: "§cTu n'es pas dans un checkpoint\n§8ℹ Tu peux aussi faire /checkpoint list"
+  removed: "§aCheckpoint §6%index%§a supprimé"
+  invalid: "§cNuméro de checkpoint invalide"
+  noCheckpoint: "§cAucun checkpoint défini"
+  count: "§aIl y a %count% checkpoints"
+  normalized: "§aCheckpoints normalisés"
+  resetPlayerScore: "§aScore de §6%player%§a réinitialisé"
+
+race:
+  start: "§aCourse en démarrage..."
+  end: "§cLa course est terminée !"
+  prepare: "§aLes joueurs seront placés automatiquement."
+  cancelPrepare: "§aMode préparation désactivé."
+  help: "§3--------- §b§l/race§r §3---------\n§3->§a start §8-§7 Lancer la course\n§3->§a prepare §8-§7 Préparer les joueurs\n§7§oℹ Placement automatique des joueurs dans leurs voitures\n§3->§a end §8-§7 Finir la course"
+
+car:
+  invalidID: "§cAucune voiture avec l'ID §4%id%"
+  noCars: "§cAucune voiture définie."
+
+  create:
+    1:
+      title: "§aDéfinir le spawn"
+      subtitle: "§e%check% §apour valider"
+      message: "§aCasse le bloc du spawn, puis écris %check%."
+      selected: "§bBloc sélectionné, écris §3%check%§b."
+      noSelection: "§cSélectionne un bloc d'abord !"
+      check: "done"
+      completed: "§aPosition enregistrée."
+
+    2:
+      title: "§aNom du propriétaire"
+      message: "§aÉcris le nom du propriétaire dans le chat."
+      completed: "§aPropriétaire : %owner%."
+
+    3:
+      title: "§aChoisir le bateau"
+      message: "§aTiens un bateau puis écris §e%check%§a."
+      invalidItem: "§cTiens un bateau en main !"
+      check: "done"
+
+    completed:
+      message: "§aVoiture enregistrée."
+      title: "§2§lTerminé !"
+      subtitle: "§aVoiture sauvegardée."
+
+  changedOwner: "§aPropriétaire changé : %owner%"
+  removed: "§aVoiture supprimée (id %id%)"
+
+error:
+  invalidNumber: "§cNombre invalide"
+  playerNotFound: "§cJoueur introuvable"
+  playerToExecuteCommand: "§cTu dois être un joueur pour faire ça."

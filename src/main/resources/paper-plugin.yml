@@ -1,0 +1,12 @@
+name: IceBoatRacing
+version: '1.0-BETA'
+main: fr.mattmunich.iceBoatRacing.Main
+api-version: '1.21'
+authors: [ mattmunich ]
+description: A plugin for Minecraft ice boat racing
+dependencies:
+  server:
+    LuckPerms:
+      load: BEFORE
+      required: true
+      join-classpath: true

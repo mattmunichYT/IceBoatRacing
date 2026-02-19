@@ -1,0 +1,64 @@
+prefix: "<b><gradient:#8DABF3:#10CA9A>[Ice Boat Racing]</gradient></b>"
+noPrefix:
+  liveSidebarTitle: "§3-- §b§lIce Boat Racing §3--"
+  join: "§7[§a+§7] §b%player%"
+  quit: "§7[§c-§7] §b%player%"
+
+completedLaps: "§3%player%§b completed the laps n°§3%count%§b in §3%time%§b !"
+crossedSector: "§bTime for §3%player%§b at sector §3%count%e§b: §3%time%§b"
+
+checkpoint:
+  pos:
+    1: "§bCheckpoint position §31§b set."
+    2: "§bCheckpoint position §32§b set."
+    notSet: "§cPlease select both positions first!\n§8ℹ Select using a wooden shovel"
+  startLineSaved: "§aStart line saved!\n§8ℹ Use /checkpoint setFinish to save the finish line"
+  finishLineSaved: "§aFinish line saved!"
+  saved: "§aCheckpoint §2%index%§a saved"
+  sectorSaved: "§aSector checkpoint §e%index% §asaved!"
+  notInCheckpoint: "§cYou are not inside a checkpoint\n§8ℹ You can also use /checkpoint list and delete a checkpoint from there"
+  removed: "§aRemoved checkpoint §6%index%§a successfully"
+  invalid: "§cInvalid checkpoint number"
+  noCheckpoint: "§cNo checkpoints defined"
+  count: "§aThere are %count% checkpoints"
+  normalized: "§aCheckpoints normalized"
+  resetPlayerScore: "§aSuccessfully reset §6%player%§a's score"
+
+race:
+  start: "§aStarting race..."
+  end: "§cThe race has ended!"
+  prepare: "§aThe players will now automatically be put in their car on join."
+  cancelPrepare: "§aThe race is no longer in preparing mode."
+  help: "§3--------- §b§l/race§r §3---------\n§3->§a start §8-§7 Start the race\n§3->§a prepare §8-§7 Prepare the players for the start of the race\n§7§oℹ Players will automatically be placed in their cars when they join the server\n§3->§a end §8-§7 End the race"
+
+car:
+  invalidID: "§cCouldn't find a car with the ID §4%id%"
+  noCars: "§cNo cars defined."
+  create:
+    1:
+      title: "§aDefine the car's starting location"
+      subtitle: "§aThen type §e%check%§a in the chat."
+      message: "§aBreak the block where the car will be spawned, type %check% in the chat when done."
+      selected: "§bBlock selected, type §3%check%§b to confirm."
+      noSelection: "§cPlease select a block first!"
+      check: "done"
+      completed: "§aLocation saved."
+    2:
+      title: "§aType car's owner name in chat"
+      message: "§aType the name of the owner of the car in chat."
+      completed: "§aSet owner to %owner%."
+    3:
+      title: "§aSelect the car type"
+      message: "§aHold the boat item in your hand, then type §e%check%§a."
+      invalidItem: "§cHold a boat item in your hand!"
+      check: "done"
+    completed:
+      message: "§aCar saved."
+      title: "§2§lDone!"
+      subtitle: "§aThe car has been saved."
+  changedOwner: "§aChanged car owner to %owner%"
+  removed: "§aRemoved car with id %id%"
+error:
+  invalidNumber: "§cInvalid number"
+  playerNotFound: "§cPlayer not found"
+  playerToExecuteCommand: "§cYou must be a player to use this command."
