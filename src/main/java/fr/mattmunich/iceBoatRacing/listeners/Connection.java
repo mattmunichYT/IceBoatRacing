@@ -38,6 +38,9 @@ public class Connection implements Listener {
 
             main.racers.get(p.getUniqueId()).car = car[0];
             if(main.preparingRace) {
+                //TP to spawn of the world -- else player won't be in the car
+                p.teleport(car[0].getStartingLocation().getWorld().getSpawnLocation());
+
                 carManager.spawnCar(car[0],p);
                 main.racers.put(p.getUniqueId(),new RaceData(p));
                 main.racers.get(p.getUniqueId()).checkpointIndex = -1;

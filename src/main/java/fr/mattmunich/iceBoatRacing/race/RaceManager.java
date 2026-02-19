@@ -14,18 +14,21 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.Objects;
+
 import static fr.mattmunich.iceBoatRacing.Main.c;
 
 public class RaceManager {
 
     private final Main main;
     private final CarManager carManager;
-    private final World raceWorld =  Bukkit.getWorld("GP-Canada");
+    private final World raceWorld;
 
 
     public RaceManager(Main main, CarManager carManager) {
         this.main = main;
         this.carManager = carManager;
+        raceWorld = Objects.requireNonNull(carManager.get(0)).getStartingLocation().getWorld();
     }
 
     public void startRace() {
@@ -167,7 +170,6 @@ public class RaceManager {
         main.hasRaceStarted=false;
     }
 
-    //ONLY FOR GP 2026
     public void fillRegion(World world,
                            int x1, int y1, int z1,
                            int x2, int y2, int z2,
