@@ -3,7 +3,9 @@ package fr.mattmunich.iceBoatRacing.cars;
 import fr.mattmunich.iceBoatRacing.Main;
 import fr.mattmunich.iceBoatRacing.race.RaceData;
 import org.bukkit.entity.Boat;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Vehicle;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -32,6 +34,7 @@ public class CarListener implements Listener {
     @EventHandler
     public void onMoveCar(PlayerMoveEvent e) {
         Player p = e.getPlayer();
+        if(p.getVehicle()!=null && !(p.getVehicle() instanceof Boat)) return;
         if (!main.racers.containsKey(p.getUniqueId())) return;
         if(!main.startingRace && !main.preparingRace) return;
 
@@ -40,7 +43,14 @@ public class CarListener implements Listener {
 
     @EventHandler
     public void onMoveCar2(VehicleMoveEvent e) {
-        if(!(e.getVehicle().getPassengers().getFirst() instanceof Player p)) return;
+        Vehicle vehicle = e.getVehicle();
+        if(!(vehicle instanceof Boat)) return;
+        Entity passenger;
+        try {
+            passenger = vehicle.getPassengers().getFirst();
+        } catch (NullPointerException ex) { return; }
+        if(passenger == null) return;
+        if(!(passenger instanceof Player p)) return;
         if(!main.racers.containsKey(p.getUniqueId())) return;
         if(!main.startingRace && !main.preparingRace) return;
 
