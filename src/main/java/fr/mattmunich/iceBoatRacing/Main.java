@@ -46,8 +46,6 @@ public final class Main extends JavaPlugin {
 
         loadCars();
 
-        loadRaceManager();
-
         if (registerScoreboard()) return;
 
         registerCommands();
@@ -55,6 +53,8 @@ public final class Main extends JavaPlugin {
         log("Done enabling plugin!");
 
         loadLuckPerms();
+
+        Bukkit.getScheduler().runTask(this, this::loadRaceManager);
     }
 
 
