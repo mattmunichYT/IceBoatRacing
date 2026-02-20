@@ -61,6 +61,6 @@ public class IBRCommand implements BasicCommand {
 
     @Override
     public @Nullable String permission() {
-        return "iceBoatRacing.command";
+        return "iceboatracing.command.plugin";
     }
 }

@@ -2,11 +2,40 @@ name: IceBoatRacing
 version: '1.0-RELEASE'
 main: fr.mattmunich.iceBoatRacing.Main
 api-version: '1.21'
-authors: [ mattmunich ]
+author:  mattmunich
+website: https://modrinth.com/plugin/ibr
 description: A plugin for Minecraft ice boat racing
+prefix: "[IceBoatRacing] "
+provides:
+  - iceboatracing
+  - ibr
 dependencies:
   server:
     LuckPerms:
       load: BEFORE
       required: true
       join-classpath: true
+permissions:
+  iceboatracing.*:
+    description: All the permissions of the plugin
+    children:
+      iceboatracing.command.*: true
+  iceboatracing.command.*:
+    description: The permissions for all commands
+    children:
+      iceboatracing.command.checkpoint: true
+      iceboatracing.command.car: true
+      iceboatracing.command.race: true
+      iceboatracing.command.plugin: true
+  iceboatracing.command.race:
+    description: The permissions for the /race command
+    default: false
+  iceboatracing.command.car:
+    description: The permissions for the /car command
+    default: false
+  iceboatracing.command.checkpoint:
+    description: The permissions for the /checkpoint command
+    default: false
+  iceboatracing.command.plugin:
+    description: The permissions for the /iceboatracing or /ibr command
+    default: false
