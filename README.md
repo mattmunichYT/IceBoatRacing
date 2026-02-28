@@ -5,6 +5,10 @@ It provides a full race system with **checkpoints**, **live scoreboards**, and e
 
 Supports multiple languages and is designed for competitive Ice Boat Racing gameplay.
 
+## Download links:
+- [Modrinth](https://modrinth.com/plugin/ibr)
+- [CurseForge](https://www.curseforge.com/minecraft/bukkit-plugins/ice-boat-racing)
+
 ---
 
 ## 🚀 Features
