@@ -12,6 +12,8 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.vehicle.VehicleExitEvent;
 import org.bukkit.event.vehicle.VehicleMoveEvent;
 
+import java.util.NoSuchElementException;
+
 public class CarListener implements Listener {
 
     private final Main main;
@@ -23,7 +25,7 @@ public class CarListener implements Listener {
     @EventHandler
     public void onExitVehicle(VehicleExitEvent e) {
         if (!(e.getExited() instanceof Player p)) return;
-        if(main.hasRaceStarted || (!main.startingRace && !main.preparingRace)) return;
+        if(!main.hasRaceStarted && !main.startingRace && !main.preparingRace) return;
 
         RaceData racer = main.racers.get(p.getUniqueId());
         if (racer == null || racer.car == null) return;
@@ -48,7 +50,7 @@ public class CarListener implements Listener {
         Entity passenger;
         try {
             passenger = vehicle.getPassengers().getFirst();
-        } catch (NullPointerException ex) { return; }
+        } catch (NoSuchElementException ex) { return; }
         if(passenger == null) return;
         if(!(passenger instanceof Player p)) return;
         if(!main.racers.containsKey(p.getUniqueId())) return;

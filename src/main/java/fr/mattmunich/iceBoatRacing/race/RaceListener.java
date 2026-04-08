@@ -1,6 +1,7 @@
 package fr.mattmunich.iceBoatRacing.race;
 
 import fr.mattmunich.iceBoatRacing.Main;
+import fr.mattmunich.iceBoatRacing.Messages;
 import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.Checkpoint;
 import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.CheckpointManager;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -45,7 +46,6 @@ public class RaceListener implements Listener {
         Checkpoint next = checkpointManager.get(data.checkpointIndex+1);
 
         if (next==null) next = checkpointManager.get(0);
-
         if (!next.contains(player.getLocation())) return;
 
         // Start/finish checkpoint handling
@@ -61,6 +61,9 @@ public class RaceListener implements Listener {
                                 "time", formatTime(lapDuration)
                         )
                 ));
+            }
+            if(data.lapCount == 20) {
+                Bukkit.broadcast(Messages.getMessage("prefix").append(c("§3")).append(player.displayName()).append(c("§b a terminé la course!")));
             }
 
             data.lapTime = now;

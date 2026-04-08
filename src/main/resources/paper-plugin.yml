@@ -1,5 +1,5 @@
 name: IceBoatRacing
-version: '1.0-RELEASE'
+version: '1.3-RELEASE'
 main: fr.mattmunich.iceBoatRacing.Main
 api-version: '1.21'
 author:  mattmunich

@@ -66,7 +66,8 @@ public class CarManager {
         Boat boat = (Boat) loc.getWorld().spawnEntity(loc, boatEntityFromMaterial(boatMat));
         boat.customName(c(car.getCustomName()));
         Location boatLocation = boat.getLocation();
-        boatLocation.setRotation(-90F,0F); //TODO: make configurable
+        float startRotation = (float) main.getConfig().getInt("race.startRotation");
+        boatLocation.setRotation(startRotation,0F);
         boat.teleport(boatLocation);
         boat.setInvulnerable(true);
 
@@ -78,12 +79,13 @@ public class CarManager {
 
         int id = count();
         String path = "cars." + id;
+        String customName = s(boatItem.getItemMeta().customName()).isBlank() ? "Race car" : s(boatItem.getItemMeta().customName());
 
         main.getConfig().set(path + ".world", startingLocation.getWorld().getName());
         main.getConfig().set(path + ".startingLocation", serialize(startingLocation));
         main.getConfig().set(path + ".owner", owner.toString());
         main.getConfig().set(path + ".boatMaterial", boatItem.getType().name());
-        main.getConfig().set(path + ".boatCustomName", s(boatItem.getItemMeta().customName()));
+        main.getConfig().set(path + ".boatCustomName", customName);
 
         main.saveConfig();
 
@@ -136,7 +138,7 @@ public class CarManager {
         if (value == null) return null;
 
         World world = Bukkit.getWorld(worldName);
-        if (world == null) return null;
+//        if (world == null) return null;
 
         String[] parts = value.split(",");
         return new Location(
@@ -167,6 +169,7 @@ public class CarManager {
             case MANGROVE_BOAT -> EntityType.MANGROVE_BOAT;
             case CHERRY_BOAT -> EntityType.CHERRY_BOAT;
             case BAMBOO_RAFT -> EntityType.BAMBOO_RAFT;
+            case PALE_OAK_BOAT -> EntityType.PALE_OAK_BOAT;
             case BAMBOO_CHEST_RAFT -> EntityType.BAMBOO_CHEST_RAFT;
             default -> EntityType.OAK_BOAT;
         };

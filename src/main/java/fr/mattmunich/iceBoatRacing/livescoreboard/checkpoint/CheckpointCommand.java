@@ -219,7 +219,7 @@ public class CheckpointCommand implements Listener, BasicCommand {
     @Override
     public @NonNull Collection<String> suggest(@NonNull CommandSourceStack source, String @NonNull [] args) {
         List<String> suggestions = new ArrayList<>();
-        if(args.length==1) {
+        if(args.length==1 || args.length==0) {
             suggestions.add("list");
             suggestions.add("count");
             suggestions.add("create");

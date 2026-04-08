@@ -134,7 +134,7 @@ public class CheckpointManager {
         if (value == null) return null;
 
         World world = Bukkit.getWorld(worldName);
-        if (world == null) return null;
+//        if (world == null) return null;
 
         String[] parts = value.split(",");
         return new Location(

@@ -14,21 +14,28 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.Objects;
-
 import static fr.mattmunich.iceBoatRacing.Main.c;
 
 public class RaceManager {
 
     private final Main main;
     private final CarManager carManager;
-    private final World raceWorld;
+    private World raceWorld = Bukkit.getWorld("world");
 
 
     public RaceManager(Main main, CarManager carManager) {
         this.main = main;
         this.carManager = carManager;
-        raceWorld = Objects.requireNonNull(carManager.get(0)).getStartingLocation().getWorld();
+        Bukkit.getScheduler().runTask(main, () -> {
+            Car firstCar = carManager.get(0);
+            if (firstCar != null && firstCar.getStartingLocation() != null) {
+                raceWorld = firstCar.getStartingLocation().getWorld();
+                main.log("[RaceManager] Detected race world: " + raceWorld.getName());
+            } else {
+                main.log("[RaceManager] No cars loaded yet, using default world for raceWorld.");
+                raceWorld = Bukkit.getWorlds().getFirst();
+            }
+        });
     }
 
     public void startRace() {
@@ -56,13 +63,13 @@ public class RaceManager {
         final int[] timesRun = {0};
         final BukkitTask[] task = new BukkitTask[1];
         task[0] = Bukkit.getScheduler().runTaskTimer(main, () -> {
-            int fromX = main.getConfig().getInt("raceLights.from.x",123456789);
-            int fromY = main.getConfig().getInt("raceLights.from.y",123456789);
-            int fromZ = main.getConfig().getInt("raceLights.from.z",123456789);
-            int toX = main.getConfig().getInt("raceLights.to.x",123456789);
-            int toY = main.getConfig().getInt("raceLights.to.y",123456789);
-            int toZ = main.getConfig().getInt("raceLights.to.z",123456789);
-            boolean raceLightsEnabled = main.getConfig().getBoolean("raceLights.enabled");
+            int fromX = main.getConfig().getInt("race.lights.from.x",123456789);
+            int fromY = main.getConfig().getInt("race.lights.from.y",123456789);
+            int fromZ = main.getConfig().getInt("race.lights.from.z",123456789);
+            int toX = main.getConfig().getInt("race.lights.to.x",123456789);
+            int toY = main.getConfig().getInt("race.lights.to.y",123456789);
+            int toZ = main.getConfig().getInt("race.lights.to.z",123456789);
+            boolean raceLightsEnabled = main.getConfig().getBoolean("race.lights.enabled");
             if(fromX == 123456789 || fromY == 123456789 || fromZ == 123456789 || toX == 123456789 || toY == 123456789 || toZ == 123456789) raceLightsEnabled = false;
             String titleContent;
             switch (timesRun[0]) {
