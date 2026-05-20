@@ -1,25 +1,55 @@
+# IceBoatRacing, a powerful plugin for your ice boat racing server.
+# - Developped by mattmunich
+#
+# ----------------------------------------------------------------
+# Welcome to the en_US message configuration file.
+# Below, you can change the messages that will be shown by
+# the plugin when the language in config.yml is set to
+# this file's name (without the .yml)
+# ----------------------------------------------------------------
+# Some instructions:
+# - Color codes
+# You can use the § sign followed by a specific caracther to
+# add color to these messages.
+#
+# - Arguments/Variables
+# Some messages support arguments that will be formatted like:
+# %argument%. These will are hard-coded in the plugin and will
+# be replaced indenpendently from this config. If they are
+# missing, they just won't show up in the message.
+# ----------------------------------------------------------------
+
+
+#The prefix used in the beggining of every message
+#(except titles and messages under the "noPrefix" section)
 prefix: "<b><gradient:#8DABF3:#10CA9A>[Ice Boat Racing]</gradient></b>"
+
 noPrefix:
-  liveSidebarTitle: "§3-- §b§lIce Boat Racing §3--"
+  #The title of the scoreboard during a race
+  liveSidebarTitle: "§3-- §b§lBoat Race §3--"
+  #Join and leave messages
   join: "§7[§a+§7] §b%player%"
   quit: "§7[§c-§7] §b%player%"
 
 checkpoint:
+  #Messages regarding the checkpoint setting pos
   pos:
-    1: "§bCheckpoint position §31§b set."
-    2: "§bCheckpoint position §32§b set."
-    notSet: "§cPlease select both positions first!\n§8ℹ Select using a wooden shovel"
-  startLineSaved: "§aStart line saved!\n§8ℹ Use /checkpoint setFinish to save the finish line"
+    1: "§bCheckpoint §3position 1§b set to §3%x%§b, §3%y%§b, §3%z%§b."
+    2: "§bCheckpoint §3position 2§b set to §3%x%§b, §3%y%§b, §3%z%§b."
+    notSet: "§cSelect §4both positions§c first!\n§8ℹ Use a wooden shovel"
+  #Success messages
+  startLineSaved: "§aStart line saved!\n§8ℹ Use /checkpoint setFinish if your finish line differs from the start"
   finishLineSaved: "§aFinish line saved!"
   saved: "§aCheckpoint §2%index%§a saved"
-  sectorSaved: "§aSector checkpoint §e%index% §asaved!"
-  notInCheckpoint: "§cYou are not inside a checkpoint\n§8ℹ You can also use /checkpoint list and delete a checkpoint from there"
-  removed: "§aRemoved checkpoint §6%index%§a successfully"
-  invalid: "§cInvalid checkpoint number"
-  noCheckpoint: "§cNo checkpoints defined"
+  sectorSaved: "§aSector §e%index% §asaved!"
+  removed: "§aCheckpoint §6%index%§a removed"
   count: "§aThere are %count% checkpoints"
+  resetPlayerScore: "§aScore of §6%player%§a reset"
   normalized: "§aCheckpoints normalized"
-  resetPlayerScore: "§aSuccessfully reset §6%player%§a's score"
+  #Errors
+  notInCheckpoint: "§cYou are not in a checkpoint\n§8ℹ You can also use /checkpoint list"
+  invalid: "§cInvalid checkpoint number"
+  noCheckpoint: "§cNo checkpoint defined"
 
 race:
   #Will be displayed to every player
@@ -28,45 +58,58 @@ race:
 
   #Only displayed to the command executor
   prepare: "§aPlayers will be placed automatically." #Displayed when '/race prepare' is used (and prepare toggled OFF)
-  cancelPrepare: "§aPreparation mode disabled." #Displayed when '/race prepare' is used (and prepare toggled ON)
+  cancelPrepare: "§aPrepare mode disabled." #Displayed when '/race prepare' is used (and prepare toggled ON)
 
   #In race events
   onCompleteLap:
     title: "§6%currentLapCount%/%raceLapCount%"
     subtitle: "§alaps completed"
     message: "§3%player%§b finished lap §3%count%§b in §3%time%§b!"
-  onCrossSector: "§3%player%§b's time at sector §3%count%§b: §3%time%§b"
+  onCrossSector: "§b§3%player%§b's time at sector §3%count%§b: §3%time%§b"
 
   #Help message
-  help: "§3--------- §b§l/race§r §3---------\n§3->§a start §8-§7 Start the race\n§3->§a prepare §8-§7 Prepare the players\n§7§oℹ Automatically places players in their boats\n§3->§a end §8-§7 End the race"
+  help: "§3--------- §b§l/race§r §3---------\n§3->§a start §8-§7 Start the race\n§3->§a prepare §8-§7 Prepare players\n§7§oℹ Automatically places players in their boats\n§3->§a end §8-§7 End the race"
+
 car:
-  invalidID: "§cCouldn't find a car with the ID §4%id%"
+  #Errors
+  invalidID: "§cNo car with ID §4%id%"
   noCars: "§cNo cars defined."
+
+  #Command success feedback
+  changedOwner: "§aOwner changed: %owner%"
+  removed: "§aCar removed (id %id%)"
+
+  #Messages/titles shown in the car creation process
   create:
     1:
-      title: "§aDefine the car's starting location"
-      subtitle: "§aThen type §e%check%§a in the chat."
-      message: "§aBreak the block where the car will be spawned, type %check% in the chat when done."
-      selected: "§bBlock selected, type §3%check%§b to confirm."
-      noSelection: "§cPlease select a block first!"
+      title: "§aSet Spawn"
+      subtitle: "§e%check% §ato confirm"
+      message: "§aBreak the spawn block, then type %check%."
+      selected: "§bBlock selected, type §3%check%§b."
+      noSelection: "§cSelect a block first!"
       check: "done"
-      completed: "§aLocation saved."
+      completed: "§aPosition saved."
+
     2:
-      title: "§aType car's owner name in chat"
-      message: "§aType the name of the owner of the car in chat."
-      completed: "§aSet owner to %owner%."
+      title: "§aOwner Name"
+      subtitle: "§eEnter the owner's name in chat"
+      message: "§aType the owner's name in chat."
+      completed: "§aOwner: %owner%."
+
     3:
-      title: "§aSelect the car type"
-      message: "§aHold the boat item in your hand, then type §e%check%§a."
-      invalidItem: "§cHold a boat item in your hand!"
+      title: "§aChoose Boat"
+      subtitle: "§e%check% §ato confirm"
+      message: "§aHold a boat and type §e%check%§a."
+      invalidItem: "§cHold a boat in your hand!"
       check: "done"
+
     completed:
-      message: "§aCar saved."
+      message: "§aThe car has been saved."
       title: "§2§lDone!"
-      subtitle: "§aThe car has been saved."
-  changedOwner: "§aChanged car owner to %owner%"
-  removed: "§aRemoved car with id %id%"
+      subtitle: "§aCar saved"
+
+#Some basic error messages
 error:
   invalidNumber: "§cInvalid number"
   playerNotFound: "§cPlayer not found"
-  playerToExecuteCommand: "§cYou must be a player to use this command."
+  playerToExecuteCommand: "§cYou must be a player to do this."

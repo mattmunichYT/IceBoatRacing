@@ -1,32 +1,55 @@
+# IceBoatRacing, a powerful plugin for your ice boat racing server.
+# - Developped by mattmunich
+#
+# ----------------------------------------------------------------
+# Welcome to the fr_FR message configuration file.
+# Below, you can change the messages that will be shown by
+# the plugin when the language in config.yml is set to
+# this file's name (without the .yml)
+# ----------------------------------------------------------------
+# Some instructions:
+# - Color codes
+# You can use the § sign followed by a specific caracther to
+# add color to these messages.
+#
+# - Arguments/Variables
+# Some messages support arguments that will be formatted like:
+# %argument%. These will are hard-coded in the plugin and will
+# be replaced indenpendently from this config. If they are
+# missing, they just won't show up in the message.
+# ----------------------------------------------------------------
+
+
+#The prefix used in the beggining of every message
+#(except titles and messages under the "noPrefix" section)
 prefix: "<b><gradient:#8DABF3:#10CA9A>[Ice Boat Racing]</gradient></b>"
 
 noPrefix:
+  #The title of the scoreboard during a race
   liveSidebarTitle: "§3-- §b§lCourse de bateaux §3--"
-  join: "§7[§a+§7] §b%player%"
-  quit: "§7[§c-§7] §b%player%"
-prefix: "<b><gradient:#8DABF3:#10CA9A>[Ice Boat Racing]</gradient></b>"
-
-noPrefix:
-  liveSidebarTitle: "§3-- §b§lCourse de bateaux §3--"
+  #Join and leave messages
   join: "§7[§a+§7] §b%player%"
   quit: "§7[§c-§7] §b%player%"
 
 checkpoint:
+  #Messages regarding the checkpoint setting pos
   pos:
-    1: "§bPosition 1 du checkpoint définie."
-    2: "§bPosition 2 du checkpoint définie."
-    notSet: "§cSélectionne les deux positions d'abord !\n§8ℹ Avec une pelle en bois"
-  startLineSaved: "§aLigne de départ enregistrée !\n§8ℹ Fais /checkpoint setFinish"
+    1: "§bPosition §31§b du checkpoint définie en §3%x%§b, §3%y%§b, §3%z%§b."
+    2: "§bPosition §32§b du checkpoint définie en §3%x%§b, §3%y%§b, §3%z%§b."
+    notSet: "§cSélectionne les §4deux positions§c d'abord !\n§8ℹ Avec une pelle en bois"
+  #Success messages
+  startLineSaved: "§aLigne de départ enregistrée !\n§8ℹ Fais /checkpoint setFinish si ta ligne d'arrivée diffère de celle de départ"
   finishLineSaved: "§aLigne d'arrivée enregistrée !"
   saved: "§aCheckpoint §2%index%§a enregistré"
   sectorSaved: "§aSecteur §e%index% §aenregistré !"
-  notInCheckpoint: "§cTu n'es pas dans un checkpoint\n§8ℹ Tu peux aussi faire /checkpoint list"
   removed: "§aCheckpoint §6%index%§a supprimé"
+  count: "§aIl y a %count% checkpoints"
+  resetPlayerScore: "§aScore de §6%player%§a réinitialisé"
+  normalized: "§aCheckpoints normalisés"
+  #Errors
+  notInCheckpoint: "§cTu n'es pas dans un checkpoint\n§8ℹ Tu peux aussi faire /checkpoint list"
   invalid: "§cNuméro de checkpoint invalide"
   noCheckpoint: "§cAucun checkpoint défini"
-  count: "§aIl y a %count% checkpoints"
-  normalized: "§aCheckpoints normalisés"
-  resetPlayerScore: "§aScore de §6%player%§a réinitialisé"
 
 race:
   #Will be displayed to every player
@@ -48,53 +71,15 @@ race:
   help: "§3--------- §b§l/race§r §3---------\n§3->§a start §8-§7 Lancer la course\n§3->§a prepare §8-§7 Préparer les joueurs\n§7§oℹ Placement automatique des joueurs dans leurs voitures\n§3->§a end §8-§7 Finir la course"
 
 car:
-  invalidID: "§cAucune voiture avec l'IDprefix: "<b><gradient:#8DABF3:#10CA9A>[Ice Boat Racing]</gradient></b>"
-
-noPrefix:
-  liveSidebarTitle: "§3-- §b§lCourse de bateaux §3--"
-  join: "§7[§a+§7] §b%player%"
-  quit: "§7[§c-§7] §b%player%"
-
-checkpoint:
-  pos:
-    1: "§bPosition 1 du checkpoint définie."
-    2: "§bPosition 2 du checkpoint définie."
-    notSet: "§cSélectionne les deux positions d'abord !\n§8ℹ Avec une pelle en bois"
-  startLineSaved: "§aLigne de départ enregistrée !\n§8ℹ Fais /checkpoint setFinish"
-  finishLineSaved: "§aLigne d'arrivée enregistrée !"
-  saved: "§aCheckpoint §2%index%§a enregistré"
-  sectorSaved: "§aSecteur §e%index% §aenregistré !"
-  notInCheckpoint: "§cTu n'es pas dans un checkpoint\n§8ℹ Tu peux aussi faire /checkpoint list"
-  removed: "§aCheckpoint §6%index%§a supprimé"
-  invalid: "§cNuméro de checkpoint invalide"
-  noCheckpoint: "§cAucun checkpoint défini"
-  count: "§aIl y a %count% checkpoints"
-  normalized: "§aCheckpoints normalisés"
-  resetPlayerScore: "§aScore de §6%player%§a réinitialisé"
-
-race:
-  #Will be displayed to every player
-  start: "§aCourse en démarrage..." #Displayed when '/race start' is used
-  end: "§cLa course est terminée !" #Displayed when '/race end' is used
-
-  #Only displayed to the command executor
-  prepare: "§aLes joueurs seront placés automatiquement." #Displayed when '/race prepare' is used (and prepare toggled OFF)
-  cancelPrepare: "§aMode préparation désactivé." #Displayed when '/race prepare' is used (and prepare toggled ON)
-
-  #In race events
-  onCompleteLap:
-    title: "§6%currentLapCount%/%raceLapCount%"
-    subtitle: "§atours complétés"
-    message: "§3%player%§b a terminé le tour n°§3%count%§b en §3%time%§b !"
-  onCrossSector: "§bTemps de §3%player%§b au secteur §3%count%§b : §3%time%§b"
-
-  #Help message
-  help: "§3--------- §b§l/race§r §3---------\n§3->§a start §8-§7 Lancer la course\n§3->§a prepare §8-§7 Préparer les joueurs\n§7§oℹ Placement automatique des joueurs dans leurs voitures\n§3->§a end §8-§7 Finir la course"
-
-car:
+  #Errors
   invalidID: "§cAucune voiture avec l'ID §4%id%"
   noCars: "§cAucune voiture définie."
 
+  #Command success feedback
+  changedOwner: "§aPropriétaire changé : %owner%"
+  removed: "§aVoiture supprimée (id %id%)"
+
+  #Messages/titles shown in the car creation process
   create:
     1:
       title: "§aDéfinir le spawn"
@@ -107,133 +92,23 @@ car:
 
     2:
       title: "§aNom du propriétaire"
+      subtitle: "§eEntre le nom du propriétaire dans le chat"
       message: "§aÉcris le nom du propriétaire dans le chat."
       completed: "§aPropriétaire : %owner%."
 
     3:
       title: "§aChoisir le bateau"
-      message: "§aTiens un bateau puis écris §e%check%§a."
-      invalidItem: "§cTiens un bateau en main !"
-      check: "done"
-
-    completed:
-      message: "§aVoiture enregistrée."
-      title: "§2§lTerminé !"
-      subtitle: "§aVoiture sauvegardée."
-
-  changedOwner: "§aPropriétaire changé : %owner%"
-  removed: "§aVoiture supprimée (id %id%)"
-
-error:
-  invalidNumber: "§cNombre invalide"
-  playerNotFound: "§cJoueur introuvable"
-  playerToExecuteCommand: "§cTu dois être un joueur pour faire ça."
-  §4%id%"
-  noCars: "§cAucune voiture définie."
-
-  create:
-    1:
-      title: "§aDéfinir le spawn"
       subtitle: "§e%check% §apour valider"
-      message: "§aCasse le bloc du spawn, puis écris %check%."
-      selected: "§bBloc sélectionné, écris §3%check%§b."
-      noSelection: "§cSélectionne un bloc d'abord !"
-      check: "done"
-      completed: "§aPosition enregistrée."
-
-    2:
-      title: "§aNom du propriétaire"
-      message: "§aÉcris le nom du propriétaire dans le chat."
-      completed: "§aPropriétaire : %owner%."
-
-    3:
-      title: "§aChoisir le bateau"
       message: "§aTiens un bateau puis écris §e%check%§a."
       invalidItem: "§cTiens un bateau en main !"
       check: "done"
 
     completed:
-      message: "§aVoiture enregistrée."
+      message: "§aLa voiture a été sauvegardée!"
       title: "§2§lTerminé !"
-      subtitle: "§aVoiture sauvegardée."
+      subtitle: "§aVoiture sauvegardée"
 
-  changedOwner: "§aPropriétaire changé : %owner%"
-  removed: "§aVoiture supprimée (id %id%)"
-
-error:
-  invalidNumber: "§cNombre invalide"
-  playerNotFound: "§cJoueur introuvable"
-  playerToExecuteCommand: "§cTu dois être un joueur pour faire ça."
-
-checkpoint:
-  pos:
-    1: "§bPosition 1 du checkpoint définie."
-    2: "§bPosition 2 du checkpoint définie."
-    notSet: "§cSélectionne les deux positions d'abord !\n§8ℹ Avec une pelle en bois"
-  startLineSaved: "§aLigne de départ enregistrée !\n§8ℹ Fais /checkpoint setFinish"
-  finishLineSaved: "§aLigne d'arrivée enregistrée !"
-  saved: "§aCheckpoint §2%index%§a enregistré"
-  sectorSaved: "§aSecteur §e%index% §aenregistré !"
-  notInCheckpoint: "§cTu n'es pas dans un checkpoint\n§8ℹ Tu peux aussi faire /checkpoint list"
-  removed: "§aCheckpoint §6%index%§a supprimé"
-  invalid: "§cNuméro de checkpoint invalide"
-  noCheckpoint: "§cAucun checkpoint défini"
-  count: "§aIl y a %count% checkpoints"
-  normalized: "§aCheckpoints normalisés"
-  resetPlayerScore: "§aScore de §6%player%§a réinitialisé"
-
-race:
-  #Will be displayed to every player
-  start: "§aCourse en démarrage..." #Displayed when '/race start' is used
-  end: "§cLa course est terminée !" #Displayed when '/race end' is used
-
-  #Only displayed to the command executor
-  prepare: "§aLes joueurs seront placés automatiquement." #Displayed when '/race prepare' is used (and prepare toggled OFF)
-  cancelPrepare: "§aMode préparation désactivé." #Displayed when '/race prepare' is used (and prepare toggled ON)
-
-  #In race events
-  onCompleteLap:
-    title: "§6%currentLapCount%/%raceLapCount%"
-    subtitle: "§atours complétés"
-    message: "§3%player%§b a terminé le tour n°§3%count%§b en §3%time%§b !"
-  onCrossSector: "§bTemps de §3%player%§b au secteur §3%count%§b : §3%time%§b"
-
-  #Help message
-  help: "§3--------- §b§l/race§r §3---------\n§3->§a start §8-§7 Lancer la course\n§3->§a prepare §8-§7 Préparer les joueurs\n§7§oℹ Placement automatique des joueurs dans leurs voitures\n§3->§a end §8-§7 Finir la course"
-
-car:
-  invalidID: "§cAucune voiture avec l'ID §4%id%"
-  noCars: "§cAucune voiture définie."
-
-  create:
-    1:
-      title: "§aDéfinir le spawn"
-      subtitle: "§e%check% §apour valider"
-      message: "§aCasse le bloc du spawn, puis écris %check%."
-      selected: "§bBloc sélectionné, écris §3%check%§b."
-      noSelection: "§cSélectionne un bloc d'abord !"
-      check: "done"
-      completed: "§aPosition enregistrée."
-
-    2:
-      title: "§aNom du propriétaire"
-      message: "§aÉcris le nom du propriétaire dans le chat."
-      completed: "§aPropriétaire : %owner%."
-
-    3:
-      title: "§aChoisir le bateau"
-      message: "§aTiens un bateau puis écris §e%check%§a."
-      invalidItem: "§cTiens un bateau en main !"
-      check: "done"
-
-    completed:
-      message: "§aVoiture enregistrée."
-      title: "§2§lTerminé !"
-      subtitle: "§aVoiture sauvegardée."
-
-  changedOwner: "§aPropriétaire changé : %owner%"
-  removed: "§aVoiture supprimée (id %id%)"
-
+#Some basic error messages
 error:
   invalidNumber: "§cNombre invalide"
   playerNotFound: "§cJoueur introuvable"

@@ -10,6 +10,7 @@ import net.kyori.adventure.text.event.ClickEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -50,9 +51,10 @@ public class CheckpointCommand implements Listener, BasicCommand {
         if(event.getClickedBlock() == null) return;
 
         if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
-            assert event.getClickedBlock() != null;
-            pos1.put(p, event.getClickedBlock().getLocation());
-            p.sendMessage(getMessage("checkpoint.pos.1"));
+            Block clicked = event.getClickedBlock();
+            assert clicked != null;
+            pos1.put(p, clicked.getLocation());
+            p.sendMessage(getMessage("checkpoint.pos.1",formatArguments("x",""+clicked.getX(),"y",""+clicked.getY(),"z",""+clicked.getZ())));
             event.setCancelled(true);
         }
 
@@ -103,6 +105,11 @@ public class CheckpointCommand implements Listener, BasicCommand {
                     .max()
                     .orElse(-1) + 1;
 
+            if(nextIndex == 1) {
+                checkpointManager.saveCheckpoint(nextIndex, l1, l2, Checkpoint.Type.START_FINISH);
+                player.sendMessage(getMessage("checkpoint.startLineSaved"));
+            }
+
             checkpointManager.saveCheckpoint(nextIndex, l1, l2, Checkpoint.Type.NORMAL);
             player.sendMessage(getMessage("checkpoint.saved",formatArguments("index", String.valueOf(nextIndex))));
 
@@ -110,13 +117,14 @@ public class CheckpointCommand implements Listener, BasicCommand {
 
             Location l1 = pos1.get(player);
             Location l2 = pos2.get(player);
-            pos1.remove(player);
-            pos2.remove(player);
 
             if (l1 == null || l2 == null) {
                 player.sendMessage(getMessage("checkpoint.posNotSet"));
                 return;
             }
+
+            pos1.remove(player);
+            pos2.remove(player);
 
             int nextIndex = checkpointManager.getAll().stream()
                     .mapToInt(Checkpoint::getIndex)
