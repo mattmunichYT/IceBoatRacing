@@ -4,9 +4,6 @@ noPrefix:
   join: "§7[§a+§7] §b%player%"
   quit: "§7[§c-§7] §b%player%"
 
-completedLaps: "§3%player%§b completed the laps n°§3%count%§b in §3%time%§b !"
-crossedSector: "§bTime for §3%player%§b at sector §3%count%e§b: §3%time%§b"
-
 checkpoint:
   pos:
     1: "§bCheckpoint position §31§b set."
@@ -25,12 +22,23 @@ checkpoint:
   resetPlayerScore: "§aSuccessfully reset §6%player%§a's score"
 
 race:
-  start: "§aStarting race..."
-  end: "§cThe race has ended!"
-  prepare: "§aThe players will now automatically be put in their car on join."
-  cancelPrepare: "§aThe race is no longer in preparing mode."
-  help: "§3--------- §b§l/race§r §3---------\n§3->§a start §8-§7 Start the race\n§3->§a prepare §8-§7 Prepare the players for the start of the race\n§7§oℹ Players will automatically be placed in their cars when they join the server\n§3->§a end §8-§7 End the race"
+  #Will be displayed to every player
+  start: "§aRace starting..." #Displayed when '/race start' is used
+  end: "§cThe race is over!" #Displayed when '/race end' is used
 
+  #Only displayed to the command executor
+  prepare: "§aPlayers will be placed automatically." #Displayed when '/race prepare' is used (and prepare toggled OFF)
+  cancelPrepare: "§aPreparation mode disabled." #Displayed when '/race prepare' is used (and prepare toggled ON)
+
+  #In race events
+  onCompleteLap:
+    title: "§6%currentLapCount%/%raceLapCount%"
+    subtitle: "§alaps completed"
+    message: "§3%player%§b finished lap §3%count%§b in §3%time%§b!"
+  onCrossSector: "§3%player%§b's time at sector §3%count%§b: §3%time%§b"
+
+  #Help message
+  help: "§3--------- §b§l/race§r §3---------\n§3->§a start §8-§7 Start the race\n§3->§a prepare §8-§7 Prepare the players\n§7§oℹ Automatically places players in their boats\n§3->§a end §8-§7 End the race"
 car:
   invalidID: "§cCouldn't find a car with the ID §4%id%"
   noCars: "§cNo cars defined."

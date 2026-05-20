@@ -5,6 +5,7 @@ import fr.mattmunich.iceBoatRacing.Messages;
 import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.Checkpoint;
 import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.CheckpointManager;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.Player;
@@ -54,15 +55,22 @@ public class RaceListener implements Listener {
             if(data.lapCount==0) data.startTime=now;
             if (data.lapCount>0) {
                 long lapDuration = now-data.lapTime;
-                Bukkit.broadcast(getMessage("completedLaps",
+                Bukkit.broadcast(getMessage("race.onCompleteLap.message",
                         formatArguments(
                                 "player", LegacyComponentSerializer.legacySection().serialize(player.displayName()),
                                 "count",  "" + data.lapCount,
                                 "time", formatTime(lapDuration)
                         )
                 ));
+                Title title = Title.title(
+                    Messages.getMessage("race.onCompleteLap.title", formatArguments(
+                        "currentLapCount", "" + data.lapCount,
+                        "raceLapCount", "" + main.raceLapCount
+                )), Messages.getMessage("race.onCompleteLap.subtitle"));
+
+                player.showTitle(title);
             }
-            if(data.lapCount == 20) {
+            if(data.lapCount == main.raceLapCount) {
                 Bukkit.broadcast(Messages.getMessage("prefix").append(c("§3")).append(player.displayName()).append(c("§b a terminé la course!")));
             }
 
@@ -72,7 +80,7 @@ public class RaceListener implements Listener {
         }
 
         if (next.getType().equals(Checkpoint.Type.SECTOR)) {
-            Bukkit.broadcast(getMessage("crossedSector",
+            Bukkit.broadcast(getMessage("race.onCrossSector",
                     formatArguments(
                             "player", LegacyComponentSerializer.legacySection().serialize(player.displayName()),
                             "count", String.valueOf(next.getSectorIndex()),

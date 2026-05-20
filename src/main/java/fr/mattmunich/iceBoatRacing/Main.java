@@ -37,6 +37,7 @@ public final class Main extends JavaPlugin {
     public boolean startingRace = false;
     public boolean hasRaceStarted = false;
     public boolean preparingRace = false;
+    public int raceLapCount = 0;
 
     @Override
     public void onEnable() {
@@ -80,6 +81,7 @@ public final class Main extends JavaPlugin {
         reloadConfig();
         saveResource("lang/en_US.yml", true);
         saveResource("lang/fr_FR.yml", true);
+        raceLapCount = getConfig().getInt("race.lapCount");
         log("Done configuring config files!");
     }
 

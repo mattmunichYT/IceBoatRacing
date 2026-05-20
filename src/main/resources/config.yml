@@ -1,5 +1,6 @@
 language: en_US
 race:
+  lapCount: 10
   ligths:
     enabled: false
     from:
