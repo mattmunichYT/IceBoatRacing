@@ -6,7 +6,16 @@
 
     <groupId>fr.mattmunich</groupId>
     <artifactId>IceBoatRacing</artifactId>
-    <version>1.3-RELEASE</version>
+    <!--
+    Use following tags:
+    - SNAPSHOT for development version
+    - RELEASE for release: version to be published
+    - BETA if the version is unstable
+
+    REMEMBER TO SWITCH IN paper-plugin.yml TOO!
+    -->
+
+    <version>1.4-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>IceBoatRacing</name>
