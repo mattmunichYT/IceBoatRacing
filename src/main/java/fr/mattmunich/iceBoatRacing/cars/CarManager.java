@@ -1,16 +1,20 @@
 package fr.mattmunich.iceBoatRacing.cars;
 
 import fr.mattmunich.iceBoatRacing.Main;
+import fr.mattmunich.iceBoatRacing.race.Race;
+import fr.mattmunich.iceBoatRacing.race.RaceManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.*;
 
 import static fr.mattmunich.iceBoatRacing.Main.c;
@@ -18,11 +22,13 @@ import static fr.mattmunich.iceBoatRacing.Main.s;
 
 public class CarManager {
     private final Main main;
+    private final RaceManager raceManager;
 
     public final List<Car> cars = new ArrayList<>();
 
-    public CarManager(Main main) {
+    public CarManager(Main main, RaceManager raceManager) {
         this.main = main;
+        this.raceManager = raceManager;
     }
 
     public void add(Car car) {
@@ -75,21 +81,29 @@ public class CarManager {
         car.setBoat(boat);
     }
 
-    public void saveCar(UUID owner, Location startingLocation, ItemStack boatItem) {
+    public void saveCar(Race race, UUID owner, Location startingLocation, ItemStack boatItem) {
 
-        int id = count();
+        int id = count(race);
         String path = "cars." + id;
         String customName = s(boatItem.getItemMeta().customName()).isBlank() ? "Race car" : s(boatItem.getItemMeta().customName());
 
-        main.getConfig().set(path + ".world", startingLocation.getWorld().getName());
-        main.getConfig().set(path + ".startingLocation", serialize(startingLocation));
-        main.getConfig().set(path + ".owner", owner.toString());
-        main.getConfig().set(path + ".boatMaterial", boatItem.getType().name());
-        main.getConfig().set(path + ".boatCustomName", customName);
+        YamlConfiguration config = raceManager.getRaceConfig(race);
 
-        main.saveConfig();
+        config.set(path + ".world", startingLocation.getWorld().getName());
+        config.set(path + ".startingLocation", serialize(startingLocation));
+        config.set(path + ".owner", owner.toString());
+        config.set(path + ".boatMaterial", boatItem.getType().name());
+        config.set(path + ".boatCustomName", customName);
 
-        add(new Car(id, owner, startingLocation, boatItem.getType(), s(boatItem.getItemMeta().customName())));
+        try {
+            raceManager.saveRaceConfig(race,config);
+        } catch (IOException e) {
+            main.log("§cCouldn't save car " + id + " for race " + race.getName() + " because the it's config threw an error on saving. " +
+                    "\n§rStacktrace: " + e.getMessage() +
+                    "\n" + Arrays.toString(e.getStackTrace()));
+        }
+
+        race.addCar(new Car(id, owner, startingLocation, boatItem.getType(), s(boatItem.getItemMeta().customName())));
     }
 
     public void loadCars() {
@@ -126,8 +140,48 @@ public class CarManager {
         }
     }
 
+    public void loadCars(Race race) {
+        race.clearCars();
+        
+        YamlConfiguration config = raceManager.getRaceConfig(race);
+
+        if (!config.isConfigurationSection("cars")) return;
+
+        for (String key : Objects.requireNonNull(
+                config.getConfigurationSection("cars")
+        ).getKeys(false)) {
+
+            int id = Integer.parseInt(key);
+            String path = "cars." + id;
+
+            String worldName = config.getString(path + ".world");
+            Location loc = deserialize(
+                    worldName,
+                    config.getString(path + ".startingLocation")
+            );
+
+            if (loc == null) continue;
+
+            UUID owner = UUID.fromString(
+                    Objects.requireNonNull(config.getString(path + ".owner"))
+            );
+
+            Material material = Material.valueOf(
+                    config.getString(path + ".boatMaterial", "OAK_BOAT")
+            );
+
+            String customName = config.getString(path + ".boatCustomName");
+
+            race.addCar(new Car(id, owner, loc, material, customName));
+        }
+    }
+
     public int count() {
         return getAll().size();
+    }
+
+    public int count(Race race) {
+        return race.getCars().size();
     }
 
     private String serialize(Location loc) {

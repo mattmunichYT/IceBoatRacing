@@ -93,21 +93,21 @@ public final class Main extends JavaPlugin {
 
     private void loadCheckpoints() {
         log("Loading checkpoints...");
-        checkpointManager = new CheckpointManager(this);
+        checkpointManager = new CheckpointManager(this,raceManager);
         Bukkit.getScheduler().runTask(this, () -> checkpointManager.loadCheckpoints());
         log("Done loading checkpoints!");
     }
 
     private void loadCars() {
         log("Loading cars...");
-        carManager = new CarManager(this);
+        carManager = new CarManager(this,raceManager);
         Bukkit.getScheduler().runTask(this, () -> carManager.loadCars());
         log("Done loading cars!");
     }
 
     private void loadRaceManager() {
         log("Loading race manager...");
-        raceManager = new RaceManager(this,carManager);
+        raceManager = new RaceManager(this,carManager, checkpointManager);
         log("Done loading race manager!");
     }
 

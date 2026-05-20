@@ -53,7 +53,8 @@ checkpoint:
 
 race:
   #Will be displayed to every player
-  start: "§aCourse en démarrage..." #Displayed when '/race start' is used
+  start: "§aCourse %name% démarre..." #Displayed when '/race start <name>' is used
+  notFound: "§Course non trouvée" #Displayed when the inputted race is invalid
   end: "§cLa course est terminée !" #Displayed when '/race end' is used
 
   #Only displayed to the command executor

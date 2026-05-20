@@ -22,13 +22,32 @@ public class RaceCommand implements BasicCommand {
 
     @Override
     public void execute(@NonNull CommandSourceStack source, String @NonNull [] args) {
-        if(args.length == 1 && args[0].equalsIgnoreCase("start")) {
-            source.getSender().sendMessage(Messages.getMessage("race.start"));
-            raceManager.startRace();
-        } else if(args.length == 1 && args[0].equalsIgnoreCase("end")) {
-            raceManager.endRace();
+        if(args.length == 2 && args[0].equalsIgnoreCase("start")) {
+            String raceName = args[1];
+            Race race = raceManager.getRace(raceName);
+            if(race == null) {
+                source.getSender().sendMessage(Messages.getMessage("race.notFound"));
+                return;
+            }
+            source.getSender().sendMessage(Messages.getMessage("race.start", Messages.formatArguments("name", race.getName())));
+            raceManager.startRace(race);
+        } else if(args.length == 2 && args[0].equalsIgnoreCase("end")) {
+            String raceName = args[1];
+            Race race = raceManager.getRace(raceName);
+            if(race == null) {
+                source.getSender().sendMessage(Messages.getMessage("race.notFound"));
+                return;
+            }
+            source.getSender().sendMessage(Messages.getMessage("race.end", Messages.formatArguments("name", race.getName())));
+            raceManager.endRace(race);
         } else if (args.length==1 && args[0].equalsIgnoreCase("prepare")) {
-            raceManager.togglePrepareRace(source.getSender());
+            String raceName = args[1];
+            Race race = raceManager.getRace(raceName);
+            if(race == null) {
+                source.getSender().sendMessage(Messages.getMessage("race.notFound"));
+                return;
+            }
+            raceManager.togglePrepareRace(source.getSender(),race);
         } else {
             source.getSender().sendMessage(Messages.getMessage("race.help"));
         }
