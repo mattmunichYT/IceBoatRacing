@@ -10,6 +10,7 @@ public class RaceData {
     public Car car;
     public long startTime;
     public long lapTime;
+    public Race race;
 
     public RaceData(Player player) {
         this.player = player;

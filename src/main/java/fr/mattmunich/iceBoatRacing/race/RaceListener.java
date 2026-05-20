@@ -40,17 +40,20 @@ public class RaceListener implements Listener {
         }
 
         RaceData data = main.racers.get(player.getUniqueId());
-        if (data == null) {
-            player.sendActionBar(c("§cNo race data."));
+        if (data == null || data.race == null || data.car == null) {
+            player.sendActionBar(c("§e§oNo race data"));
             return;
         }
-        Checkpoint next = checkpointManager.get(data.checkpointIndex+1);
 
-        if (next==null) next = checkpointManager.get(0);
-        if (!next.contains(player.getLocation())) return;
+        Checkpoint nextCheckpoint = checkpointManager.get(data.race, data.checkpointIndex+1);
+
+        if (nextCheckpoint == null) nextCheckpoint = checkpointManager.get(data.race,1);
+
+        //Actually check if the player is crossing the checkpoint
+        if (!nextCheckpoint.contains(player.getLocation())) return;
 
         // Start/finish checkpoint handling
-        if (next.getType().equals(Checkpoint.Type.START_FINISH)) {
+        if (nextCheckpoint.getType().equals(Checkpoint.Type.START_FINISH)) {
             long now = System.currentTimeMillis();
             if(data.lapCount==0) data.startTime=now;
             if (data.lapCount>0) {
@@ -79,11 +82,11 @@ public class RaceListener implements Listener {
             data.checkpointIndex = -1;
         }
 
-        if (next.getType().equals(Checkpoint.Type.SECTOR)) {
+        if (nextCheckpoint.getType().equals(Checkpoint.Type.SECTOR)) {
             Bukkit.broadcast(getMessage("race.onCrossSector",
                     formatArguments(
                             "player", LegacyComponentSerializer.legacySection().serialize(player.displayName()),
-                            "count", String.valueOf(next.getSectorIndex()),
+                            "count", String.valueOf(nextCheckpoint.getSectorIndex()),
                             "time", formatTime(System.currentTimeMillis()-data.lapTime)
                     )
             ));

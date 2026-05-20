@@ -70,7 +70,7 @@ public final class Main extends JavaPlugin {
         pm.registerEvents(new CarCommand(this, carManager), this);
         pm.registerEvents(new CarListener(this),this);
         pm.registerEvents(new Connection(this,carManager),this);
-        pm.registerEvents(new CheckpointCommand(checkpointManager,this),this);
+        pm.registerEvents(new CheckpointCommand(checkpointManager,raceManager, this),this);
         pm.registerEvents(new RaceListener(this,checkpointManager),this);
     }
 

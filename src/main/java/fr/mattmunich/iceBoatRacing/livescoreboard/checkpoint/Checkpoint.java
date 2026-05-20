@@ -16,6 +16,12 @@ public class Checkpoint {
     Location max;
     Type type;
 
+    /**
+     * Type will be set to NORMAL
+     * @param index the checkpoint ID
+     * @param min position 1
+     * @param max position 2
+     */
     public Checkpoint(int index, Location min, Location max) {
         this.index = index;
         this.min = min;
@@ -23,6 +29,12 @@ public class Checkpoint {
         this.type = Type.NORMAL;
     }
 
+    /**
+     * @param index the checkpoint ID
+     * @param min position 1
+     * @param max position 2
+     * @param type the checkpoint type from the Checkpoint.Type enum
+     */
     public Checkpoint(int index, Location min, Location max, Type type) {
         this.index = index;
         this.min = min;
@@ -30,6 +42,13 @@ public class Checkpoint {
         this.type = type;
     }
 
+    /**
+     *  Use for new SECTOR checkpoint only
+     * @param index the checkpoint ID
+     * @param sectorIndex the sector ID
+     * @param min position 1
+     * @param max position 2
+     */
     public Checkpoint(int index, int sectorIndex, Location min, Location max) {
         this.index = index;
         this.sectorIndex = sectorIndex;
@@ -37,7 +56,10 @@ public class Checkpoint {
         this.max = max;
         this.type = Type.SECTOR;
     }
-
+    /**
+     * Check if the checkpoint contains the location loc
+     * @param loc the location to check
+     */
     public boolean contains(Location loc) {
         return loc.getWorld().equals(min.getWorld()) &&
                 loc.getX() >= min.getX() && loc.getX() <= max.getX() &&

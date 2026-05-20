@@ -4,7 +4,6 @@ import fr.mattmunich.iceBoatRacing.Main;
 import fr.mattmunich.iceBoatRacing.Messages;
 import fr.mattmunich.iceBoatRacing.cars.Car;
 import fr.mattmunich.iceBoatRacing.cars.CarManager;
-import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.Checkpoint;
 import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.CheckpointManager;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
@@ -149,6 +148,7 @@ public class RaceManager {
                 race.racers.get(owner.getUniqueId()).lapCount = 0;
                 race.racers.get(owner.getUniqueId()).lapTime = 0;
                 race.racers.get(owner.getUniqueId()).startTime = 0;
+                race.racers.get(owner.getUniqueId()).race = race;
                 race.racers.get(owner.getUniqueId()).player = owner;
 
                 main.liveSidebar.getScore(owner.getName()).resetScore();
@@ -242,6 +242,7 @@ public class RaceManager {
             race.racers.get(owner.getUniqueId()).lapCount = 0;
             race.racers.get(owner.getUniqueId()).lapTime = 0;
             race.racers.get(owner.getUniqueId()).startTime = 0;
+            race.racers.get(owner.getUniqueId()).race = race;
             race.racers.get(owner.getUniqueId()).player = owner;
 
             main.liveSidebar.getScore(owner.getName()).resetScore();
