@@ -30,6 +30,7 @@ public class Messages {
     /**
      * Loads the selected language file from /lang/
      */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private void loadLanguageFile() {
 
         // Get language from config.yml
@@ -61,13 +62,6 @@ public class Messages {
         langConfig = YamlConfiguration.loadConfiguration(langFile);
 
         main.log("Loaded language: " + currentLang);
-    }
-
-    /**
-     * Reloads language file (for /reload or /ibr reload)
-     */
-    public void reload() {
-        loadLanguageFile();
     }
 
     public static Component getMessage(String identifier) {
@@ -133,11 +127,16 @@ public class Messages {
 
         // Replace placeholders
         for (Map.Entry<String, String> entry : arguments.entrySet()) {
+            //Ignore unset arguments
+            if(!message.contains("%" + entry.getKey() + "%")) continue;
+            //Actually replace
             message = message.replace("%" + entry.getKey() + "%", entry.getValue());
         }
 
+        //Convert to component for PaperMC
         Component component = c(message);
 
+        //Add the prefix if required
         if (addPrefix(identifier)) {
             component = getMessage("prefix").append(c("§r ")).append(component);
         }
