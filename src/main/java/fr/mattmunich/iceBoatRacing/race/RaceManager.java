@@ -29,26 +29,16 @@ public class RaceManager {
     private final Main main;
     private final CarManager carManager;
     private final CheckpointManager checkpointManager;
-    private World raceWorld = Bukkit.getWorld("world");
-
     public List<Race> races;
 
     public RaceManager(Main main, CarManager carManager, CheckpointManager checkpointManager) {
         this.main = main;
         this.carManager = carManager;
         this.checkpointManager = checkpointManager;
-        loadAllRaces();
 
-        Bukkit.getScheduler().runTask(main, () -> {
-            Car firstCar = carManager.get(0);
-            if (firstCar != null && firstCar.getStartingLocation() != null) {
-                raceWorld = firstCar.getStartingLocation().getWorld();
-                main.log("[RaceManager] Detected race world: " + raceWorld.getName());
-            } else {
-                main.log("[RaceManager] No cars loaded yet, using default world for raceWorld.");
-                raceWorld = Bukkit.getWorlds().getFirst();
-            }
-        });
+        main.log("Loading races...");
+        loadAllRaces();
+        main.log("Done loading races!");
     }
 
     public Race getRace(String raceName) {
@@ -65,36 +55,51 @@ public class RaceManager {
         if (!racesFolder.exists()) return;
 
         for (File file : Objects.requireNonNull(racesFolder.listFiles())) {
-            if (!file.getName().endsWith(".yml")) continue;
+            if (!file.getName().endsWith(".yml")) {
+                main.warn("File " + file.getName() + " wasn't loaded as a race, as it is not a .yml");
+                continue;
+            }
             YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
             String name = config.getString("name");
+            main.log("Loading race " + name);
             World world = Bukkit.getWorld(Objects.requireNonNull(config.getString("world")));
             if(world == null) {
-                main.log("Couldn't load race " + name + " because it's world wasn't found.");
+                main.severe("Couldn't load race " + name + " because it's world wasn't found.");
                 continue;
             }
             Race race = new Race(name, world);
             checkpointManager.loadRaceCheckpoints(race);
             carManager.loadCars(race);
 
+            assert races != null;
             races.add(race);
+            main.log("Race " + name + " has been loaded");
         }
     }
 
+    public void saveAllRaces() {
+        for (Race race : races) {
+            saveRace(race);
+        }
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public void saveRace(Race race) {
-        File raceFile = new File(main.getDataFolder(), "races/" + race.getName() + ".yml");
-        raceFile.getParentFile().mkdirs(); // creates the races/ folder if it doesn't exist
+        main.log("Saving race " + race.getName());
+        File raceFile = new File(main.getDataFolder(), "races/" + race.getName().toLowerCase().replace(" ","_") + ".yml");
+        raceFile.getParentFile().mkdirs();
 
         YamlConfiguration config = new YamlConfiguration();
         config.set("name", race.getName());
         config.set("world", race.getWorld().getName());
-
-        // set whatever else you need
+        carManager.loadCars(race);
+        checkpointManager.loadRaceCheckpoints(race);
 
         try {
             config.save(raceFile);
+            main.log("Race  " + race.getName() + " has been saved");
         } catch (IOException e) {
-            e.printStackTrace();
+            main.err("Couldn't save race " + race.getName(),e);
         }
     }
 

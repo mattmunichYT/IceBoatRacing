@@ -88,9 +88,7 @@ public class CheckpointManager {
         try {
             raceManager.saveRaceConfig(race, config);
         } catch (IOException e) {
-            main.log("§cCouldn't remove checkpoint " + checkpoint.getIndex() + " for race " + race.getName() + " because the it's config threw an error on saving. " +
-                    "\n§rStacktrace: " + e.getMessage() +
-                    "\n" + Arrays.toString(e.getStackTrace()));
+            main.err("Couldn't remove checkpoint " + checkpoint.getIndex() + " for race " + race.getName() + " because the it's config threw an error on saving. ",e);
             return;
         }
         race.removeCheckpoint(checkpoint);
@@ -116,9 +114,7 @@ public class CheckpointManager {
         try {
             raceManager.saveRaceConfig(race, config);
         } catch (IOException e) {
-            main.log("§cCouldn't save checkpoint " + index + " for race " + race.getName() + " because the it's config threw an error on saving. " +
-                    "\n§rStacktrace: " + e.getMessage() +
-                    "\n" + Arrays.toString(e.getStackTrace()));
+            main.err("Couldn't save checkpoint " + index + " for race " + race.getName() + " because the it's config threw an error on saving. ",e);
             return;
         }
 
@@ -146,9 +142,7 @@ public class CheckpointManager {
         try {
             raceManager.saveRaceConfig(race, config);
         } catch (IOException e) {
-            main.log("§cCouldn't save checkpoint " + index + " for race " + race.getName() + " because the it's config threw an error on saving. " +
-                    "\n§rStacktrace: " + e.getMessage() +
-                    "\n" + Arrays.toString(e.getStackTrace()));
+            main.err("Couldn't save checkpoint " + index + " for race " + race.getName() + " because the it's config threw an error on saving. ",e);
             return;
         }
 
@@ -277,9 +271,7 @@ public class CheckpointManager {
         try {
             raceManager.saveRaceConfig(race, config);
         } catch (IOException e) {
-            main.log("§cCouldn't normalize checkpoints for race " + race.getName() + " because the it's config threw an error on saving. " +
-                    "\n§rStacktrace: " + e.getMessage() +
-                    "\n" + Arrays.toString(e.getStackTrace()));
+            main.err("Couldn't normalize checkpoints for race " + race.getName() + " because the it's config threw an error on saving. ",e);
         }
     }
 }

@@ -47,10 +47,6 @@ public final class Main extends JavaPlugin {
 
         loadMessages();
 
-        loadCheckpoints();
-
-        loadCars();
-
         loadRaceManager();
 
 
@@ -67,7 +63,7 @@ public final class Main extends JavaPlugin {
 
     private void registerListeners() {
         PluginManager pm = Bukkit.getPluginManager();
-        pm.registerEvents(new CarCommand(this, carManager), this);
+        pm.registerEvents(new CarCommand(this, carManager,raceManager), this);
         pm.registerEvents(new CarListener(this),this);
         pm.registerEvents(new Connection(this,carManager),this);
         pm.registerEvents(new CheckpointCommand(checkpointManager,raceManager, this),this);
@@ -89,20 +85,6 @@ public final class Main extends JavaPlugin {
         log("Loading messages...");
         messages = new Messages(this);
         log("Done loading messages!");
-    }
-
-    private void loadCheckpoints() {
-        log("Loading checkpoints...");
-        checkpointManager = new CheckpointManager(this,raceManager);
-        Bukkit.getScheduler().runTask(this, () -> checkpointManager.loadCheckpoints());
-        log("Done loading checkpoints!");
-    }
-
-    private void loadCars() {
-        log("Loading cars...");
-        carManager = new CarManager(this,raceManager);
-        Bukkit.getScheduler().runTask(this, () -> carManager.loadCars());
-        log("Done loading cars!");
     }
 
     private void loadRaceManager() {
@@ -142,8 +124,8 @@ public final class Main extends JavaPlugin {
     private void registerCommands() {
         log("Registering commands...");
         registerCommand("iceboatracing", "Command to manage the plugin", List.of("ibr"), new IBRCommand(this));
-        registerCommand("checkpoint", "Command to manage checkpoints", new CheckpointCommand(checkpointManager,this));
-        registerCommand("car", "Command to manage cars", new CarCommand(this,carManager));
+        registerCommand("checkpoint", "Command to manage checkpoints", new CheckpointCommand(checkpointManager,raceManager, this));
+        registerCommand("car", "Command to manage cars", new CarCommand(this,carManager,raceManager));
         registerCommand("race", "Command to manage the race", new RaceCommand(this,raceManager));
         log("Done registering commands!");
     }
@@ -166,11 +148,18 @@ public final class Main extends JavaPlugin {
     @Override
     public void onDisable() {
         super.onDisable();
+        raceManager.saveAllRaces();
     }
 
     public void log(String message) {
         Bukkit.getConsoleSender().sendMessage("[IceBoatRacing] " + message);
     }
+
+    public void err(String message, Exception e) { getLogger().severe("[IceBoatRacing] " + message + "\nStacktrace: "  + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace())); }
+
+    public void warn(String message) { getLogger().warning("[IceBoatRacing] " + message); }
+
+    public void severe(String message) { getLogger().severe("[IceBoatRacing] " + message); }
 
     public static Component c(String message) {
         return LegacyComponentSerializer.legacySection().deserialize(message);

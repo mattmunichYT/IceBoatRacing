@@ -71,6 +71,11 @@ race:
   #Help message
   help: "§3--------- §b§l/race§r §3---------\n§3->§a start §8-§7 Lancer la course\n§3->§a prepare §8-§7 Préparer les joueurs\n§7§oℹ Placement automatique des joueurs dans leurs voitures\n§3->§a end §8-§7 Finir la course"
 
+  select: ""
+  create:
+    1:
+
+
 car:
   #Errors
   invalidID: "§cAucune voiture avec l'ID §4%id%"
@@ -114,3 +119,4 @@ error:
   invalidNumber: "§cNombre invalide"
   playerNotFound: "§cJoueur introuvable"
   playerToExecuteCommand: "§cTu dois être un joueur pour faire ça."
+  unknown: "§cUne erreur inconnue est survenue. Vérifiez s'il y a un message d'erreur dans la console."
