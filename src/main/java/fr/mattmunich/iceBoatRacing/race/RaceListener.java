@@ -86,7 +86,7 @@ public class RaceListener implements Listener {
             Bukkit.broadcast(getMessage("race.onCrossSector",
                     formatArguments(
                             "player", LegacyComponentSerializer.legacySection().serialize(player.displayName()),
-                            "count", String.valueOf(nextCheckpoint.getSectorIndex()),
+                            "count", String.valueOf(nextCheckpoint.getSectorID()),
                             "time", formatTime(System.currentTimeMillis()-data.lapTime)
                     )
             ));

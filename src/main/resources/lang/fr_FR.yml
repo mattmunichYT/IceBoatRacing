@@ -40,9 +40,9 @@ checkpoint:
   #Success messages
   startLineSaved: "§aLigne de départ enregistrée !\n§8ℹ Fais /checkpoint setFinish si ta ligne d'arrivée diffère de celle de départ"
   finishLineSaved: "§aLigne d'arrivée enregistrée !"
-  saved: "§aCheckpoint §2%index%§a enregistré"
-  sectorSaved: "§aSecteur §e%index% §aenregistré !"
-  removed: "§aCheckpoint §6%index%§a supprimé"
+  saved: "§aCheckpoint §2%id%§a enregistré"
+  sectorSaved: "§aSecteur §e%sectorID% §aenregistré !"
+  removed: "§aCheckpoint §6%id%§a supprimé"
   count: "§aIl y a %count% checkpoints"
   resetPlayerScore: "§aScore de §6%player%§a réinitialisé"
   normalized: "§aCheckpoints normalisés"
@@ -71,10 +71,59 @@ race:
   #Help message
   help: "§3--------- §b§l/race§r §3---------\n§3->§a start §8-§7 Lancer la course\n§3->§a prepare §8-§7 Préparer les joueurs\n§7§oℹ Placement automatique des joueurs dans leurs voitures\n§3->§a end §8-§7 Finir la course"
 
-  select: ""
+  select: "§bSélectionnez une course:"
   create:
+    cancel: "annuler" #The message to send to cancel the race creation process
+    cancelled: "§bLa création de la course a été annulée." #When you cancel the creation
+    #Naming the race
     1:
+      title: "§3Nom de la course"
+      subtitle: "§bEntrez le §3nom§b dans le chat"
+      message: "§bCommencez par entrer le nom de la course ci-dessous (dans le chat)."
 
+    #Define the checkpoints
+    2:
+      title: "§3Checkpoints?"
+      subtitle: "§bDéfinir les checkpoints ?"
+      message: "§bDéfinissez les points par lesquels passe la course. \n-> Entrez §3%start%§b pour commencer ou §3%later%§b pour configurer cela plus tard.\n§8§oℹ︎ Ceux-ci seront utilisés pour mettre a jour le score en direct des participants. Vous pouvez toujours faire cela plus tard!"
+      start: "commencer"
+      later: "pas maintenant"
+    3:
+      title: "§3Création checkpoints"
+      subtitle: "§bCommencez à définir les checkpoints"
+      message: "§bDéfinissez les checkpoints de la course en vous rendant à chaque emplacement.\n§b-> §3%define%§b pour poser un checkpoint\n§b-> §3%defineSector%§b pour poser un checkpoint de secteur\n§b-> §3%defineFinish%§b pour définir la ligne d'arrivée §8§o(si différente du départ)\n§b-> §3%help%§b pour afficher l'aide\n§b-> §3%done%§b pour terminer\n§8§oℹ︎ Un secteur fonctionne comme un checkpoint, mais annonce également le temps au secteur dans le chat.\n§8§oℹ︎ Pour définir un checkpoint, faites un clic gauche pour le point 1 et un clic droit pour le point 2 avec une §3§opelle en bois§8§o, comme avec WorldEdit."
+      checkpointCreation:
+        define: "definir"
+        defineSector: "definir secteur"
+        defineFinish: "definir fin"
+        help: "aide"
+        done: "sauvegarder"
+      feedback:
+        startDefined:
+          title: "§3Départ défini"
+          subtitle: "§bLa ligne de §3départ§b a été définie"
+        finishDefined:
+          title: "§3Arrivée définie"
+          subtitle: "§bLa ligne d'§3arrivée§b a été définie"
+        checkpointDefined:
+          title: "§3Checkpoint défini"
+          subtitle: "§bLe checkpoint §3%checkpointID%§b a été défini"
+        sectorDefined:
+          title: "§3Secteur défini"
+          subtitle: "§bLe secteur §3%sectorID%§b a été défini"
+        done:
+          title: "§2Terminé"
+          subtitle: "§aCheckpoints sauvegardés!"
+        error:
+          #Will be shown if the player tries to define a sector first (before defining start line)
+          defineStartLineFirst: "§cCommencez par définir la ligne de départ avant de faire cela."
+
+    4:
+      title: "§3Voitures?"
+      subtitle: "§bDéfinir les voitures ?"
+      message: "§bDéfinissez les points par lesquels voitures des participant de la course. \n-> Entrez §3%start%§b pour commencer ou §3%later%§b pour configurer cela plus tard.\n§8§oℹ︎ Celles-ci seront automatiquement placées lorsque la course commencera, et leurs passagers téléportés dedans. Vous pouvez toujours faire cela plus tard!"
+      start: "commencer"
+      later: "pas maintenant"
 
 car:
   #Errors
@@ -88,29 +137,29 @@ car:
   #Messages/titles shown in the car creation process
   create:
     1:
-      title: "§aDéfinir le spawn"
-      subtitle: "§e%check% §apour valider"
-      message: "§aCasse le bloc du spawn, puis écris %check%."
+      title: "§3Définir le spawn"
+      subtitle: "§3%check% §bpour valider"
+      message: "§bCasse le bloc du spawn, puis écris §3%check%§b."
       selected: "§bBloc sélectionné, écris §3%check%§b."
       noSelection: "§cSélectionne un bloc d'abord !"
       check: "done"
       completed: "§aPosition enregistrée."
 
     2:
-      title: "§aNom du propriétaire"
-      subtitle: "§eEntre le nom du propriétaire dans le chat"
-      message: "§aÉcris le nom du propriétaire dans le chat."
+      title: "§3Nom du propriétaire"
+      subtitle: "§bEntre le nom du propriétaire dans le chat"
+      message: "§bÉcris le nom du propriétaire dans le chat."
       completed: "§aPropriétaire : %owner%."
 
     3:
-      title: "§aChoisir le bateau"
-      subtitle: "§e%check% §apour valider"
-      message: "§aTiens un bateau puis écris §e%check%§a."
+      title: "§3Choisir le bateau"
+      subtitle: "§3%check% §bpour valider"
+      message: "§bTiens un bateau puis écris §3%check%§b."
       invalidItem: "§cTiens un bateau en main !"
       check: "done"
 
     completed:
-      message: "§aLa voiture a été sauvegardée!"
+      message: "§bLa voiture a été sauvegardée!"
       title: "§2§lTerminé !"
       subtitle: "§aVoiture sauvegardée"
 

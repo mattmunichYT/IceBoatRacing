@@ -40,8 +40,8 @@ public class CheckpointCommand implements Listener, BasicCommand {
         this.main = main;
     }
 
-    private static final Map<Player, Location> pos1 = new HashMap<>();
-    private static final Map<Player, Location> pos2 = new HashMap<>();
+    public static final Map<Player, Location> pos1 = new HashMap<>();
+    public static final Map<Player, Location> pos2 = new HashMap<>();
 
     @EventHandler
     public void onSelect(PlayerInteractEvent event) {
@@ -96,38 +96,32 @@ public class CheckpointCommand implements Listener, BasicCommand {
             }
 
             // Check if creating a SECTOR
-            if (args.length >= 4 && args[2].equalsIgnoreCase("SECTOR")) {
-                int sectorIndex;
-                try {
-                    sectorIndex = Integer.parseInt(args[3]);
-                } catch (Exception e) {
-                    player.sendMessage(getMessage("error.invalidNumber"));
+            if (args.length >= 3 && args[2].equalsIgnoreCase("SECTOR")) {
+                Checkpoint checkpoint = checkpointManager.saveSectorCheckpoint(race, l1, l2);
+                if(checkpoint == null) {
+                    player.sendMessage(getMessage("error.unknown"));
                     return;
                 }
-
-                int nextIndex = race.getCheckpoints().stream()
-                        .mapToInt(Checkpoint::getIndex)
-                        .max()
-                        .orElse(-1) + 1;
-
-                checkpointManager.saveSectorCheckpoint(race, sectorIndex, nextIndex, l1, l2);
-                player.sendMessage(getMessage("checkpoint.sectorSaved",formatArguments("index", String.valueOf(sectorIndex))));
+                player.sendMessage(getMessage("checkpoint.sectorSaved",
+                        formatArguments("sectorID", "" + checkpoint.getSectorID())
+                ));
                 return;
             }
 
             // Otherwise normal checkpoint
-            int nextIndex = race.getCheckpoints().stream()
-                    .mapToInt(Checkpoint::getIndex)
-                    .max()
-                    .orElse(-1) + 1;
-
-            if(nextIndex == 1) {
-                checkpointManager.saveCheckpoint(race, nextIndex, l1, l2, Checkpoint.Type.START_FINISH);
+            if(race.getCheckpoints().isEmpty()) {
+                checkpointManager.saveCheckpoint(race, l1, l2, Checkpoint.Type.START_FINISH);
                 player.sendMessage(getMessage("checkpoint.startLineSaved"));
             }
 
-            checkpointManager.saveCheckpoint(race, nextIndex, l1, l2, Checkpoint.Type.NORMAL);
-            player.sendMessage(getMessage("checkpoint.saved",formatArguments("index", String.valueOf(nextIndex))));
+            Checkpoint checkpoint = checkpointManager.saveCheckpoint(race, l1, l2, Checkpoint.Type.NORMAL);
+            if(checkpoint == null) {
+                player.sendMessage(getMessage("error.unknown"));
+                return;
+            }
+            player.sendMessage(getMessage("checkpoint.saved",
+                    formatArguments("id", String.valueOf(checkpoint.getId()))
+            ));
 
         } else if (args.length == 2 && args[0].equalsIgnoreCase("setFinish")) {
 
@@ -149,12 +143,13 @@ public class CheckpointCommand implements Listener, BasicCommand {
                 return;
             }
 
-            int nextIndex = checkpointManager.getAllNoRaceInfo().stream()
-                    .mapToInt(Checkpoint::getIndex)
-                    .max()
-                    .orElse(-1) + 1;
+            Checkpoint checkpoint = checkpointManager.saveCheckpoint(race, l1, l2, Checkpoint.Type.START_FINISH);
 
-            checkpointManager.saveCheckpoint(race, nextIndex, l1, l2, Checkpoint.Type.START_FINISH);
+            if(checkpoint == null) {
+                player.sendMessage(getMessage("error.unknown"));
+                return;
+            }
+
             player.sendMessage(getMessage("checkpoint.finishLineSaved"));
 
 
@@ -170,7 +165,7 @@ public class CheckpointCommand implements Listener, BasicCommand {
             }
 
             checkpointManager.remove(race, checkpoint);
-            player.sendMessage(Messages.getMessage("checkpoint.removed",formatArguments("index","" + checkpoint.getIndex())));
+            player.sendMessage(Messages.getMessage("checkpoint.removed",formatArguments("index","" + checkpoint.getId())));
         } else if (args.length == 3 && args[0].equalsIgnoreCase("remove")) {
 
             int checkpointNum;
@@ -195,8 +190,14 @@ public class CheckpointCommand implements Listener, BasicCommand {
                 return;
             }
 
-            checkpointManager.remove(race, checkpoint);
-            player.sendMessage(Messages.getMessage("checkpoint.removed",formatArguments("index","" + checkpointNum)));
+            boolean success = checkpointManager.remove(race, checkpoint);
+            if (!success) {
+                player.sendMessage(getMessage("error.unknown"));
+                return;
+            }
+            player.sendMessage(Messages.getMessage("checkpoint.removed",
+                    formatArguments("id","" + checkpointNum)
+            ));
         } else if (args.length <= 2 && args[0].equalsIgnoreCase("list")) {
             //Generated by Claude
             //TODO check if it works
@@ -255,14 +256,14 @@ public class CheckpointCommand implements Listener, BasicCommand {
 
                 Component removeText = Component.text("[x]")
                         .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND,
-                                ClickEvent.Payload.string("/checkpoint remove " + checkpoint.getIndex() + " " + race.getName())));
+                                ClickEvent.Payload.string("/checkpoint remove " + checkpoint.getId() + " " + race.getName())));
 
                 Component tpText = Component.text("[→]")
                         .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND,
                                 ClickEvent.Payload.string("/tp " + min.getBlockX() + " " + min.getBlockY() + " " + min.getBlockZ())));
 
                 player.sendMessage(c(
-                        "§e  #" + checkpoint.getIndex()
+                        "§e  #" + checkpoint.getId()
                                 + " §7[" + min.getWorld().getName() + "]"
                                 + " §fX:" + min.getBlockX() + " Y:" + min.getBlockY() + " Z:" + min.getBlockZ()
                                 + " §7→"
@@ -312,15 +313,19 @@ public class CheckpointCommand implements Listener, BasicCommand {
                 return;
             }
 
+            //Remove data
             race.racers.remove(target.getUniqueId());
+            //Replace with some new clear data
             race.racers.put(target.getUniqueId(), new RaceData(target));
+
+            //Reset player's data on live scoreboard
             main.liveSidebar.getScore(target.getName()).resetScore();
             player.sendMessage(Messages.getMessage("checkpoint.resetPlayerScore",formatArguments("player",player.getName())));
         } else {
             player.sendMessage(c("§eCheckpoint commands:"));
             player.sendMessage(c("§7- §f/checkpoint list"));
             player.sendMessage(c("§7- §f/checkpoint count"));
-            player.sendMessage(c("§7- §f/checkpoint create <raceName> [\"SECTOR\"] [sectorIndex]"));
+            player.sendMessage(c("§7- §f/checkpoint create <raceName> [\"SECTOR\"]"));
             player.sendMessage(c("§7- §f/checkpoint setFinish <raceName>"));
             player.sendMessage(c("§7- §f/checkpoint remove [raceName] [checkpointID]"));
             player.sendMessage(c("§7- §f/checkpoint normalize [raceName]"));
@@ -355,8 +360,6 @@ public class CheckpointCommand implements Listener, BasicCommand {
                     for (Race race : raceManager.races) suggestions.add(race.getName());
                 } else if (args.length == 3) {
                     suggestions.add("SECTOR");
-                } else if (args.length == 4 && args[2].equalsIgnoreCase("SECTOR")) {
-                    suggestions.add("0");
                 }
             }
             case "setfinish", "normalize" -> {
