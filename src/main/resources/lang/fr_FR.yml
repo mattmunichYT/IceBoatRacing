@@ -73,7 +73,9 @@ race:
 
   select: "§bSélectionnez une course:"
   create:
+    confirm: "confirmer" #Confirm race deletion
     cancel: "annuler" #The message to send to cancel the race creation process
+    confirmCancel: "§eVoulez-vous vraiment annuler la création de la course?\nUtilisez §c%confirm%§e pour confirmer et §a%cancel%§e pour annuler la suppression."
     cancelled: "§bLa création de la course a été annulée." #When you cancel the creation
     #Naming the race
     1:
@@ -124,6 +126,40 @@ race:
       message: "§bDéfinissez les points par lesquels voitures des participant de la course. \n-> Entrez §3%start%§b pour commencer ou §3%later%§b pour configurer cela plus tard.\n§8§oℹ︎ Celles-ci seront automatiquement placées lorsque la course commencera, et leurs passagers téléportés dedans. Vous pouvez toujours faire cela plus tard!"
       start: "commencer"
       later: "pas maintenant"
+    5:
+      title: "§3Création voitures"
+      subtitle: "§bLa création va commencer..."
+      message: "§bLe processus de création des voitures va commencer..."
+      checkpointCreation:
+        define: "definir"
+        defineSector: "definir secteur"
+        defineFinish: "definir fin"
+        help: "aide"
+        done: "sauvegarder"
+      feedback:
+        startDefined:
+          title: "§3Départ défini"
+          subtitle: "§bLa ligne de §3départ§b a été définie"
+        finishDefined:
+          title: "§3Arrivée définie"
+          subtitle: "§bLa ligne d'§3arrivée§b a été définie"
+        checkpointDefined:
+          title: "§3Checkpoint défini"
+          subtitle: "§bLe checkpoint §3%checkpointID%§b a été défini"
+        sectorDefined:
+          title: "§3Secteur défini"
+          subtitle: "§bLe secteur §3%sectorID%§b a été défini"
+        done:
+          title: "§2Terminé"
+          subtitle: "§aCheckpoints sauvegardés!"
+        error:
+          #Will be shown if the player tries to define a sector first (before defining start line)
+          defineStartLineFirst: "§cCommencez par définir la ligne de départ avant de faire cela."
+
+    done:
+      title: "§3Course sauvegardée !"
+      subtitle: "§bLa course a été créée avec succès"
+      message: "§aLa course a été sauvegardée avec succès !\n§b-> §3/checkpoint create§b pour ajouter des checkpoints à la course\n§b-> §3/car create§b pour enregistrer des voitures\n§b-> §3/race info <nomCourse>§b pour consulter les informations de la course"
 
 car:
   #Errors

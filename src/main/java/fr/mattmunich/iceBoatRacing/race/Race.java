@@ -3,7 +3,6 @@ package fr.mattmunich.iceBoatRacing.race;
 import fr.mattmunich.iceBoatRacing.cars.Car;
 import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.Checkpoint;
 import org.bukkit.World;
-import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.util.*;
 
@@ -67,5 +66,17 @@ public class Race {
 
     public boolean removeCar(Car car) {
         return cars.remove(car);
+    }
+
+    public boolean isStarting() {
+        return startingRace;
+    }
+
+    public boolean isPreparing() {
+        return preparingRace;
+    }
+
+    public boolean isHasStarted() {
+        return hasRaceStarted;
     }
 }

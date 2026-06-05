@@ -51,6 +51,12 @@ public class RaceManager {
     }
 
     public void loadAllRaces() {
+        if(races!=null) {
+            for (Race race : races) {
+                endRace(race);
+            }
+            races.clear();
+        }
         File racesFolder = new File(main.getDataFolder(), "races");
         if (!racesFolder.exists()) return;
 
@@ -101,6 +107,16 @@ public class RaceManager {
         } catch (IOException e) {
             main.err("Couldn't save race " + race.getName(),e);
         }
+    }
+
+    public boolean deleteRace(Race race) {
+        main.log("Deleting race " + race.getName());
+
+        File raceFile = new File(main.getDataFolder(), "races/" + race.getName().toLowerCase().replace(" ","_") + ".yml");
+        boolean deleted = raceFile.delete();
+
+        if(deleted) main.log("Race " + race.getName() + " has been deleted");
+        return deleted;
     }
 
     public YamlConfiguration getRaceConfig(Race race) {

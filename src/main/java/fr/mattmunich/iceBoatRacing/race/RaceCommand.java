@@ -5,6 +5,7 @@ import fr.mattmunich.iceBoatRacing.Messages;
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -12,12 +13,12 @@ import java.util.Collection;
 import java.util.List;
 
 public class RaceCommand implements BasicCommand {
-    private final Main main;
     private final RaceManager raceManager;
+    private final RaceCreator raceCreator;
 
-    public RaceCommand(Main main, RaceManager raceManager) {
-        this.main = main;
+    public RaceCommand(RaceManager raceManager, RaceCreator raceCreator) {
         this.raceManager = raceManager;
+        this.raceCreator = raceCreator;
     }
 
     @Override
@@ -48,6 +49,12 @@ public class RaceCommand implements BasicCommand {
                 return;
             }
             raceManager.togglePrepareRace(source.getSender(),race);
+        } else if (args.length == 1 && args[0].equalsIgnoreCase("create")) {
+            if(!(source.getSender() instanceof Player p)) {
+                source.getSender().sendMessage(Messages.getMessage("error.playerToExecuteCommand"));
+                return;
+            }
+            raceCreator.createRace(p);
         } else {
             source.getSender().sendMessage(Messages.getMessage("race.help"));
         }

@@ -35,12 +35,13 @@ public class IBRCommand implements BasicCommand {
 
             // Reload in-memory data from the freshly loaded config
             Bukkit.getScheduler().runTask(main, () -> {
-                main.checkpointManager.loadCheckpoints();
-                main.carManager.loadCars();
+                main.raceManager.saveAllRaces();
+                main.raceManager.loadAllRaces();
+                main.registerScoreboard();
+                s.sendMessage(getMessage("prefix").append(c(" §bDone reloading!")));
             });
 
-            main.registerScoreboard();
-            s.sendMessage(getMessage("prefix").append(c(" §bDone reloading!")));
+
         } else if (args.length == 1 && args[0].equalsIgnoreCase("info")) {
             s.sendMessage(
                     getStringMessage("prefix")
