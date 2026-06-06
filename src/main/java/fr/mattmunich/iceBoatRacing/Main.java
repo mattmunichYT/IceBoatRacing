@@ -10,10 +10,8 @@ import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.CheckpointManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import net.luckperms.api.LuckPerms;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.*;
 
@@ -28,7 +26,6 @@ public final class Main extends JavaPlugin {
     Messages messages;
     RaceManager raceManager;
     RaceCreator raceCreator;
-    public LuckPerms luckPerms;
 
     public Map<UUID, RaceData> racers = new HashMap<>();
     public Objective liveSidebar;
@@ -45,7 +42,7 @@ public final class Main extends JavaPlugin {
 
         loadMessages();
 
-        loadRaceManager();
+        loadManagers();
 
         loadRaceCreator();
 
@@ -57,7 +54,6 @@ public final class Main extends JavaPlugin {
 
         log("Done enabling plugin!");
 
-        loadLuckPerms();
     }
 
     private void registerListeners() {
@@ -87,10 +83,23 @@ public final class Main extends JavaPlugin {
         log("Done loading messages!");
     }
 
-    private void loadRaceManager() {
-        log("Loading race manager...");
+    private void loadManagers() {
+        log("Loading managers...");
+        //Preload car and checkpoint manager for racemanager
+        carManager = new CarManager(this);
+        checkpointManager = new CheckpointManager(this);
+
+        //Load race manager
         raceManager = new RaceManager(this,carManager, checkpointManager);
-        log("Done loading race manager!");
+        log("Done loading managers!");
+
+        //Initalise race manager in car and checkpoint manager
+        carManager.setRaceManager(raceManager);
+        checkpointManager.setRaceManager(raceManager);
+        log("Initiazed RaceManager for Car and Checkpoint managers");
+
+        //Load races after CarManager and CheckpointManager have RaceManager set.
+        raceManager.loadAllRaces();
     }
 
     private void loadRaceCreator() {
@@ -132,24 +141,9 @@ public final class Main extends JavaPlugin {
         registerCommand("iceboatracing", "Command to manage the plugin", List.of("ibr"), new IBRCommand(this));
         registerCommand("checkpoint", "Command to manage checkpoints", new CheckpointCommand(checkpointManager,raceManager, this));
         registerCommand("car", "Command to manage cars", new CarCommand(this,carManager,raceManager));
-        registerCommand("race", "Command to manage the race", new RaceCommand(raceManager,raceCreator));
+        registerCommand("race", "Command to manage the race", new RaceCommand(this, raceManager,raceCreator));
         log("Done registering commands!");
     }
-
-    private void loadLuckPerms() {
-        Bukkit.getScheduler().runTask(this, () -> {
-            log("Loading LuckPerms dependency");
-            RegisteredServiceProvider<LuckPerms> provider = Bukkit.getServicesManager().getRegistration(LuckPerms.class);
-            if (provider != null) {
-                luckPerms = provider.getProvider();
-                log("Done registering LuckPerms dependency!");
-            }else {
-                getLogger().warning("LuckPerms provider was null!");
-            }
-        });
-    }
-
-
 
     @Override
     public void onDisable() {

@@ -4,19 +4,24 @@ import fr.mattmunich.iceBoatRacing.Main;
 import fr.mattmunich.iceBoatRacing.Messages;
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class RaceCommand implements BasicCommand {
+    private final Main main;
     private final RaceManager raceManager;
     private final RaceCreator raceCreator;
 
-    public RaceCommand(RaceManager raceManager, RaceCreator raceCreator) {
+    public RaceCommand(Main main, RaceManager raceManager, RaceCreator raceCreator) {
+        this.main = main;
         this.raceManager = raceManager;
         this.raceCreator = raceCreator;
     }
@@ -39,9 +44,8 @@ public class RaceCommand implements BasicCommand {
                 source.getSender().sendMessage(Messages.getMessage("race.notFound"));
                 return;
             }
-            source.getSender().sendMessage(Messages.getMessage("race.end", Messages.formatArguments("name", race.getName())));
             raceManager.endRace(race);
-        } else if (args.length==1 && args[0].equalsIgnoreCase("prepare")) {
+        } else if (args.length==2 && args[0].equalsIgnoreCase("prepare")) {
             String raceName = args[1];
             Race race = raceManager.getRace(raceName);
             if(race == null) {
@@ -55,6 +59,18 @@ public class RaceCommand implements BasicCommand {
                 return;
             }
             raceCreator.createRace(p);
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("delete")) {
+            String raceName = args[1];
+            Race race = raceManager.getRace(raceName);
+            if(race == null) {
+                source.getSender().sendMessage(Messages.getMessage("race.notFound"));
+                return;
+            }
+            Bukkit.getScheduler().runTask(main, () -> {
+                boolean success = raceManager.deleteRace(race);
+                if (success) source.getSender().sendMessage(Messages.getMessage("race.deleted", Messages.formatArguments("name", raceName)));
+                else source.getSender().sendMessage(Messages.getMessage("error.unknown"));
+            });
         } else {
             source.getSender().sendMessage(Messages.getMessage("race.help"));
         }
@@ -62,7 +78,37 @@ public class RaceCommand implements BasicCommand {
 
     @Override
     public @NonNull Collection<String> suggest(@NonNull CommandSourceStack commandSourceStack, String @NonNull [] args) {
-        return List.of("start","end","prepare");
+        List<Race> races =  raceManager.getRaces();
+        List<String> raceList;
+        if(!races.isEmpty()) {
+            raceList = new ArrayList<>();
+            races.forEach((race) -> raceList.add(race.getName()));
+        } else raceList = List.of("§oNo races defined");
+
+        List<String> baseList = List.of("start","prepare","end","create","delete");
+        if(args.length==0) {
+            return baseList;
+        } else if(args.length==1) {
+            List<String> suggestions = new ArrayList<>();
+            baseList.forEach((suggestion) -> {
+                if(args[0] != null && suggestion.contains(args[0])) {
+                    suggestions.add(suggestion);
+                }
+            });
+            return suggestions;
+        } else if(args.length==2
+                && (
+                    args[0].equalsIgnoreCase("start")
+                    || args[0].equalsIgnoreCase("prepare")
+                    || args[0].equalsIgnoreCase("end")
+                    || args[0].equalsIgnoreCase("delete")
+            )
+        ) {
+
+            return raceList;
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     @Override

@@ -23,10 +23,13 @@ import static fr.mattmunich.iceBoatRacing.Main.s;
 
 public class CarManager {
     private final Main main;
-    private final RaceManager raceManager;
+    private RaceManager raceManager;
 
-    public CarManager(Main main, RaceManager raceManager) {
+    public CarManager(Main main) {
         this.main = main;
+    }
+
+    public void setRaceManager(RaceManager raceManager) {
         this.raceManager = raceManager;
     }
 
@@ -105,7 +108,7 @@ public class CarManager {
 
         int id = count(race);
         String path = "cars." + id;
-        String customName = s(boatItem.getItemMeta().customName()).isBlank() ? "Race car" : s(boatItem.getItemMeta().customName());
+        String customName = boatItem.getItemMeta().customName() == null ? "Race car" : s(boatItem.getItemMeta().customName());
 
         YamlConfiguration config = raceManager.getRaceConfig(race);
 

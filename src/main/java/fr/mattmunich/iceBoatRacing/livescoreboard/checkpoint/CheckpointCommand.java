@@ -26,6 +26,7 @@ import java.util.*;
 
 import static fr.mattmunich.iceBoatRacing.Main.c;
 import static fr.mattmunich.iceBoatRacing.Messages.*;
+import static fr.mattmunich.iceBoatRacing.race.RaceCreator.creatingRace;
 
 public class CheckpointCommand implements Listener, BasicCommand {
 
@@ -47,25 +48,25 @@ public class CheckpointCommand implements Listener, BasicCommand {
     public void onSelect(PlayerInteractEvent event) {
         if (event.getItem() == null) return;
         if (event.getItem().getType() != Material.WOODEN_SHOVEL) return;
+        if(creatingRace.get(event.getPlayer()) != null && creatingRace.get(event.getPlayer()) == 3) return;
 
         Player p = event.getPlayer();
 
         if(!p.hasPermission("iceboatracing.command.checkpoint")) return;
-        
-        if(event.getClickedBlock() == null) return;
+
+        Block clicked = event.getClickedBlock();
+
+        if(clicked == null) return;
 
         if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
-            Block clicked = event.getClickedBlock();
-            assert clicked != null;
             pos1.put(p, clicked.getLocation());
             p.sendMessage(getMessage("checkpoint.pos.1",formatArguments("x",""+clicked.getX(),"y",""+clicked.getY(),"z",""+clicked.getZ())));
             event.setCancelled(true);
         }
 
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            assert event.getClickedBlock() != null;
-            pos2.put(p, event.getClickedBlock().getLocation());
-            p.sendMessage(getMessage("checkpoint.pos.2"));
+            pos2.put(p, clicked.getLocation());
+            p.sendMessage(getMessage("checkpoint.pos.2",formatArguments("x",""+clicked.getX(),"y",""+clicked.getY(),"z",""+clicked.getZ())));
             event.setCancelled(true);
         }
     }

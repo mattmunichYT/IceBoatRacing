@@ -90,15 +90,14 @@ public class Messages {
     }
 
     public static String getStringMessage(String identifier) {
-
-        Component msg = getMessage(identifier);
-
-        if (msg instanceof TextComponent text) {
-            return text.content();
+        if (langConfig == null || !langConfig.contains(identifier)) {
+            main.getLogger().severe("Missing message string: " + identifier + " in lang/" + currentLang + ".yml");
+            return "MESSAGE NOT FOUND";
         }
 
-        return "MESSAGE NOT FOUND";
+        return langConfig.getString(identifier);
     }
+
 
     /**
      * Formats placeholders like %player%
@@ -148,6 +147,9 @@ public class Messages {
         return !identifier.contains("noPrefix")
                 && !identifier.equals("prefix")
                 && !identifier.contains("title")
-                && !identifier.contains("check");
+                && !identifier.contains("check")
+                && !identifier.contains("start")
+                && !identifier.contains("later")
+                && !identifier.contains("checkpointCreation");
     }
 }

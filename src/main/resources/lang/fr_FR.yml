@@ -54,12 +54,13 @@ checkpoint:
 race:
   #Will be displayed to every player
   start: "§aCourse %name% démarre..." #Displayed when '/race start <name>' is used
-  notFound: "§Course non trouvée" #Displayed when the inputted race is invalid
+  notFound: "§cCourse non trouvée." #Displayed when the inputted race is invalid
   end: "§cLa course est terminée !" #Displayed when '/race end' is used
 
   #Only displayed to the command executor
   prepare: "§aLes joueurs seront placés automatiquement." #Displayed when '/race prepare' is used (and prepare toggled OFF)
   cancelPrepare: "§aMode préparation désactivé." #Displayed when '/race prepare' is used (and prepare toggled ON)
+  deleted: "§aLa course %name% a été supprimée."#Displayed when '/race delete' is used and is successful
 
   #In race events
   onCompleteLap:
@@ -82,14 +83,18 @@ race:
       title: "§3Nom de la course"
       subtitle: "§bEntrez le §3nom§b dans le chat"
       message: "§bCommencez par entrer le nom de la course ci-dessous (dans le chat)."
+      completed: "§bLe nom de la course a été défini à §3%name%"
 
-    #Define the checkpoints
+    #Define the checkpoints?
     2:
       title: "§3Checkpoints?"
       subtitle: "§bDéfinir les checkpoints ?"
-      message: "§bDéfinissez les points par lesquels passe la course. \n-> Entrez §3%start%§b pour commencer ou §3%later%§b pour configurer cela plus tard.\n§8§oℹ︎ Ceux-ci seront utilisés pour mettre a jour le score en direct des participants. Vous pouvez toujours faire cela plus tard!"
       start: "commencer"
       later: "pas maintenant"
+      message: "§bDéfinissez les points par lesquels passe la course. \n-> Entrez §3%start%§b pour commencer ou §3%later%§b pour configurer cela plus tard.\n§8§oℹ Ceux-ci seront utilisés pour mettre a jour le score en direct des participants. Vous pouvez toujours faire cela plus tard!"
+
+
+    #Checkpoints definition process
     3:
       title: "§3Création checkpoints"
       subtitle: "§bCommencez à définir les checkpoints"

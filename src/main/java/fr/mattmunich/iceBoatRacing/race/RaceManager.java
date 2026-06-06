@@ -18,6 +18,7 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -29,16 +30,12 @@ public class RaceManager {
     private final Main main;
     private final CarManager carManager;
     private final CheckpointManager checkpointManager;
-    public List<Race> races;
+    public List<Race> races = new ArrayList<>();
 
     public RaceManager(Main main, CarManager carManager, CheckpointManager checkpointManager) {
         this.main = main;
         this.carManager = carManager;
         this.checkpointManager = checkpointManager;
-
-        main.log("Loading races...");
-        loadAllRaces();
-        main.log("Done loading races!");
     }
 
     public Race getRace(String raceName) {
@@ -50,7 +47,14 @@ public class RaceManager {
         return null;
     }
 
+    public List<Race> getRaces() {
+        return races;
+    }
+
     public void loadAllRaces() {
+        main.log("Loading all races...");
+        int loadedRaces = 0;
+
         if(races!=null) {
             for (Race race : races) {
                 endRace(race);
@@ -67,6 +71,12 @@ public class RaceManager {
             }
             YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
             String name = config.getString("name");
+
+            if(name == null) {
+                main.warn("Ignored " + file.getName() + "because it didn't contain any name for the race.");
+                continue;
+            }
+
             main.log("Loading race " + name);
             World world = Bukkit.getWorld(Objects.requireNonNull(config.getString("world")));
             if(world == null) {
@@ -80,40 +90,78 @@ public class RaceManager {
             assert races != null;
             races.add(race);
             main.log("Race " + name + " has been loaded");
+            loadedRaces++;
         }
+        main.log("Loaded " + loadedRaces + " race(s)!");
     }
 
     public void saveAllRaces() {
+        if(races==null || races.isEmpty()) return;
         for (Race race : races) {
             saveRace(race);
         }
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public void saveRace(Race race) {
-        main.log("Saving race " + race.getName());
+    public void createRace(Race race) {
+        main.log("Creating race " + race.getName());
         File raceFile = new File(main.getDataFolder(), "races/" + race.getName().toLowerCase().replace(" ","_") + ".yml");
         raceFile.getParentFile().mkdirs();
 
         YamlConfiguration config = new YamlConfiguration();
         config.set("name", race.getName());
         config.set("world", race.getWorld().getName());
-        carManager.loadCars(race);
-        checkpointManager.loadRaceCheckpoints(race);
 
         try {
             config.save(raceFile);
-            main.log("Race  " + race.getName() + " has been saved");
+            main.log("Race " + race.getName() + " has been saved");
+        } catch (IOException e) {
+            main.err("Couldn't create race " + race.getName(),e);
+        }
+
+        //Update race in race list
+        races.add(race);
+    }
+
+    public boolean saveRace(Race race) {
+        main.log("Saving race " + race.getName());
+        File raceFile = new File(main.getDataFolder(), "races/" + race.getName().toLowerCase().replace(" ","_") + ".yml");
+        raceFile.getParentFile().mkdirs();
+
+        YamlConfiguration config;
+        try {
+            config = YamlConfiguration.loadConfiguration(raceFile);
+        } catch (Exception e) {
+            main.err("Couldn't save race " + race.getName(),e);
+            return false;
+        }
+
+        try {
+            config.save(raceFile);
+            main.log("Race " + race.getName() + " has been saved");
         } catch (IOException e) {
             main.err("Couldn't save race " + race.getName(),e);
+            return false;
         }
+
+        //More like update (not really load)
+        carManager.loadCars(race);
+        checkpointManager.loadRaceCheckpoints(race);
+
+        //Update race in race list
+        races.remove(race);
+        races.add(race);
+        return true;
     }
 
     public boolean deleteRace(Race race) {
         main.log("Deleting race " + race.getName());
+        endRace(race);
 
         File raceFile = new File(main.getDataFolder(), "races/" + race.getName().toLowerCase().replace(" ","_") + ".yml");
         boolean deleted = raceFile.delete();
+
+        races.remove(race);
 
         if(deleted) main.log("Race " + race.getName() + " has been deleted");
         return deleted;
@@ -285,6 +333,8 @@ public class RaceManager {
     }
 
     public void endRace(Race race) {
+        if(!race.hasStarted()) return;
+
         Bukkit.broadcast(Messages.getMessage("race.end", Messages.formatArguments("name", race.getName())));
         for (Car car : race.getCars()) {
             Player owner = Bukkit.getPlayer(car.getOwner());

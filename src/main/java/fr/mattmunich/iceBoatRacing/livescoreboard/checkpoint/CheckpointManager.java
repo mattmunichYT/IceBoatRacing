@@ -14,10 +14,13 @@ import java.util.*;
 public class CheckpointManager {
 
     private final Main main;
-    private final RaceManager raceManager;
+    private  RaceManager raceManager;
 
-    public CheckpointManager(Main main, RaceManager raceManager) {
+    public CheckpointManager(Main main) {
         this.main = main;
+    }
+
+    public void setRaceManager(RaceManager raceManager) {
         this.raceManager = raceManager;
     }
 

@@ -76,7 +76,7 @@ public class Race {
         return preparingRace;
     }
 
-    public boolean isHasStarted() {
+    public boolean hasStarted() {
         return hasRaceStarted;
     }
 }

@@ -31,33 +31,35 @@ public class Connection implements Listener {
     public void onJoin(PlayerJoinEvent e) {
         Player p = e.getPlayer();
 
-        for(Race race : raceManager.races) {
-            if(race.isPreparing() && race.racers.containsKey(p.getUniqueId())) {
-                final Car[] car = new Car[1];
-                race.getCars().forEach(c -> {
-                    if(c.getOwner().equals(p.getUniqueId())) {
-                        car[0] = c;
+        if (raceManager.races !=null && !raceManager.races.isEmpty()) {
+            for(Race race : raceManager.races) {
+                if(race.isPreparing() && race.racers.containsKey(p.getUniqueId())) {
+                    final Car[] car = new Car[1];
+                    race.getCars().forEach(c -> {
+                        if(c.getOwner().equals(p.getUniqueId())) {
+                            car[0] = c;
+                        }
+                    });
+
+                    main.racers.get(p.getUniqueId()).car = car[0];
+                    if(main.preparingRace) {
+                        //TP to spawn of the world -- else player won't be in the car
+                        p.teleport(car[0].getStartingLocation().getWorld().getSpawnLocation());
+
+                        carManager.spawnCar(car[0],p);
+                        main.racers.put(p.getUniqueId(),new RaceData(p));
+                        race.racers.get(p.getUniqueId()).car = car[0];
+                        race.racers.get(p.getUniqueId()).checkpointIndex = -1;
+                        race.racers.get(p.getUniqueId()).lapCount = 0;
+                        race.racers.get(p.getUniqueId()).lapTime = 0;
+                        race.racers.get(p.getUniqueId()).startTime = 0;
+                        race.racers.get(p.getUniqueId()).race = race;
+                        race.racers.get(p.getUniqueId()).player = p;
+
+                        main.liveSidebar.getScore(p.getName()).resetScore();
                     }
-                });
 
-                main.racers.get(p.getUniqueId()).car = car[0];
-                if(main.preparingRace) {
-                    //TP to spawn of the world -- else player won't be in the car
-                    p.teleport(car[0].getStartingLocation().getWorld().getSpawnLocation());
-
-                    carManager.spawnCar(car[0],p);
-                    main.racers.put(p.getUniqueId(),new RaceData(p));
-                    race.racers.get(p.getUniqueId()).car = car[0];
-                    race.racers.get(p.getUniqueId()).checkpointIndex = -1;
-                    race.racers.get(p.getUniqueId()).lapCount = 0;
-                    race.racers.get(p.getUniqueId()).lapTime = 0;
-                    race.racers.get(p.getUniqueId()).startTime = 0;
-                    race.racers.get(p.getUniqueId()).race = race;
-                    race.racers.get(p.getUniqueId()).player = p;
-
-                    main.liveSidebar.getScore(p.getName()).resetScore();
                 }
-
             }
         }
 
