@@ -5,7 +5,7 @@ import org.bukkit.entity.Player;
 
 public class RaceData {
     public Player player;
-    public int checkpointIndex = -1;
+    public int checkpointIndex = 0;
     public int lapCount = -1;
     public Car car;
     public long startTime;

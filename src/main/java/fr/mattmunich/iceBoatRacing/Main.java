@@ -62,7 +62,7 @@ public final class Main extends JavaPlugin {
         pm.registerEvents(new CarListener(this),this);
         pm.registerEvents(new Connection(this,carManager,raceManager),this);
         pm.registerEvents(new CheckpointCommand(checkpointManager,raceManager, this),this);
-        pm.registerEvents(new RaceListener(this,checkpointManager),this);
+        pm.registerEvents(new RaceListener(this,checkpointManager,raceManager),this);
         pm.registerEvents(new RaceCreator(this,raceManager,checkpointManager,carManager), this);
     }
 
@@ -162,10 +162,21 @@ public final class Main extends JavaPlugin {
     public void severe(String message) { getLogger().severe("[IceBoatRacing] " + message); }
 
     public static Component c(String message) {
-        return LegacyComponentSerializer.legacySection().deserialize(message);
+        try {
+            return LegacyComponentSerializer.legacySection().deserialize(message);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
-    public static String s(Component component) { return ((TextComponent) component).content(); }
+    public static String s(Component component) {
+        try {
+            return ((TextComponent) component).content();
+        } catch (Exception e) {
+            return null;
+        }
+
+    }
 
     public static String formatTime(long durationMs) {
         long minutes = durationMs / 60000;

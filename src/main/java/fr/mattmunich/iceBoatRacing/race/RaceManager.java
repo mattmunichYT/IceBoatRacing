@@ -31,6 +31,7 @@ public class RaceManager {
     private final CarManager carManager;
     private final CheckpointManager checkpointManager;
     public List<Race> races = new ArrayList<>();
+    public List<Race> activeRaces = new ArrayList<>();
 
     public RaceManager(Main main, CarManager carManager, CheckpointManager checkpointManager) {
         this.main = main;
@@ -151,6 +152,11 @@ public class RaceManager {
         //Update race in race list
         races.remove(race);
         races.add(race);
+
+        if(activeRaces.contains(race)) {
+            activeRaces.remove(race);
+            activeRaces.add(race);
+        }
         return true;
     }
 
@@ -205,6 +211,7 @@ public class RaceManager {
         }
 
         race.startingRace = true;
+        activeRaces.add(race);
         if(!race.preparingRace) {
             for (Car car : race.getCars()) {
                 Player owner = Bukkit.getPlayer(car.getOwner());
@@ -269,7 +276,7 @@ public class RaceManager {
                 }
             }
 
-            Title title = Title.title(c(titleContent),c(""));
+            Title title = Title.title(Objects.requireNonNull(c(titleContent)), Objects.requireNonNull(c("")));
 
 
             for(UUID racer : race.racers.keySet()) {
@@ -300,6 +307,7 @@ public class RaceManager {
     public void prepareRace(CommandSender sender, Race race) {
         sender.sendMessage(Messages.getMessage("race.prepare", Messages.formatArguments("name", race.getName())));
         race.preparingRace = true;
+        activeRaces.add(race);
         for (Car car : race.getCars()) {
             Player owner = Bukkit.getPlayer(car.getOwner());
             if (owner == null) continue;
@@ -321,6 +329,7 @@ public class RaceManager {
     public void cancelPrepareRace(CommandSender sender, Race race) {
         sender.sendMessage(Messages.getMessage("race.cancelPrepare", Messages.formatArguments("name", race.getName())));
         race.preparingRace = false;
+        activeRaces.remove(race);
         for (Car car : race.getCars()) {
             Player owner = Bukkit.getPlayer(car.getOwner());
             if (owner == null) continue;
@@ -334,6 +343,7 @@ public class RaceManager {
 
     public void endRace(Race race) {
         if(!race.hasStarted()) return;
+        activeRaces.remove(race);
 
         Bukkit.broadcast(Messages.getMessage("race.end", Messages.formatArguments("name", race.getName())));
         for (Car car : race.getCars()) {

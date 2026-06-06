@@ -13,6 +13,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 
+import java.util.Objects;
+
 import static fr.mattmunich.iceBoatRacing.Main.c;
 import static fr.mattmunich.iceBoatRacing.Main.formatTime;
 import static fr.mattmunich.iceBoatRacing.Messages.formatArguments;
@@ -22,10 +24,12 @@ public class RaceListener implements Listener {
 
     private final Main main;
     private final CheckpointManager checkpointManager;
+    private final RaceManager raceManager;
 
-    public RaceListener(Main main, CheckpointManager checkpointManager) {
+    public RaceListener(Main main, CheckpointManager checkpointManager, RaceManager raceManager) {
         this.main = main;
         this.checkpointManager = checkpointManager;
+        this.raceManager = raceManager;
     }
 
     @EventHandler
@@ -39,9 +43,13 @@ public class RaceListener implements Listener {
             return;
         }
 
-        RaceData data = main.racers.get(player.getUniqueId());
+        RaceData data = null;
+        for(Race race : raceManager.activeRaces) {
+            if(race.racers.containsKey(player.getUniqueId())) data = race.racers.get(player.getUniqueId());
+        }
+
         if (data == null || data.race == null || data.car == null) {
-            player.sendActionBar(c("§e§oNo race data"));
+            player.sendActionBar(Objects.requireNonNull(c("§e§oNo race data")));
             return;
         }
 
@@ -74,7 +82,7 @@ public class RaceListener implements Listener {
                 player.showTitle(title);
             }
             if(data.lapCount == main.raceLapCount) {
-                Bukkit.broadcast(Messages.getMessage("prefix").append(c("§3")).append(player.displayName()).append(c("§b a terminé la course!")));
+                Bukkit.broadcast(Messages.getMessage("prefix").append(Objects.requireNonNull(c("§3"))).append(player.displayName()).append(Objects.requireNonNull(c("§b a terminé la course!"))));
             }
 
             data.lapTime = now;

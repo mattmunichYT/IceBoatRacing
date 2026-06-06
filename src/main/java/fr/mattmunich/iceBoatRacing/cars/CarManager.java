@@ -4,6 +4,8 @@ import fr.mattmunich.iceBoatRacing.Main;
 import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.Checkpoint;
 import fr.mattmunich.iceBoatRacing.race.Race;
 import fr.mattmunich.iceBoatRacing.race.RaceManager;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -93,7 +95,9 @@ public class CarManager {
 
         // Spawn boat
         Boat boat = (Boat) loc.getWorld().spawnEntity(loc, boatEntityFromMaterial(boatMat));
-        boat.customName(c(car.getCustomName()));
+        Component customName = c(car.getCustomName());
+        if(customName == null) customName = c("Race car");
+        boat.customName(customName);
         Location boatLocation = boat.getLocation();
         float startRotation = (float) main.getConfig().getInt("race.startRotation");
         boatLocation.setRotation(startRotation,0F);
@@ -108,7 +112,7 @@ public class CarManager {
 
         int id = count(race);
         String path = "cars." + id;
-        String customName = boatItem.getItemMeta().customName() == null ? "Race car" : s(boatItem.getItemMeta().customName());
+        String customName = s(boatItem.getItemMeta().customName()) == null ? "Race car" : s(boatItem.getItemMeta().customName());
 
         YamlConfiguration config = raceManager.getRaceConfig(race);
 
