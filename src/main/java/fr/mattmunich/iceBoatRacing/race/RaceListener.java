@@ -7,6 +7,7 @@ import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.CheckpointManager;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -72,6 +73,10 @@ public class RaceListener implements Listener {
             }
             if(data.lapCount == main.raceLapCount) {
                 Bukkit.broadcast(Messages.getMessage("prefix").append(c("§3")).append(player.displayName()).append(c("§b a terminé la course!")));
+                data.car.destroy();
+                player.setGameMode(GameMode.SPECTATOR);
+                int finishRacePlace = main.finishedRace.size()+1;
+                main.finishedRace.put(player.getUniqueId(), finishRacePlace);
             }
 
             data.lapTime = now;

@@ -38,6 +38,7 @@ public final class Main extends JavaPlugin {
     public boolean hasRaceStarted = false;
     public boolean preparingRace = false;
     public int raceLapCount = 0;
+    public Map<UUID, Integer> finishedRace = new HashMap<>();
 
     @Override
     public void onEnable() {

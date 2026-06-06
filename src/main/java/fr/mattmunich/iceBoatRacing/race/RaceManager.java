@@ -14,6 +14,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.*;
+
 import static fr.mattmunich.iceBoatRacing.Main.c;
 
 public class RaceManager {
@@ -164,15 +166,30 @@ public class RaceManager {
 
     public void endRace() {
         Bukkit.broadcast(Messages.getMessage("race.end"));
-        for (Car car : carManager.cars) {
-            Player owner = Bukkit.getPlayer(car.getOwner());
-            if (owner == null) continue;
 
-            car.destroy();
-            main.racers.remove(owner.getUniqueId());
+        for (UUID racer : main.racers.keySet()) {
+            Player owner = Bukkit.getPlayer(racer);
+            if (owner == null) continue;
+            Car car = main.racers.get(racer).car;
+            if (car.getBoat() != null) car.destroy();
+
 
             main.liveSidebar.getScore(owner.getName()).resetScore();
+            main.log("-----===== CLASSEMENT DE LA COURSE =====-----");
+            List<UUID> list = new ArrayList<>(main.finishedRace.keySet().stream().toList());
+            Collections.reverse(list);
+            for (UUID uuid : list) {
+                Player p =  Bukkit.getPlayer(uuid);
+                int raceFinishPlace = main.finishedRace.get(uuid);
+                if(p==null) {
+                    main.log(raceFinishPlace + ". " + uuid);
+                    continue;
+                }
+                main.log(raceFinishPlace + ". " + p.getName());
+            }
+            main.log("-----===== FIN DU CLASSEMENT =====-----");
         }
+        main.racers.clear();
 
         main.hasRaceStarted=false;
     }
