@@ -40,31 +40,31 @@ public class CarListener implements Listener {
         e.setCancelled(true);
     }
 
-    @EventHandler
-    public void onMoveCar(PlayerMoveEvent e) {
-        Player p = e.getPlayer();
-        if(p.getVehicle()!=null && !(p.getVehicle() instanceof Boat)) return;
-        RaceData data = null;
-        for(Race race : raceManager.activeRaces) if(race.racers.containsKey(p.getUniqueId())) data = race.racers.get(p.getUniqueId());
-        if (data == null || data.race == null || data.car == null) return;
-        if(!data.race.isPreparing() && !data.race.isStarting()) return;
-
-        e.setCancelled(true);
-    }
-
 //    @EventHandler
-//    public void onMoveCar2(VehicleMoveEvent e) {
-//        Vehicle vehicle = e.getVehicle();
-//        if(!(vehicle instanceof Boat)) return;
-//        Entity passenger;
-//        try { passenger = vehicle.getPassengers().getFirst(); } catch (NoSuchElementException ignored) { return; }
-//        if(passenger == null) return;
-//        if(!(passenger instanceof Player p)) return;
+//    public void onMoveCar(PlayerMoveEvent e) {
+//        Player p = e.getPlayer();
+//        if(p.getVehicle()!=null && !(p.getVehicle() instanceof Boat)) return;
 //        RaceData data = null;
 //        for(Race race : raceManager.activeRaces) if(race.racers.containsKey(p.getUniqueId())) data = race.racers.get(p.getUniqueId());
 //        if (data == null || data.race == null || data.car == null) return;
 //        if(!data.race.isPreparing() && !data.race.isStarting()) return;
 //
-//        e.getVehicle().teleport(e.getFrom());
+//        e.setCancelled(true);
 //    }
+
+    @EventHandler
+    public void onMoveCar2(VehicleMoveEvent e) {
+        Vehicle vehicle = e.getVehicle();
+        if(!(vehicle instanceof Boat)) return;
+        Entity passenger;
+        try { passenger = vehicle.getPassengers().getFirst(); } catch (NoSuchElementException ignored) { return; }
+        if(passenger == null) return;
+        if(!(passenger instanceof Player p)) return;
+        RaceData data = null;
+        for(Race race : raceManager.activeRaces) if(race.racers.containsKey(p.getUniqueId())) data = race.racers.get(p.getUniqueId());
+        if (data == null || data.race == null || data.car == null) return;
+        if(!data.race.isPreparing() && !data.race.isStarting()) return;
+
+        e.getVehicle().teleport(e.getFrom());
+    }
 }

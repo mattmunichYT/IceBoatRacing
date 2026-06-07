@@ -57,6 +57,8 @@ public class RaceListener implements Listener {
 
         if (nextCheckpoint == null) nextCheckpoint = checkpointManager.get(data.race,1);
 
+        main.log("[DEBUG] Checking for " + player.getName() + " in checkpoint " + nextCheckpoint.getId());
+
         //Actually check if the player is crossing the checkpoint
         if (!nextCheckpoint.contains(player.getLocation())) return;
 

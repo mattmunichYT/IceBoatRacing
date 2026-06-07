@@ -198,6 +198,7 @@ public class CheckpointManager {
 
         int sectorID = 1;
         for(Checkpoint check : race.getCheckpoints()) {
+            //Add 1 for each existing sector
             if(check.getType().equals(Checkpoint.Type.SECTOR)) sectorID++;
         }
 

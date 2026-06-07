@@ -409,6 +409,9 @@ public class RaceCreator implements Listener {
             return;
         }
 
+        //Be sure that the car is detected, even when you click the ground when defining checkpoints
+        if(l1.getY() == l2.getY()) l2.add(0, 1, 0);
+
         String basePath = "race.create.3.feedback.";
         if(!firstCheckpointDefined.get(p)) {
             p.sendMessage(getMessage(basePath + "error.defineStartLineFirst"));
@@ -435,6 +438,9 @@ public class RaceCreator implements Listener {
             p.sendMessage(getMessage("checkpoint.pos.notSet"));
             return;
         }
+
+        //Be sure that the car is detected, even when you click the ground when defining checkpoints
+        if(l1.getY() == l2.getY()) l2.add(0, 1, 0);
 
         Race race;
 
