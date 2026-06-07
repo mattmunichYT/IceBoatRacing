@@ -59,7 +59,7 @@ public final class Main extends JavaPlugin {
     private void registerListeners() {
         PluginManager pm = Bukkit.getPluginManager();
         pm.registerEvents(new CarCommand(this, carManager,raceManager), this);
-        pm.registerEvents(new CarListener(this),this);
+        pm.registerEvents(new CarListener(this,raceManager),this);
         pm.registerEvents(new Connection(this,carManager,raceManager),this);
         pm.registerEvents(new CheckpointCommand(checkpointManager,raceManager, this),this);
         pm.registerEvents(new RaceListener(this,checkpointManager,raceManager),this);

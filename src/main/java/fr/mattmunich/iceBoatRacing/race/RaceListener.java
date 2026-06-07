@@ -60,6 +60,8 @@ public class RaceListener implements Listener {
         //Actually check if the player is crossing the checkpoint
         if (!nextCheckpoint.contains(player.getLocation())) return;
 
+        main.log("[DEBUG] Checkpoint crossed.");
+
         // Start/finish checkpoint handling
         if (nextCheckpoint.getType().equals(Checkpoint.Type.START_FINISH)) {
             long now = System.currentTimeMillis();
