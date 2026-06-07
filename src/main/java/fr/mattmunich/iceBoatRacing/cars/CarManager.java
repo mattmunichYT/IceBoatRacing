@@ -201,7 +201,7 @@ public class CarManager {
         YamlConfiguration config = raceManager.getRaceConfig(race);
         if(config == null) return false;
 
-        config.set("car." + car.getId(), null);
+        config.set("cars." + car.getId(), null);
         try {
             raceManager.saveRaceConfig(race, config);
         } catch (IOException e) {
