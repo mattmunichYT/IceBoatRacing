@@ -9,6 +9,7 @@ import org.bukkit.entity.Vehicle;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.bukkit.event.vehicle.VehicleExitEvent;
 import org.bukkit.event.vehicle.VehicleMoveEvent;
 
@@ -29,6 +30,18 @@ public class CarListener implements Listener {
 
         RaceData racer = main.racers.get(p.getUniqueId());
         if (racer == null || racer.car == null) return;
+
+        e.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onEnterVehicle(VehicleEnterEvent e) {
+        if (!(e.getEntered() instanceof Player p)) return;
+        if(!main.hasRaceStarted && !main.startingRace && !main.preparingRace) return;
+
+        RaceData racer = main.racers.get(p.getUniqueId());
+        if (racer == null || racer.car == null) return;
+        if(e.getVehicle().getPassengers().size()==1) return;
 
         e.setCancelled(true);
     }
