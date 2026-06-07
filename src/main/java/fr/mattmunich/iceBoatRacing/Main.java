@@ -13,10 +13,8 @@ import fr.mattmunich.iceBoatRacing.race.RaceManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import net.luckperms.api.LuckPerms;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.*;
 
@@ -30,7 +28,6 @@ public final class Main extends JavaPlugin {
     CarManager carManager;
     Messages messages;
     RaceManager raceManager;
-    public LuckPerms luckPerms;
 
     public Map<UUID, RaceData> racers = new HashMap<>();
     public Objective liveSidebar;
@@ -62,8 +59,6 @@ public final class Main extends JavaPlugin {
         registerListeners();
 
         log("Done enabling plugin!");
-
-        loadLuckPerms();
     }
 
     private void registerListeners() {
@@ -147,19 +142,6 @@ public final class Main extends JavaPlugin {
         registerCommand("car", "Command to manage cars", new CarCommand(this,carManager));
         registerCommand("race", "Command to manage the race", new RaceCommand(this,raceManager));
         log("Done registering commands!");
-    }
-
-    private void loadLuckPerms() {
-        Bukkit.getScheduler().runTask(this, () -> {
-            log("Loading LuckPerms dependency");
-            RegisteredServiceProvider<LuckPerms> provider = Bukkit.getServicesManager().getRegistration(LuckPerms.class);
-            if (provider != null) {
-                luckPerms = provider.getProvider();
-                log("Done registering LuckPerms dependency!");
-            }else {
-                getLogger().warning("LuckPerms provider was null!");
-            }
-        });
     }
 
 
