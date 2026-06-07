@@ -175,20 +175,20 @@ public class RaceManager {
 
 
             main.liveSidebar.getScore(owner.getName()).resetScore();
-            main.log("-----===== CLASSEMENT DE LA COURSE =====-----");
-            List<UUID> list = new ArrayList<>(main.finishedRace.keySet().stream().toList());
-            Collections.reverse(list);
-            for (UUID uuid : list) {
-                Player p =  Bukkit.getPlayer(uuid);
-                int raceFinishPlace = main.finishedRace.get(uuid);
-                if(p==null) {
-                    main.log(raceFinishPlace + ". " + uuid);
-                    continue;
-                }
-                main.log(raceFinishPlace + ". " + p.getName());
-            }
-            main.log("-----===== FIN DU CLASSEMENT =====-----");
         }
+
+        //TODO work on a better ranking output
+        main.log("-----===== TEMPORARY RANKING =====-----");
+        for (UUID uuid : main.finishedRace.keySet()) {
+            Player p =  Bukkit.getPlayer(uuid);
+            int raceFinishPlace = main.finishedRace.get(uuid);
+            if(p==null) {
+                main.log(raceFinishPlace + ". " + uuid);
+                continue;
+            }
+            main.log(raceFinishPlace + ". " + p.getName());
+        }
+        main.log("-----===== TEMPORARY RANKING =====-----");
         main.racers.clear();
 
         main.hasRaceStarted=false;

@@ -137,7 +137,7 @@ public final class Main extends JavaPlugin {
 
     private void registerCommands() {
         log("Registering commands...");
-        registerCommand("iceboatracing", "Command to manage the plugin", List.of("ibr"), new IBRCommand(this));
+        registerCommand("iceboatracing", "Command to manage the plugin", Collections.singleton("ibr"), new IBRCommand(this));
         registerCommand("checkpoint", "Command to manage checkpoints", new CheckpointCommand(checkpointManager,this));
         registerCommand("car", "Command to manage cars", new CarCommand(this,carManager));
         registerCommand("race", "Command to manage the race", new RaceCommand(this,raceManager));
