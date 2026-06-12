@@ -1,13 +1,28 @@
-#Will read from the file [language].yml, so by defaualt: en_US.yml
+# IceBoatRacing, a powerful plugin for your ice boat racing server.
+# - Developped by mattmunich
+#
+# ----------------------------------------------------------------
+# Welcome to the main configuration file of this plugin.
+# Below, you can change the main settings for this plugin,
+# like the language, the number of laps required to finish
+# a race and more.
+# ----------------------------------------------------------------
+# Some instructions:
+# - The default value for race.lights.x/y/z is 123456789,
+#   if they are read by the plugin, the race lights are
+#   automatically disabled.
+# ----------------------------------------------------------------
+
+# Will read from the file [language].yml, so by defaualt: en_US.yml
 language: en_US
 
-#Configure the race.
+# Configure the race.
 race:
-  #The number of laps required to finish the race
+  # The number of laps required to finish the race
   lapCount: 10
-  #Configure the race lights
-  #-> colored glass that will change on
-  #   race start to simulate race lights
+  # Configure the race lights
+  # -> colored glass that will change on
+  #    race start to simulate race lights
   ligths:
     enabled: false
     from:
@@ -19,8 +34,8 @@ race:
       y: 123456789
       z: 123456789
 
-  #The rotation of the boat on race start
-  #
-  #Change this if your boats face the wrong
-  #direction when running /race start
+  # The rotation of the boat on race start
+  # ---
+  # Change this if your boats face the wrong
+  # direction when running /race start
   startRotation: 0
