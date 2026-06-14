@@ -114,7 +114,7 @@ public class RaceCreator implements Listener {
     }
 
 
-    /* TODO
+    /* TODO Race creation:
     * Plan:
     * - Ask for name
     * - [OPTIONAL] Define checkpoints AND sectors
@@ -127,7 +127,11 @@ public class RaceCreator implements Listener {
     * 5. Define cars
     * End (Save)
     *
-    * - Fix bugs
+    * The actual things to do:
+    * - Add support to add cars
+    * - Test with more strange names (custom caracters -> add limitation?)
+    * - Check if race already exists (yes? -> cancel creation)
+    * -
     * */
 
     /**
