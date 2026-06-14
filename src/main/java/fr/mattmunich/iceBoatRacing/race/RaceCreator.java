@@ -27,6 +27,7 @@ import static fr.mattmunich.iceBoatRacing.Messages.formatArguments;
 import static fr.mattmunich.iceBoatRacing.Messages.getMessage;
 import static fr.mattmunich.iceBoatRacing.Messages.getStringMessage;
 
+@SuppressWarnings("unused")
 public class RaceCreator implements Listener {
 
     private final Main main;
@@ -44,32 +45,33 @@ public class RaceCreator implements Listener {
     /**
      * The map that contains players who are creating a race and the stage of the creation process
      */
-    public static Map<Player, Integer> creatingRace = new HashMap<>();
+    public static final Map<Player, Integer> creatingRace = new HashMap<>();
     //Saved data during the process
     /**
      * Saves the name of the race during the creation process
      */
-    static Map<Player,String> raceName =  new HashMap<>();
+    static final Map<Player,String> raceName =  new HashMap<>();
     /**
      * Save wether the player has already created a checkpoint
      * (-> should next checkpoint be start line?)
      */
-    static Map<Player,Boolean> firstCheckpointDefined =  new HashMap<>();
+    static final Map<Player,Boolean> firstCheckpointDefined =  new HashMap<>();
 
 
     /**
      * When player wants to cancel the creation process of a race, it will be put in this list.
      * A listener will then await a confirmation message.
      */
-    static List<Player> confirmRaceCancel = new ArrayList<>();
+    static final List<Player> confirmRaceCancel = new ArrayList<>();
 
     /**
      * The list the player will be put into, to be able to identify if they are using this
      * class (RaceCreator) to create cars. This will automatically ask them if they want to
      * rerun the /car create command when they're done creating a car. This will allow
      * CarCommand to identify players who are defining cars while creating the race.
+     * @apiNote Work in progress
      */
-    static List<Player> definingCars = new ArrayList<>();
+    static List<Player> definingCars = new ArrayList<>(); //TODO
 
     /**
      * 1st position of the checkpoint (like WorldEdit)
@@ -390,7 +392,7 @@ public class RaceCreator implements Listener {
             return;
         }
 
-        Race race = new Race(raceName.get(p), l1.getWorld());
+        Race race = raceManager.getRace(raceName.get(p));
 
         checkpointManager.saveCheckpoint(race, l1, l2, Checkpoint.Type.START_FINISH);
         Title title = Title.title(
@@ -418,7 +420,7 @@ public class RaceCreator implements Listener {
             return;
         }
 
-        Race race = new Race(raceName.get(p), l1.getWorld());
+        Race race = raceManager.getRace(raceName.get(p));
 
         Checkpoint checkpoint = checkpointManager.saveSectorCheckpoint(race, l1, l2);
         Title title = Title.title(
@@ -447,9 +449,14 @@ public class RaceCreator implements Listener {
         //Register the race first
         if(!firstCheckpointDefined.get(p)) {
             race = new Race(raceName.get(p), l1.getWorld());
-            raceManager.createRace(race);
+            race = raceManager.createRace(race);
         } else {
             race = raceManager.getRace(raceName.get(p));
+        }
+
+        if(race==null) {
+            p.sendMessage(getMessage("error.unknown"));
+            return;
         }
 
         Checkpoint checkpoint = checkpointManager.saveCheckpoint(race, l1, l2);
@@ -471,7 +478,11 @@ public class RaceCreator implements Listener {
             );
         }
 
-        raceManager.saveRace(race);
+        boolean result = raceManager.saveRace(race);
+        if(!result) {
+            p.sendMessage(getMessage("error.unknown"));
+            return;
+        }
         p.showTitle(title);
     }
 }

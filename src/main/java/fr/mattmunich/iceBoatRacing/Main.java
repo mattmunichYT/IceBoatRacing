@@ -27,11 +27,8 @@ public final class Main extends JavaPlugin {
     RaceManager raceManager;
     RaceCreator raceCreator;
 
-    public Map<UUID, RaceData> racers = new HashMap<>();
+    public final Map<UUID, RaceData> racers = new HashMap<>();
     public Objective liveSidebar;
-    public boolean startingRace = false;
-    public boolean hasRaceStarted = false;
-    public boolean preparingRace = false;
     public int raceLapCount = 0;
 
     @Override
@@ -59,10 +56,10 @@ public final class Main extends JavaPlugin {
     private void registerListeners() {
         PluginManager pm = Bukkit.getPluginManager();
         pm.registerEvents(new CarCommand(this, carManager,raceManager), this);
-        pm.registerEvents(new CarListener(this,raceManager),this);
-        pm.registerEvents(new Connection(this,carManager,raceManager),this);
+        pm.registerEvents(new CarListener(raceManager),this);
+        pm.registerEvents(new Connection(this,raceManager),this);
         pm.registerEvents(new CheckpointCommand(checkpointManager,raceManager, this),this);
-        pm.registerEvents(new RaceListener(this,checkpointManager,raceManager),this);
+        pm.registerEvents(new RaceListener(this,raceManager),this);
         pm.registerEvents(new RaceCreator(this,raceManager,checkpointManager,carManager), this);
     }
 
@@ -162,11 +159,8 @@ public final class Main extends JavaPlugin {
     public void severe(String message) { getLogger().severe("[IceBoatRacing] " + message); }
 
     public static Component c(String message) {
-        try {
-            return LegacyComponentSerializer.legacySection().deserialize(message);
-        } catch (Exception e) {
-            return null;
-        }
+        if(message == null || message.isBlank()) return null;
+        return LegacyComponentSerializer.legacySection().deserialize(message);
     }
 
     public static String s(Component component) {

@@ -166,7 +166,7 @@ public class CheckpointCommand implements Listener, BasicCommand {
             }
 
             checkpointManager.remove(race, checkpoint);
-            player.sendMessage(Messages.getMessage("checkpoint.removed",formatArguments("index","" + checkpoint.getId())));
+            player.sendMessage(Messages.getMessage("checkpoint.removed",formatArguments("ID","" + checkpoint.getId())));
         } else if (args.length == 3 && args[0].equalsIgnoreCase("remove")) {
 
             int checkpointNum;
@@ -184,7 +184,7 @@ public class CheckpointCommand implements Listener, BasicCommand {
                 return;
             }
 
-            Checkpoint checkpoint = checkpointManager.get(race, checkpointNum);
+            Checkpoint checkpoint = race.getCheckpoint(checkpointNum);
 
             if (checkpoint == null) {
                 player.sendMessage(getMessage("checkpoint.invalid"));

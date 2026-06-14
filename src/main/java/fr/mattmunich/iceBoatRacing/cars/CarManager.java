@@ -1,11 +1,9 @@
 package fr.mattmunich.iceBoatRacing.cars;
 
 import fr.mattmunich.iceBoatRacing.Main;
-import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.Checkpoint;
 import fr.mattmunich.iceBoatRacing.race.Race;
 import fr.mattmunich.iceBoatRacing.race.RaceManager;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.ComponentBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -50,18 +48,6 @@ public class CarManager {
         Map<Race, List<Car>> cars = new HashMap<>();
         for (Race race : raceManager.races) {
             cars.put(race, race.getCars());
-        }
-        return cars;
-    }
-
-    /**
-     * Get all the checkpoints in the form of a list
-     *@return a list of all the checkpoints
-     */
-    public List<Car> getAllNoRaceInfo() {
-        List<Car> cars = new ArrayList<>();
-        for (Race race : raceManager.races) {
-            cars.addAll(race.getCars());
         }
         return cars;
     }
@@ -167,10 +153,6 @@ public class CarManager {
         }
     }
 
-    public int count() {
-        return getAll().size();
-    }
-
     public int count(Race race) {
         return race.getCars().size();
     }
@@ -208,8 +190,7 @@ public class CarManager {
             main.err("Couldn't remove car " + car.getId() + " for race " + race.getName(),e);
             return false;
         }
-        race.removeCar(car);
-        return true;
+        return race.removeCar(car);
     }
 
 

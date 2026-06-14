@@ -28,44 +28,83 @@ public class RaceCommand implements BasicCommand {
 
     @Override
     public void execute(@NonNull CommandSourceStack source, String @NonNull [] args) {
-        if(args.length == 2 && args[0].equalsIgnoreCase("start")) {
-            String raceName = args[1];
-            Race race = raceManager.getRace(raceName);
+        if(args.length >= 1 && args[0].equalsIgnoreCase("start")) {
+            Race race;
+            if(raceManager.races.size() != 1) {
+                if(args.length!=2) {
+                    source.getSender().sendMessage(Messages.getMessage("race.help"));
+                    return;
+                }
+                String raceName = args[1];
+                race = raceManager.getRace(raceName);
+            } else {
+                race = raceManager.races.getFirst();
+            }
             if(race == null) {
                 source.getSender().sendMessage(Messages.getMessage("race.notFound"));
                 return;
             }
             source.getSender().sendMessage(Messages.getMessage("race.start", Messages.formatArguments("name", race.getName())));
-            raceManager.startRace(race);
-        } else if(args.length == 2 && args[0].equalsIgnoreCase("end")) {
-            String raceName = args[1];
-            Race race = raceManager.getRace(raceName);
+            race.start();
+        } else if(args.length >= 1 && args[0].equalsIgnoreCase("end")) {
+            Race race;
+            if(raceManager.activeRaces.size() != 1) {
+                if(args.length!=2) {
+                    source.getSender().sendMessage(Messages.getMessage("race.help"));
+                    return;
+                }
+                String raceName = args[1];
+                race = raceManager.getRace(raceName);
+            } else {
+                race = raceManager.activeRaces.getFirst();
+            }
             if(race == null) {
                 source.getSender().sendMessage(Messages.getMessage("race.notFound"));
                 return;
             }
-            raceManager.endRace(race);
-        } else if (args.length==2 && args[0].equalsIgnoreCase("prepare")) {
-            String raceName = args[1];
-            Race race = raceManager.getRace(raceName);
+
+            race.end();
+        } else if (args.length >=1 && args[0].equalsIgnoreCase("prepare")) {
+            Race race;
+            if(raceManager.races.size() != 1) {
+                if(args.length!=2) {
+                    source.getSender().sendMessage(Messages.getMessage("race.help"));
+                    return;
+                }
+                String raceName = args[1];
+                race = raceManager.getRace(raceName);
+            } else {
+                race = raceManager.races.getFirst();
+            }
             if(race == null) {
                 source.getSender().sendMessage(Messages.getMessage("race.notFound"));
                 return;
             }
-            raceManager.togglePrepareRace(source.getSender(),race);
+            race.togglePrepare(source.getSender());
         } else if (args.length == 1 && args[0].equalsIgnoreCase("create")) {
             if(!(source.getSender() instanceof Player p)) {
                 source.getSender().sendMessage(Messages.getMessage("error.playerToExecuteCommand"));
                 return;
             }
             raceCreator.createRace(p);
-        } else if (args.length == 2 && args[0].equalsIgnoreCase("delete")) {
-            String raceName = args[1];
-            Race race = raceManager.getRace(raceName);
+        } else if (args.length >= 1 && args[0].equalsIgnoreCase("delete")) {
+            Race race;
+            if(raceManager.races.size() != 1) {
+                if(args.length!=2) {
+                    source.getSender().sendMessage(Messages.getMessage("race.help"));
+                    return;
+                }
+                String raceName = args[1];
+                race = raceManager.getRace(raceName);
+            } else {
+                race = raceManager.activeRaces.getFirst();
+            }
             if(race == null) {
                 source.getSender().sendMessage(Messages.getMessage("race.notFound"));
                 return;
             }
+
+            String raceName = race.getName();
             Bukkit.getScheduler().runTask(main, () -> {
                 boolean success = raceManager.deleteRace(race);
                 if (success) source.getSender().sendMessage(Messages.getMessage("race.deleted", Messages.formatArguments("name", raceName)));

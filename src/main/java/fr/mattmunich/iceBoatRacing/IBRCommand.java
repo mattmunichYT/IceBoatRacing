@@ -4,7 +4,6 @@ import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.scoreboard.*;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -28,7 +27,7 @@ public class IBRCommand implements BasicCommand {
         CommandSender s = source.getSender();
         if (args.length == 1 && args[0].equalsIgnoreCase("reload")) {
             if (!s.hasPermission("iceBoatRacing.reload")) return;
-            s.sendMessage(getMessage("prefix").append(c(" §b§oReloading...")));
+            s.sendMessage(getMessage("prefix").append(c("§b§oReloading...")));
 
             main.loadConfigs();                // reloads config.yml from disk
             main.loadMessages();               // reloads lang files
@@ -38,7 +37,7 @@ public class IBRCommand implements BasicCommand {
                 main.raceManager.saveAllRaces();
                 main.raceManager.loadAllRaces();
                 main.registerScoreboard();
-                s.sendMessage(getMessage("prefix").append(c(" §bDone reloading!")));
+                s.sendMessage(getMessage("prefix").append(c("§bDone reloading!")));
             });
 
 

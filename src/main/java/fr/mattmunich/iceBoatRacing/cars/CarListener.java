@@ -10,22 +10,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.vehicle.VehicleExitEvent;
 import org.bukkit.event.vehicle.VehicleMoveEvent;
 
 import java.util.NoSuchElementException;
-import java.util.Objects;
-
-import static fr.mattmunich.iceBoatRacing.Main.c;
 
 public class CarListener implements Listener {
 
-    private final Main main;
     private final RaceManager raceManager;
 
-    public CarListener(Main main, RaceManager raceManager) {
-        this.main = main;
+    public CarListener(RaceManager raceManager) {
         this.raceManager = raceManager;
     }
 
@@ -35,7 +29,7 @@ public class CarListener implements Listener {
         RaceData data = null;
         for(Race race : raceManager.activeRaces) if(race.racers.containsKey(p.getUniqueId())) data = race.racers.get(p.getUniqueId());
         if (data == null || data.race == null || data.car == null) return;
-        if(!data.race.isPreparing() && !data.race.isStarting()) return;
+        if(data.race.isNotStarting() && !data.race.isPreparing() && data.race.hasNotStarted()) return;
 
         e.setCancelled(true);
     }
@@ -63,7 +57,7 @@ public class CarListener implements Listener {
         RaceData data = null;
         for(Race race : raceManager.activeRaces) if(race.racers.containsKey(p.getUniqueId())) data = race.racers.get(p.getUniqueId());
         if (data == null || data.race == null || data.car == null) return;
-        if(!data.race.isPreparing() && !data.race.isStarting()) return;
+        if(!data.race.isPreparing() && data.race.isNotStarting()) return;
 
         e.getVehicle().teleport(e.getFrom());
     }

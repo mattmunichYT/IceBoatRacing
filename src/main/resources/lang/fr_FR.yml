@@ -1,5 +1,5 @@
 # IceBoatRacing, a powerful plugin for your ice boat racing server.
-# - Developped by mattmunich
+# - Developed by mattmunich
 #
 # ----------------------------------------------------------------
 # Welcome to the fr_FR message configuration file.
@@ -9,13 +9,13 @@
 # ----------------------------------------------------------------
 # Some instructions:
 # - Color codes
-# You can use the § sign followed by a specific caracther to
+# You can use the § sign followed by a specific character to
 # add color to these messages.
 #
 # - Arguments/Variables
 # Some messages support arguments that will be formatted like:
 # %argument%. These will are hard-coded in the plugin and will
-# be replaced indenpendently from this config. If they are
+# be replaced independently of this config. If they are
 # missing, they just won't show up in the message.
 # ----------------------------------------------------------------
 
@@ -66,8 +66,38 @@ race:
   onCompleteLap:
     title: "§6%currentLapCount%/%raceLapCount%"
     subtitle: "§atours complétés"
-    message: "§3%player%§b a terminé le tour n°§3%count%§b en §3%time%§b !"
-  onCrossSector: "§bTemps de §3%player%§b au secteur §3%count%§b : §3%time%§b"
+    message: "§3%player%§b a terminé le tour n°§3%ID%§b en §3%time%§b !"
+  onCrossSector: "§bTemps de §3%player%§b au secteur §3%ID%§b : §3%time%§b"
+  onFinish:
+    message: "§2%player%§b a terminé la course en §2%time%§a et est classé §2#%ranking%§a !"
+    title: "§2Course terminée!"
+    subtitle: "§aVous êtes #%ranking%"
+    statsMessage: "§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lRésultats de la course §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n
+    §bClassement : §3#%ranking%§b/%players%\n
+    §bTemps total : §x§4§0§C§4§F§F%raceTime%\n
+    §bTour moyen : §3%meanLapTime%\n
+    §bMeilleur tour : §a%bestLapTime%\n
+    §bTour le plus lent : §c%worstLapTime%\n
+    \n
+    §bÉcart avec le vainqueur : §c%gapToWinner%\n
+    §bÉcart avec le joueur devant : §x§F§F§D§7§0§0%gapToNext%\n
+    §x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n
+    "
+    statsMessageWinner: "§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lRésultats de la course §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n
+    §bClassement : §3§l#%ranking%§b/%players%\n
+    §bTemps total : §x§4§0§C§4§F§F%raceTime%\n
+    §bTour moyen : §3%meanLapTime%\n
+    §bMeilleur tour : §a%bestLapTime%\n
+    §bTour le plus lent : §c%worstLapTime%\n
+    §x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n
+    "
+  onEnd:
+    top: "§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lClassement final §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n"
+    playerFormat: "§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%\n"
+    highlights: "\n§b🏆 Meilleur tour : §a%bestLapPlayer% §8(§a%bestLapTime%§8)\n
+    §b🐢 Tour le plus lent : §c%worstLapPlayer% §8(§c%worstLapTime%§8)\n
+    §b⚡ Écart victoire : §3%winnerGap%\n"
+    bottom: "§x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
 
   #Help message
   help: "§3--------- §b§l/race§r §3---------\n§3->§a start §8-§7 Lancer la course\n§3->§a prepare §8-§7 Préparer les joueurs\n§7§oℹ Placement automatique des joueurs dans leurs voitures\n§3->§a end §8-§7 Finir la course"

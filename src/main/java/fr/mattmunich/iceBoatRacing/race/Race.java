@@ -2,22 +2,46 @@ package fr.mattmunich.iceBoatRacing.race;
 
 import fr.mattmunich.iceBoatRacing.cars.Car;
 import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.Checkpoint;
+import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
+import javax.annotation.Nullable;
 import java.util.*;
+
+import static fr.mattmunich.iceBoatRacing.Main.formatTime;
+import static fr.mattmunich.iceBoatRacing.Messages.formatArguments;
+import static fr.mattmunich.iceBoatRacing.Messages.getMessage;
 
 public class Race {
 
-    String name;
-    World world;
-    List<Checkpoint> checkpoints = new ArrayList<>();
-    List<Car> cars = new ArrayList<>();
-    public Map<UUID, RaceData> racers = new HashMap<>();
+    private RaceManager raceManager;
+
+    public void setRaceManager(RaceManager raceManager) {
+        this.raceManager = raceManager;
+    }
+
+    final String name;
+    final World world;
+    final List<Checkpoint> checkpoints = new ArrayList<>();
+    final List<Car> cars = new ArrayList<>();
+    public final Map<UUID, RaceData> racers = new HashMap<>();
+    /**
+     * List of the racers who hae finished the race.
+     * rankings.get(0) is first, rankings.get(1) is second and so on
+     */
+    public final List<RaceData> rankings = new ArrayList<>();
+
+    /**
+     * List of the racers that are actively racing
+     * (-> those who have finished the race are not included)
+     */
+    public final List<RaceData> racing = new ArrayList<>();
 
     boolean startingRace = false;
     boolean preparingRace = false;
     boolean hasRaceStarted = false;
-
 
     public Race(
             String name,
@@ -26,6 +50,65 @@ public class Race {
         this.name = name;
         this.world = world;
     }
+
+    public void start() {
+        raceManager.startRace(this);
+    }
+
+    public void end() {
+        raceManager.endRace(this);
+    }
+
+    public void togglePrepare(CommandSender sender) {
+        raceManager.togglePrepareRace(sender, this);
+    }
+
+    public void sendRaking() {
+        Bukkit.broadcast(getMessage("race.onEnd.top"));
+
+        long bestLapTime = Long.MAX_VALUE;
+        long worstLapTime = Long.MIN_VALUE;
+
+        Player bestLapPlayer = null;
+        Player worstLapPlayer = null;
+
+        for (RaceData data : racers.values()) {
+            Bukkit.broadcast(getMessage("race.onEnd.playerFormat",formatArguments(
+                    "ranking", data.ranking + "",
+                    "player", data.player == null ? "OFFLINE" : data.player.getName(),
+                    "raceTime", formatTime(data.getRaceTime())
+            )));
+
+            for (long lapTime : data.getLapTimes()) {
+
+                if (lapTime < bestLapTime) {
+                    bestLapTime = lapTime;
+                    bestLapPlayer = data.player;
+                }
+
+                if (lapTime > worstLapTime) {
+                    worstLapTime = lapTime;
+                    worstLapPlayer = data.player;
+                }
+            }
+        }
+
+        long winnerTime = rankings.getFirst().getRaceTime();
+        long lastTime = rankings.getLast().getRaceTime();
+
+        long winnerGap = lastTime - winnerTime;
+
+        Bukkit.broadcast(getMessage("race.onEnd.highlights",formatArguments(
+                "bestLapPlayer", bestLapPlayer == null ? "§c§oOffline" : bestLapPlayer.getName(),
+                "bestLapTime", bestLapTime == Long.MAX_VALUE ? "N/A" : formatTime(bestLapTime),
+                "worstLapPlayer", worstLapPlayer == null ? "§c§oOffline" : worstLapPlayer.getName(),
+                "worstLapTime", worstLapTime == Long.MAX_VALUE ? "N/A" : formatTime(worstLapTime),
+                "winnerGap", formatTime(winnerGap)
+        )));
+
+        Bukkit.broadcast(getMessage("race.onEnd.bottom"));
+    }
+
 
     public String getName() {
         return name;
@@ -37,6 +120,13 @@ public class Race {
     //Checkpoints
     public List<Checkpoint> getCheckpoints() {
         return checkpoints;
+    }
+
+    public @Nullable Checkpoint getCheckpoint(int ID) {
+        final Checkpoint[] result = new Checkpoint[1];
+        result[0] = null;
+        getCheckpoints().forEach(checkpoint -> {if(checkpoint.getId()==ID) result[0]=checkpoint;});
+        return result[0];
     }
 
     public void addCheckpoint(Checkpoint checkpoint) {
@@ -68,15 +158,15 @@ public class Race {
         return cars.remove(car);
     }
 
-    public boolean isStarting() {
-        return startingRace;
+    public boolean isNotStarting() {
+        return !startingRace;
     }
 
     public boolean isPreparing() {
         return preparingRace;
     }
 
-    public boolean hasStarted() {
-        return hasRaceStarted;
+    public boolean hasNotStarted() {
+        return !hasRaceStarted;
     }
 }

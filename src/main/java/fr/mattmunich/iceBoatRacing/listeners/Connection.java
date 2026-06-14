@@ -12,18 +12,19 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import java.util.Map;
+import java.util.UUID;
+
 import static fr.mattmunich.iceBoatRacing.Messages.formatArguments;
 import static fr.mattmunich.iceBoatRacing.Messages.getMessage;
 
 public class Connection implements Listener {
 
     private final Main main;
-    private final CarManager carManager;
     private final RaceManager raceManager;
 
-    public Connection(Main main, CarManager carManager, RaceManager raceManager) {
+    public Connection(Main main, RaceManager raceManager) {
         this.main = main;
-        this.carManager = carManager;
         this.raceManager = raceManager;
     }
 
@@ -31,7 +32,7 @@ public class Connection implements Listener {
     public void onJoin(PlayerJoinEvent e) {
         Player p = e.getPlayer();
 
-        if (raceManager.races !=null && !raceManager.races.isEmpty()) {
+        if (!raceManager.races.isEmpty()) {
             for(Race race : raceManager.races) {
                 if(race.isPreparing() && race.racers.containsKey(p.getUniqueId())) {
                     final Car[] car = new Car[1];
@@ -41,22 +42,11 @@ public class Connection implements Listener {
                         }
                     });
 
-                    main.racers.get(p.getUniqueId()).car = car[0];
-                    if(main.preparingRace) {
+                    if(race.isPreparing()) {
                         //TP to spawn of the world -- else player won't be in the car
                         p.teleport(car[0].getStartingLocation().getWorld().getSpawnLocation());
 
-                        carManager.spawnCar(car[0],p);
-                        main.racers.put(p.getUniqueId(),new RaceData(p));
-                        race.racers.get(p.getUniqueId()).car = car[0];
-                        race.racers.get(p.getUniqueId()).checkpointIndex = -1;
-                        race.racers.get(p.getUniqueId()).lapCount = 0;
-                        race.racers.get(p.getUniqueId()).lapTime = 0;
-                        race.racers.get(p.getUniqueId()).startTime = 0;
-                        race.racers.get(p.getUniqueId()).race = race;
-                        race.racers.get(p.getUniqueId()).player = p;
-
-                        main.liveSidebar.getScore(p.getName()).resetScore();
+                        raceManager.prepareRacer(race, car[0]);
                     }
 
                 }

@@ -9,6 +9,7 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -18,10 +19,7 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 import static fr.mattmunich.iceBoatRacing.Main.c;
 
@@ -30,8 +28,8 @@ public class RaceManager {
     private final Main main;
     private final CarManager carManager;
     private final CheckpointManager checkpointManager;
-    public List<Race> races = new ArrayList<>();
-    public List<Race> activeRaces = new ArrayList<>();
+    public final List<Race> races = new ArrayList<>();
+    public final List<Race> activeRaces = new ArrayList<>();
 
     public RaceManager(Main main, CarManager carManager, CheckpointManager checkpointManager) {
         this.main = main;
@@ -57,9 +55,7 @@ public class RaceManager {
         int loadedRaces = 0;
 
         if(races!=null) {
-            for (Race race : races) {
-                endRace(race);
-            }
+            for (Race race : races) race.end();
             races.clear();
         }
         File racesFolder = new File(main.getDataFolder(), "races");
@@ -85,6 +81,7 @@ public class RaceManager {
                 continue;
             }
             Race race = new Race(name, world);
+            race.setRaceManager(this);
             checkpointManager.loadRaceCheckpoints(race);
             carManager.loadCars(race);
 
@@ -97,16 +94,16 @@ public class RaceManager {
     }
 
     public void saveAllRaces() {
-        if(races==null || races.isEmpty()) return;
+        if(races.isEmpty()) return;
         for (Race race : races) {
             saveRace(race);
         }
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public void createRace(Race race) {
+    public Race createRace(Race race) {
         main.log("Creating race " + race.getName());
-        File raceFile = new File(main.getDataFolder(), "races/" + race.getName().toLowerCase().replace(" ","_") + ".yml");
+        File raceFile = new File(main.getDataFolder(), "races/" + race.getName().replace(" ","_") + ".yml");
         raceFile.getParentFile().mkdirs();
 
         YamlConfiguration config = new YamlConfiguration();
@@ -118,15 +115,19 @@ public class RaceManager {
             main.log("Race " + race.getName() + " has been saved");
         } catch (IOException e) {
             main.err("Couldn't create race " + race.getName(),e);
+            return null;
         }
 
         //Update race in race list
         races.add(race);
+        race.setRaceManager(this);
+        return race;
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public boolean saveRace(Race race) {
         main.log("Saving race " + race.getName());
-        File raceFile = new File(main.getDataFolder(), "races/" + race.getName().toLowerCase().replace(" ","_") + ".yml");
+        File raceFile = new File(main.getDataFolder(), "races/" + race.getName().replace(" ","_") + ".yml");
         raceFile.getParentFile().mkdirs();
 
         YamlConfiguration config;
@@ -162,7 +163,7 @@ public class RaceManager {
 
     public boolean deleteRace(Race race) {
         main.log("Deleting race " + race.getName());
-        endRace(race);
+        race.end();
 
         File raceFile = new File(main.getDataFolder(), "races/" + race.getName().toLowerCase().replace(" ","_") + ".yml");
         boolean deleted = raceFile.delete();
@@ -214,23 +215,8 @@ public class RaceManager {
         activeRaces.add(race);
         if(!race.preparingRace) {
             for (Car car : race.getCars()) {
-                Player owner = Bukkit.getPlayer(car.getOwner());
-                if (owner == null) continue;
-
-                carManager.spawnCar(car,owner);
-                race.racers.put(owner.getUniqueId(),new RaceData(owner));
-                race.racers.get(owner.getUniqueId()).car = car;
-                race.racers.get(owner.getUniqueId()).checkpointIndex = -1;
-                race.racers.get(owner.getUniqueId()).lapCount = 0;
-                race.racers.get(owner.getUniqueId()).lapTime = 0;
-                race.racers.get(owner.getUniqueId()).startTime = 0;
-                race.racers.get(owner.getUniqueId()).race = race;
-                race.racers.get(owner.getUniqueId()).player = owner;
-
-                main.liveSidebar.getScore(owner.getName()).resetScore();
+                prepareRacer(race, car);
             }
-        } else {
-            race.preparingRace = false;
         }
 
         final int[] timesRun = {0};
@@ -299,6 +285,26 @@ public class RaceManager {
         },0L,20L);
     }
 
+    public void prepareRacer(Race race, Car car) {
+        Map<UUID, RaceData> racers = race.racers;
+        Player owner = Bukkit.getPlayer(car.getOwner());
+        if (owner == null) return;
+
+        owner.setGameMode(GameMode.ADVENTURE);
+        carManager.spawnCar(car,owner);
+        racers.put(owner.getUniqueId(),new RaceData(owner));
+        racers.get(owner.getUniqueId()).car = car;
+        racers.get(owner.getUniqueId()).checkpointIndex = -1;
+        racers.get(owner.getUniqueId()).lapCount = 0;
+        racers.get(owner.getUniqueId()).lapTime = 0;
+        racers.get(owner.getUniqueId()).startTime = 0;
+        racers.get(owner.getUniqueId()).race = race;
+        racers.get(owner.getUniqueId()).player = owner;
+
+        main.liveSidebar.getScore(owner.getName()).resetScore();
+        race.racing.add(racers.get(owner.getUniqueId()));
+    }
+
     public void togglePrepareRace(CommandSender sender, Race race) {
         if(race.preparingRace) cancelPrepareRace(sender, race);
         else prepareRace(sender, race);
@@ -312,17 +318,7 @@ public class RaceManager {
             Player owner = Bukkit.getPlayer(car.getOwner());
             if (owner == null) continue;
 
-            carManager.spawnCar(car,owner);
-            race.racers.put(owner.getUniqueId(),new RaceData(owner));
-            race.racers.get(owner.getUniqueId()).car = car;
-            race.racers.get(owner.getUniqueId()).checkpointIndex = -1;
-            race.racers.get(owner.getUniqueId()).lapCount = 0;
-            race.racers.get(owner.getUniqueId()).lapTime = 0;
-            race.racers.get(owner.getUniqueId()).startTime = 0;
-            race.racers.get(owner.getUniqueId()).race = race;
-            race.racers.get(owner.getUniqueId()).player = owner;
-
-            main.liveSidebar.getScore(owner.getName()).resetScore();
+            prepareRacer(race, car);
         }
     }
 
@@ -342,7 +338,7 @@ public class RaceManager {
     }
 
     public void endRace(Race race) {
-        if(!race.hasStarted()) return;
+        if(race.hasNotStarted()) return;
         activeRaces.remove(race);
 
         Bukkit.broadcast(Messages.getMessage("race.end", Messages.formatArguments("name", race.getName())));

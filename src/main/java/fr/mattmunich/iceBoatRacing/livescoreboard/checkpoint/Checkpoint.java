@@ -10,11 +10,11 @@ public class Checkpoint {
         SECTOR
     }
 
-    int id; // checkpoint index in the race order
+    final int id; // checkpoint ID in the race order
     int sectorID = -1; // only used for sectors
-    Location min;
-    Location max;
-    Type type;
+    final Location min;
+    final Location max;
+    final Type type;
 
     /**
      * Type will be set to NORMAL
