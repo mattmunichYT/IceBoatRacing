@@ -143,12 +143,17 @@ public class Messages {
     }
 
     private static boolean addPrefix(String identifier) {
-        return !identifier.contains("noPrefix")
-                && !identifier.equals("prefix")
-                && !identifier.contains("title")
+        return !identifier.contains("noPrefix") //Currently used for join/quit and liveSidebarTitle
+                && !identifier.equals("prefix") //Don't add prefix after prefix
+                && !identifier.contains("title") //=> titles and subtitles
+                //Commands when creating race, checkpoints or cars
                 && !identifier.contains("check")
                 && !identifier.contains("start")
                 && !identifier.contains("later")
-                && !identifier.contains("checkpointCreation");
+                && !identifier.contains("checkpointCreation")
+                //For race.onEnd messages
+                && !identifier.contains("playerFormat")
+                && !identifier.contains("highlights")
+                && !identifier.contains("bottom");
     }
 }

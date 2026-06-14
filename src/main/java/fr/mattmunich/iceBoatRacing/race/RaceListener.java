@@ -100,12 +100,13 @@ public class RaceListener implements Listener {
         }
 
         data.checkpointIndex++;
-        main.liveSidebar.getScore(player).setScore((data.lapCount* race.getCheckpoints().size()) + data.checkpointIndex);
+        main.liveSidebar.getScore(player).setScore(((data.lapCount-1) * race.getCheckpoints().size()) + data.checkpointIndex);
     }
 
     private void onCompleteLap(RaceData data, long now) {
         Player player = data.player;
         long lapDuration = now - data.lapTime;
+        data.lapTimes.add(lapDuration);
         Bukkit.broadcast(getMessage("race.onCompleteLap.message",
                 formatArguments(
                         "player", LegacyComponentSerializer.legacySection().serialize(player.displayName()),

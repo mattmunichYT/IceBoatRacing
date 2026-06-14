@@ -375,7 +375,7 @@ public class CarCommand implements BasicCommand, Listener {
             // STEP 3
             Title title = Title.title(
                     getMessage("car.create.3.title"),
-                    getMessage("car.create.3.subtitle")
+                    getMessage("car.create.3.subtitle", formatArguments("check",getStringMessage("car.create.3.check")))
             );
             p.showTitle(title);
             p.sendMessage(getMessage("car.create.3.message", formatArguments("check",getStringMessage("car.create.3.check"))));

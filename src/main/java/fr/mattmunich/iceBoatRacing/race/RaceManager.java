@@ -165,7 +165,7 @@ public class RaceManager {
         main.log("Deleting race " + race.getName());
         race.end();
 
-        File raceFile = new File(main.getDataFolder(), "races/" + race.getName().toLowerCase().replace(" ","_") + ".yml");
+        File raceFile = new File(main.getDataFolder(), "races/" + race.getName().replace(" ","_") + ".yml");
         boolean deleted = raceFile.delete();
 
         races.remove(race);
@@ -182,7 +182,7 @@ public class RaceManager {
             return null;
         }
 
-        File file = new File(racesFolder, race.getName() + ".yml");
+        File file = new File(racesFolder, race.getName().replace(" ","_") + ".yml");
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
         if (!file.exists()) {
             main.log("§cCouldn't get config for race " + race.getName() + " because the race config file didn't exist.");

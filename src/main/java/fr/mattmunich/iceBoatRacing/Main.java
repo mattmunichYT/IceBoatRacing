@@ -8,6 +8,7 @@ import fr.mattmunich.iceBoatRacing.race.*;
 import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.CheckpointCommand;
 import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.CheckpointManager;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentBuilder;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
@@ -159,8 +160,11 @@ public final class Main extends JavaPlugin {
     public void severe(String message) { getLogger().severe("[IceBoatRacing] " + message); }
 
     public static Component c(String message) {
-        if(message == null || message.isBlank()) return null;
-        return LegacyComponentSerializer.legacySection().deserialize(message);
+        try {
+            return LegacyComponentSerializer.legacySection().deserialize(message);
+        } catch (Exception e) {
+            return LegacyComponentSerializer.legacySection().deserialize("");
+        }
     }
 
     public static String s(Component component) {

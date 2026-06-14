@@ -97,7 +97,7 @@ public class RaceCommand implements BasicCommand {
                 String raceName = args[1];
                 race = raceManager.getRace(raceName);
             } else {
-                race = raceManager.activeRaces.getFirst();
+                race = raceManager.races.getFirst();
             }
             if(race == null) {
                 source.getSender().sendMessage(Messages.getMessage("race.notFound"));

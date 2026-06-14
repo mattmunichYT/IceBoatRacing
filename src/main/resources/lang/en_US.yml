@@ -72,7 +72,7 @@ race:
     message: "§2%player%§b finished the race in §2%time%§a and ranked §2#%ranking%§a!"
     title: "§2Race finished!"
     subtitle: "§aYou are #%ranking%"
-    statsMessage: "§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lRace Results §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n
+    statsMessage: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lRace Results §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n
     §bRanking: §3#%ranking%§b/%players%\n
     §bTotal time: §x§4§0§C§4§F§F%raceTime%\n
     §bAverage lap: §3%meanLapTime%\n
@@ -83,7 +83,7 @@ race:
     §bGap to next player: §x§F§F§D§7§0§0%gapToNext%\n
     §x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n
     "
-    statsMessageWinner: "§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lRace Results §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n
+    statsMessageWinner: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lRace Results §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n
     §bRanking: §3§l#%ranking%§b/%players%\n
     §bTotal time: §x§4§0§C§4§F§F%raceTime%\n
     §bAverage lap: §3%meanLapTime%\n
@@ -92,7 +92,7 @@ race:
     §x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n
     "
   onEnd:
-    top: "§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lFinal Standings §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n"
+    top: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lFinal Standings §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n"
     playerFormat: "§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%\n"
     highlights: "\n§b🏆 Best lap: §a%bestLapPlayer% §8(§a%bestLapTime%§8)\n
     §b🐢 Slowest lap: §c%worstLapPlayer% §8(§c%worstLapTime%§8)\n
