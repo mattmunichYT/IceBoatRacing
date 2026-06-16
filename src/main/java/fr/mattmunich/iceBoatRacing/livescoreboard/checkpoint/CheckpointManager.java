@@ -240,8 +240,6 @@ public class CheckpointManager {
             return;
         }
 
-        int checkpointCount = 0;
-
         for (String key : Objects.requireNonNull(
                 config.getConfigurationSection("checkpoints")
         ).getKeys(false)) {
@@ -271,7 +269,6 @@ public class CheckpointManager {
             } else {
                 race.addCheckpoint(new Checkpoint(ID, min, max));
             }
-            checkpointCount++;
         }
 
         race.getCheckpoints().sort(Comparator.comparingInt(Checkpoint::getId));

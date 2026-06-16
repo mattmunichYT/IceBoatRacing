@@ -1,6 +1,5 @@
 package fr.mattmunich.iceBoatRacing.cars;
 
-import fr.mattmunich.iceBoatRacing.Main;
 import fr.mattmunich.iceBoatRacing.race.Race;
 import fr.mattmunich.iceBoatRacing.race.RaceData;
 import fr.mattmunich.iceBoatRacing.race.RaceManager;
