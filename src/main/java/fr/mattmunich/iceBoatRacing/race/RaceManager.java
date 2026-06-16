@@ -85,7 +85,6 @@ public class RaceManager {
             checkpointManager.loadRaceCheckpoints(race);
             carManager.loadCars(race);
 
-            assert races != null;
             races.add(race);
             main.log("Race " + name + " has been loaded");
             loadedRaces++;
@@ -126,7 +125,6 @@ public class RaceManager {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public boolean saveRace(Race race) {
-        main.log("Saving race " + race.getName());
         File raceFile = new File(main.getDataFolder(), "races/" + race.getName().replace(" ","_") + ".yml");
         raceFile.getParentFile().mkdirs();
 
@@ -140,7 +138,6 @@ public class RaceManager {
 
         try {
             config.save(raceFile);
-            main.log("Race " + race.getName() + " has been saved");
         } catch (IOException e) {
             main.err("Couldn't save race " + race.getName(),e);
             return false;

@@ -34,18 +34,6 @@ public class CarListener implements Listener {
         e.setCancelled(true);
     }
 
-//    @EventHandler
-//    public void onMoveCar(PlayerMoveEvent e) {
-//        Player p = e.getPlayer();
-//        if(p.getVehicle()!=null && !(p.getVehicle() instanceof Boat)) return;
-//        RaceData data = null;
-//        for(Race race : raceManager.activeRaces) if(race.racers.containsKey(p.getUniqueId())) data = race.racers.get(p.getUniqueId());
-//        if (data == null || data.race == null || data.car == null) return;
-//        if(!data.race.isPreparing() && !data.race.isStarting()) return;
-//
-//        e.setCancelled(true);
-//    }
-
     @EventHandler
     public void onMoveCar2(VehicleMoveEvent e) {
         Vehicle vehicle = e.getVehicle();

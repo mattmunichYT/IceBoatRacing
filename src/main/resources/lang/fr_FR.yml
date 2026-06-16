@@ -114,6 +114,7 @@ race:
       subtitle: "§bEntrez le §3nom§b dans le chat"
       message: "§bCommencez par entrer le nom de la course ci-dessous (dans le chat)."
       completed: "§bLe nom de la course a été défini à §3%name%"
+      alreadyExists: "§cUne course avec le même nom existe déjà, veuillez choisir un autre nom."
 
     #Define the checkpoints?
     2:
@@ -164,32 +165,15 @@ race:
     5:
       title: "§3Création voitures"
       subtitle: "§bLa création va commencer..."
-      message: "§bLe processus de création des voitures va commencer..."
-      checkpointCreation:
-        define: "definir"
-        defineSector: "definir secteur"
-        defineFinish: "definir fin"
-        help: "aide"
+      message: "§bLe processus de création des voitures va commencer...\n§8§oℹEnvoyez %done% pour sauvergarder lorsque vous avez terminé."
+      carCreation:
         done: "sauvegarder"
       feedback:
-        startDefined:
-          title: "§3Départ défini"
-          subtitle: "§bLa ligne de §3départ§b a été définie"
-        finishDefined:
-          title: "§3Arrivée définie"
-          subtitle: "§bLa ligne d'§3arrivée§b a été définie"
-        checkpointDefined:
-          title: "§3Checkpoint défini"
-          subtitle: "§bLe checkpoint §3%checkpointID%§b a été défini"
-        sectorDefined:
-          title: "§3Secteur défini"
-          subtitle: "§bLe secteur §3%sectorID%§b a été défini"
+        endInstructions:
+          actionBar: "§aEnvoyez %done% pour terminer la création"
         done:
           title: "§2Terminé"
-          subtitle: "§aCheckpoints sauvegardés!"
-        error:
-          #Will be shown if the player tries to define a sector first (before defining start line)
-          defineStartLineFirst: "§cCommencez par définir la ligne de départ avant de faire cela."
+          subtitle: "§aVoitures sauvegardés!"
 
     done:
       title: "§3Course sauvegardée !"

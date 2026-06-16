@@ -81,13 +81,20 @@ public class CarManager {
 
         // Spawn boat
         Boat boat = (Boat) loc.getWorld().spawnEntity(loc, boatEntityFromMaterial(boatMat));
-        Component customName = c(car.getCustomName());
-        if(customName == null) customName = c("Race car");
+
+        Component customName;
+
+        if(car.getCustomName() == null) customName = c("Race car");
+        customName = c(car.getCustomName());
+
         boat.customName(customName);
+
         Location boatLocation = boat.getLocation();
+
         float startRotation = (float) main.getConfig().getInt("race.startRotation");
         boatLocation.setRotation(startRotation,0F);
         boat.teleport(boatLocation);
+
         boat.setInvulnerable(true);
 
         boat.addPassenger(player);

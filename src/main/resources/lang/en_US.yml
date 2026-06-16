@@ -114,6 +114,7 @@ race:
       subtitle: "§bEnter the §3name§b in chat"
       message: "§bStart by entering the name of the race below (in chat)."
       completed: "§bThe race name has been set to §3%name%"
+      alreadyExists: "§cA race with the same name already exists, please choose another name."
 
     #Define the checkpoints?
     2:

@@ -275,7 +275,6 @@ public class CheckpointManager {
         }
 
         race.getCheckpoints().sort(Comparator.comparingInt(Checkpoint::getId));
-        main.log("Loaded and sorted " + checkpointCount + " checkpoints for race " + race.getName());
     }
 
     private String serialize(Location loc) {
