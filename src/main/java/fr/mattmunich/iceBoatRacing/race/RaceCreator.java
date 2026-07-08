@@ -72,7 +72,7 @@ public class RaceCreator implements Listener {
      * CarCommand to identify players who are defining cars while creating the race.
      * @apiNote Work in progress
      */
-    public static Map<Player, String> definingCars = new HashMap<>();
+    public static final Map<Player, String> definingCars = new HashMap<>();
 
     /**
      * 1st position of the checkpoint (like WorldEdit)

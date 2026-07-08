@@ -54,6 +54,7 @@ public class RaceManager {
         main.log("Loading all races...");
         int loadedRaces = 0;
 
+        //noinspection ConstantValue
         if(races!=null) {
             for (Race race : races) race.end();
             races.clear();

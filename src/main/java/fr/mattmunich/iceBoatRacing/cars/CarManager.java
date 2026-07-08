@@ -85,7 +85,7 @@ public class CarManager {
         Component customName;
 
         if(car.getCustomName() == null) customName = c("Race car");
-        customName = c(car.getCustomName());
+        else customName = c(car.getCustomName());
 
         boat.customName(customName);
 
