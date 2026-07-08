@@ -97,6 +97,8 @@ race:
     highlights: "\n§b🏆 Best lap: §a%bestLapPlayer% §8(§a%bestLapTime%§8)\n
     §b🐢 Slowest lap: §c%worstLapPlayer% §8(§c%worstLapTime%§8)\n
     §b⚡ Victory gap: §3%winnerGap%\n"
+    bestSectorTimesTop: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬ §x§5§5§D§D§F§F§lBest Sector Times §x§0§0§A§D§F§F§l▬▬▬▬▬\n"
+    sectorFormat: "§bSector §3#%sectorID% §8» §a%player% §8(§e%time%§8)\n"
     bottom: "§x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
 
   #Help message

@@ -64,8 +64,8 @@ public class RaceListener implements Listener {
         if (!nextCheckpoint.contains(player.getLocation())) return;
 
         // Start/finish checkpoint handling
+        long now = System.currentTimeMillis();
         if (nextCheckpoint.getType().equals(Checkpoint.Type.START_FINISH)) {
-            long now = System.currentTimeMillis();
 
             //When starting the race/crossing the start line
             if(data.lapCount==0) data.startTime=now;
@@ -75,11 +75,12 @@ public class RaceListener implements Listener {
 
             //When finishing race
             if(data.lapCount == main.raceLapCount) {
+                onCompleteLap(data, now);
                 onFinishRace(data, now);
 
                 //End race automatically
                 if(race.racing.isEmpty()) {
-                    race.sendRaking();
+                    race.sendRanking();
                     race.end();
                 }
             }
@@ -90,11 +91,12 @@ public class RaceListener implements Listener {
         }
 
         if (nextCheckpoint.getType().equals(Checkpoint.Type.SECTOR)) {
+            data.sectorTimes.put(nextCheckpoint.getSectorID(), now-data.lapTime);
             Bukkit.broadcast(getMessage("race.onCrossSector",
                     formatArguments(
                             "player", LegacyComponentSerializer.legacySection().serialize(player.displayName()),
                             "ID", String.valueOf(nextCheckpoint.getSectorID()),
-                            "time", formatTime(System.currentTimeMillis()-data.lapTime)
+                            "time", formatTime(now-data.lapTime)
                     )
             ));
         }
@@ -106,14 +108,26 @@ public class RaceListener implements Listener {
     private void onCompleteLap(RaceData data, long now) {
         Player player = data.player;
         long lapDuration = now - data.lapTime;
+        long result = data.race.isBestLapTimeYet(lapDuration);
+        boolean bestLapTimeYet = result != -1;
         data.lapTimes.add(lapDuration);
-        Bukkit.broadcast(getMessage("race.onCompleteLap.message",
-                formatArguments(
-                        "player", LegacyComponentSerializer.legacySection().serialize(player.displayName()),
-                        "ID",  "" + data.lapCount,
-                        "time", formatTime(lapDuration)
-                )
-        ));
+        if(bestLapTimeYet) {
+            Bukkit.broadcast(getMessage("race.onCompleteLap.messageBestLapTimeYet",
+                    formatArguments(
+                            "player", LegacyComponentSerializer.legacySection().serialize(player.displayName()),
+                            "ID",  "" + data.lapCount,
+                            "time", formatTime(lapDuration)
+                    )
+            ));
+        } else {
+            Bukkit.broadcast(getMessage("race.onCompleteLap.message",
+                    formatArguments(
+                            "player", LegacyComponentSerializer.legacySection().serialize(player.displayName()),
+                            "ID",  "" + data.lapCount,
+                            "time", formatTime(lapDuration)
+                    )
+            ));
+        }
         Title title = Title.title(
             Messages.getMessage("race.onCompleteLap.title", formatArguments(
                 "currentLapCount", "" + data.lapCount,

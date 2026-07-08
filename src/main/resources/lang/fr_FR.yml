@@ -67,6 +67,7 @@ race:
     title: "§6%currentLapCount%/%raceLapCount%"
     subtitle: "§atours complétés"
     message: "§3%player%§b a terminé le tour n°§3%ID%§b en §3%time%§b !"
+    messageBestLapTimeYet: "§3%player%§b a terminé le tour n°§3%ID%§b avec un temps record de §3%time%§b (meilleurs temps jusqu'à maintenant) !"
   onCrossSector: "§bTemps de §3%player%§b au secteur §3%ID%§b : §3%time%§b"
   onFinish:
     message: "§2%player%§b a terminé la course en §2%time%§a et est classé §2#%ranking%§a !"
@@ -97,6 +98,8 @@ race:
     highlights: "\n§b🏆 Meilleur tour : §a%bestLapPlayer% §8(§a%bestLapTime%§8)\n
     §b🐢 Tour le plus lent : §c%worstLapPlayer% §8(§c%worstLapTime%§8)\n
     §b⚡ Écart victoire : §3%winnerGap%\n"
+    bestSectorTimesTop: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬ §x§5§5§D§D§F§F§lMeilleurs Secteurs §x§0§0§A§D§F§F§l▬▬▬▬▬\n"
+    sectorFormat: "§bSecteur §3#%sectorID% §8» §a%player% §8(§e%time%§8)\n"
     bottom: "§x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
 
   #Help message

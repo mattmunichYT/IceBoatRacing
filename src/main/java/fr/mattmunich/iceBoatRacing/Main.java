@@ -12,6 +12,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.*;
@@ -32,6 +33,8 @@ public final class Main extends JavaPlugin {
     public final Map<UUID, RaceData> racers = new HashMap<>();
     public Objective liveSidebar;
     public int raceLapCount = 0;
+
+    public final ArrayList<Player> testers = new ArrayList<>();
 
     @Override
     public void onEnable() {
@@ -97,8 +100,8 @@ public final class Main extends JavaPlugin {
         checkpointManager.setRaceManager(raceManager);
         log("Initiazed RaceManager for Car and Checkpoint managers");
 
-        //Load races after CarManager and CheckpointManager have RaceManager set.
-        raceManager.loadAllRaces();
+        //Load races after CarManager and CheckpointManager have RaceManager set and after server startup, so that all worlds are loaded.
+        Bukkit.getScheduler().runTask(this, () -> raceManager.loadAllRaces());
     }
 
     private void loadCreators() {

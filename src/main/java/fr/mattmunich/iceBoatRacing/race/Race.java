@@ -11,6 +11,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 import static fr.mattmunich.iceBoatRacing.Main.formatTime;
+import static fr.mattmunich.iceBoatRacing.Main.s;
 import static fr.mattmunich.iceBoatRacing.Messages.formatArguments;
 import static fr.mattmunich.iceBoatRacing.Messages.getMessage;
 
@@ -32,6 +33,8 @@ public class Race {
      * rankings.get(0) is first, rankings.get(1) is second and so on
      */
     public final List<RaceData> rankings = new ArrayList<>();
+
+    public long currentBestLapTime = Long.MAX_VALUE;
 
     /**
      * List of the racers that are actively racing
@@ -63,7 +66,20 @@ public class Race {
         raceManager.togglePrepareRace(sender, this);
     }
 
-    public void sendRaking() {
+    /**
+     * @param time The time of the player who finished a lap (to check if it is the best lap time yet)
+     * @return -1 if the inputted time is longer than the current best lap time. Otherwise, it returns the lastBestLapTime.
+     */
+    public long isBestLapTimeYet(long time) {
+        if (currentBestLapTime > time) {
+            long lastBestLapTime = currentBestLapTime;
+            currentBestLapTime = time;
+            return lastBestLapTime;
+        }
+        else return -1;
+    }
+
+    public void sendRanking() {
         Bukkit.broadcast(getMessage("race.onEnd.top"));
 
         long bestLapTime = Long.MAX_VALUE;
@@ -72,39 +88,67 @@ public class Race {
         Player bestLapPlayer = null;
         Player worstLapPlayer = null;
 
+        Map<Integer, Long> bestSectorTimes = new HashMap<>();
+        Map<Integer, Player> bestSectorPlayers = new HashMap<>();
+
         for (RaceData data : racers.values()) {
-            Bukkit.broadcast(getMessage("race.onEnd.playerFormat",formatArguments(
+            Bukkit.broadcast(getMessage("race.onEnd.playerFormat", formatArguments(
                     "ranking", data.ranking + "",
                     "player", data.player == null ? "OFFLINE" : data.player.getName(),
                     "raceTime", formatTime(data.getRaceTime())
             )));
 
             for (long lapTime : data.getLapTimes()) {
-
                 if (lapTime < bestLapTime) {
                     bestLapTime = lapTime;
                     bestLapPlayer = data.player;
                 }
-
                 if (lapTime > worstLapTime) {
                     worstLapTime = lapTime;
                     worstLapPlayer = data.player;
+                }
+            }
+
+            Map<Integer, Long> sectorTimes = data.getSectorTimes();
+            if (sectorTimes != null) {
+                for (int sectorID : sectorTimes.keySet()) {
+                    bestSectorTimes.putIfAbsent(sectorID, Long.MAX_VALUE);
+
+                    long playerSectorTime = sectorTimes.get(sectorID);
+
+                    if (playerSectorTime < bestSectorTimes.get(sectorID)) {
+                        bestSectorTimes.put(sectorID, playerSectorTime);
+                        bestSectorPlayers.put(sectorID, data.player);
+                    }
                 }
             }
         }
 
         long winnerTime = rankings.getFirst().getRaceTime();
         long lastTime = rankings.getLast().getRaceTime();
-
         long winnerGap = lastTime - winnerTime;
 
-        Bukkit.broadcast(getMessage("race.onEnd.highlights",formatArguments(
+        Bukkit.broadcast(getMessage("race.onEnd.highlights", formatArguments(
                 "bestLapPlayer", bestLapPlayer == null ? "§c§oOffline" : bestLapPlayer.getName(),
                 "bestLapTime", bestLapTime == Long.MAX_VALUE ? "N/A" : formatTime(bestLapTime),
                 "worstLapPlayer", worstLapPlayer == null ? "§c§oOffline" : worstLapPlayer.getName(),
-                "worstLapTime", worstLapTime == Long.MAX_VALUE ? "N/A" : formatTime(worstLapTime),
+                "worstLapTime", worstLapTime == Long.MIN_VALUE ? "N/A" : formatTime(worstLapTime), // Correction ici (MIN_VALUE)
                 "winnerGap", formatTime(winnerGap)
         )));
+
+        // 4. Affichage des Secteurs
+        Bukkit.broadcast(getMessage("race.onEnd.bestSectorTimesTop"));
+        for (int sectorID : bestSectorTimes.keySet()) {
+            Player sectorRecordHolder = bestSectorPlayers.get(sectorID);
+            String playerName = (sectorRecordHolder == null) ? "§c§oUnknown" : sectorRecordHolder.getName();
+            long recordTime = bestSectorTimes.get(sectorID);
+
+            Bukkit.broadcast(getMessage("race.onEnd.sectorFormat", formatArguments(
+                    "sectorID", String.valueOf(sectorID),
+                    "player", playerName,
+                    "time", recordTime == Long.MAX_VALUE ? "N/A" : formatTime(recordTime)
+            )));
+        }
 
         Bukkit.broadcast(getMessage("race.onEnd.bottom"));
     }

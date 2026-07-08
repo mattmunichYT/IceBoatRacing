@@ -3,9 +3,7 @@ package fr.mattmunich.iceBoatRacing.race;
 import fr.mattmunich.iceBoatRacing.cars.Car;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class RaceData {
     public Player player;
@@ -17,6 +15,7 @@ public class RaceData {
     public long lapTime = 0;
     public long endTime = 0;
     public final List<Long> lapTimes = new ArrayList<>();
+    public final Map<Integer,Long> sectorTimes = new HashMap<>();
     public Race race;
 
     public RaceData(Player player) {
@@ -44,5 +43,9 @@ public class RaceData {
 
     public List<Long> getLapTimes() {
         return lapTimes;
+    }
+
+    public Map<Integer,Long> getSectorTimes() {
+        return sectorTimes;
     }
 }

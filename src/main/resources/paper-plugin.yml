@@ -5,6 +5,7 @@ api-version: '1.21'
 author:  mattmunich
 website: https://modrinth.com/plugin/ibr
 description: A plugin for Minecraft ice boat racing
+load: POSTWORLD
 prefix: "[IceBoatRacing] "
 provides:
   - iceboatracing

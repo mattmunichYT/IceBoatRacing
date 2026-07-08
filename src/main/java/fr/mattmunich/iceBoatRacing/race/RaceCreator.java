@@ -129,7 +129,6 @@ public class RaceCreator implements Listener {
     * End (Save)
     *
     * The actual things to do:
-    * - Add support to add cars
     * - Custom lap count for each race
     * -> Define to 1 if define finish =/= start
     * - After defining finish => end checkpoint creation process
