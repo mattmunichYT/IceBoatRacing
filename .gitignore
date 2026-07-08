@@ -1,2 +1,23 @@
-# Project exclude paths
-/target/
+# --- Gradle ---
+.gradle/
+build/
+
+# --- IntelliJ IDEA ---
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# --- Operating System Files ---
+.DS_Store
+Thumbs.db
+
+# --- Log files and backups ---
+*.log
+*.tmp
+*.bak
+/gradle/wrapper/gradle-wrapper.jar
+/gradle/wrapper/gradle-wrapper.properties
+/gradlew
+/gradlew.bat
