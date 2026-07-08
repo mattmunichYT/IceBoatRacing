@@ -1,110 +1,260 @@
 package fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint;
 
 import fr.mattmunich.iceBoatRacing.Main;
+import fr.mattmunich.iceBoatRacing.race.Race;
+import fr.mattmunich.iceBoatRacing.race.RaceManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.configuration.file.YamlConfiguration;
 
+import java.io.IOException;
 import java.util.*;
 
 public class CheckpointManager {
 
     private final Main main;
-    private final List<Checkpoint> checkpoints = new ArrayList<>();
+    private  RaceManager raceManager;
 
     public CheckpointManager(Main main) {
         this.main = main;
     }
 
-    public void add(Checkpoint checkpoint) {
-        checkpoints.removeIf(c -> c.getIndex() == checkpoint.getIndex());
-        checkpoints.add(checkpoint);
-        checkpoints.sort(Comparator.comparingInt(Checkpoint::getIndex));
+    public void setRaceManager(RaceManager raceManager) {
+        this.raceManager = raceManager;
     }
 
-    public Checkpoint get(int index) {
-        return index < checkpoints.size() ? checkpoints.get(index) : null;
+    /**
+     * Get the checkpoint with a specific ID from a specific race
+     * @param race The race that contains the checkpoint
+     * @param ID The ID of the checkpoint
+     */
+    public Checkpoint get(Race race, int ID) {
+        return ID < race.getCheckpoints().size() ? race.getCheckpoints().get(ID) : null;
     }
 
-    public List<Checkpoint> getAll() {
+    /**
+     * Get all the checkpoints
+     * @return a map of all the races as keys and their checkpoint list as values
+     */
+    public Map<Race, List<Checkpoint>> getAll() {
+        Map<Race, List<Checkpoint>> checkpoints = new HashMap<>();
+        for (Race race : raceManager.races) {
+            checkpoints.put(race, race.getCheckpoints());
+        }
         return checkpoints;
     }
 
-    public Checkpoint getAt(Location loc) {
-        for (Checkpoint checkpoint : getAll()) {
-            if (checkpoint.contains(loc)) {
-                return checkpoint;
+    /**
+    * Get all the checkpoints in the form of a list
+     *@return a list of all the checkpoints
+    */
+    public List<Checkpoint> getAllNoRaceInfo() {
+        List<Checkpoint> checkpoints = new ArrayList<>();
+        for (Race race : raceManager.races) {
+            checkpoints.addAll(race.getCheckpoints());
+        }
+        return checkpoints;
+    }
+
+    /**
+     * Will return a checkpoint found at the location
+     * @param loc The location where to look for checkpoints
+     * @return Returns in the form of a map of the race and the checkpoint found
+     *
+     */
+    public Map<Race, Checkpoint> getAt(Location loc) {
+        for(Map.Entry<Race, List<Checkpoint>> entry : getAll().entrySet()) {
+            for (Checkpoint checkpoint : entry.getValue()) {
+                if (checkpoint.contains(loc)) {
+                    Map<Race,Checkpoint> result = new  HashMap<>();
+                    result.put(entry.getKey(), checkpoint);
+                    return result;
+                }
             }
         }
+
+
         return null;
     }
 
-    public void remove(Checkpoint checkpoint) {
-        if (checkpoint == null) return;
+    public boolean remove(Race race, Checkpoint checkpoint) {
+        if (checkpoint == null) return false;
 
-        checkpoints.remove(checkpoint);
-        main.getConfig().set("checkpoints." + checkpoint.getIndex(), null);
-        main.saveConfig();
+        YamlConfiguration config = raceManager.getRaceConfig(race);
+        if(config == null) {
+            main.log("§cCheckpoint " + checkpoint.getId() + " for race " + race.getName() + " wasn't removed, see cause above.");
+            return false;
+        }
+
+        config.set("checkpoints." + checkpoint.getId(), null);
+        try {
+            raceManager.saveRaceConfig(race, config);
+        } catch (IOException e) {
+            main.err("Couldn't remove checkpoint " + checkpoint.getId() + " for race " + race.getName() + " because the it's config threw an error on saving. ",e);
+            return false;
+        }
+        return race.removeCheckpoint(checkpoint);
     }
 
-    public void saveCheckpoint(int index, Location l1, Location l2, Checkpoint.Type type) {
+    /**
+     * Saves a checkpoint for a race
+     * @param race The race that the checkpoint is assigned to
+     * @param l1 The 1st location of the checkpoint (pos 1)
+     * @param l2 The 2nd location of the checkpoint (pos 2)
+     * @param type The checkpoint's type (NORMAL or START_FINISH)
+     */
+    public Checkpoint saveCheckpoint(Race race, Location l1, Location l2, Checkpoint.Type type) {
         Location min = min(l1, l2);
         Location max = max(l1, l2);
 
-        String path = "checkpoints." + index;
+        int ID = race.getCheckpoints().stream()
+                .mapToInt(Checkpoint::getId)
+                .max()
+                .orElse(0) + 1;
 
-        main.getConfig().set(path + ".world", min.getWorld().getName());
-        main.getConfig().set(path + ".min", serialize(min));
-        main.getConfig().set(path + ".max", serialize(max));
-        main.getConfig().set(path + ".type", type.name()); // store type
 
-        main.saveConfig();
+        YamlConfiguration config = raceManager.getRaceConfig(race);
+        if(config == null) {
+            main.log("§cCheckpoint " + ID + " for race " + race.getName() + " wasn't saved, see cause above.");
+            return null;
+        }
 
-        add(new Checkpoint(index, min, max, type));
+        String path = "checkpoints." + ID;
+
+        config.set(path + ".world", min.getWorld().getName());
+        config.set(path + ".min", serialize(min));
+        config.set(path + ".max", serialize(max));
+        config.set(path + ".type", type.name());
+
+        try {
+            raceManager.saveRaceConfig(race, config);
+        } catch (IOException e) {
+            main.err("Couldn't save checkpoint " + ID + " for race " + race.getName() + " because the it's config threw an error on saving. ",e);
+            return null;
+        }
+
+        Checkpoint checkpoint = new Checkpoint(ID, min, max, type);
+        race.addCheckpoint(checkpoint);
+        return checkpoint;
     }
 
-    public void saveSectorCheckpoint(int sectorIndex, Location l1, Location l2) {
-        int nextIndex = getAll().stream()
-                .mapToInt(Checkpoint::getIndex)
-                .max().orElse(-1) + 1;
+    /**
+     * Saves a checkpoint for a race
+     * @param race The race that the checkpoint is assigned to
+     * @param l1 The 1st location of the checkpoint (pos 1)
+     * @param l2 The 2nd location of the checkpoint (pos 2)
+     * @return The type of checkpoint that was saved, to figure out which feedback to give to the player
+     */
+    public Checkpoint saveCheckpoint(Race race, Location l1, Location l2) {
+        Location min = min(l1, l2);
+        Location max = max(l1, l2);
 
-        String path = "checkpoints." + nextIndex;
+        int ID = race.getCheckpoints().stream()
+                .mapToInt(Checkpoint::getId)
+                .max()
+                .orElse(0) + 1;
 
-        main.getConfig().set(path + ".world", l1.getWorld().getName());
-        main.getConfig().set(path + ".min", serialize(min(l1, l2)));
-        main.getConfig().set(path + ".max", serialize(max(l1, l2)));
-        main.getConfig().set(path + ".type", "SECTOR");
-        main.getConfig().set(path + ".sectorIndex", sectorIndex);
+        Checkpoint.Type type = Checkpoint.Type.NORMAL;
 
-        main.saveConfig();
+        if(ID == 1) {
+            type = Checkpoint.Type.START_FINISH;
+        }
 
-        add(new Checkpoint(nextIndex, sectorIndex, min(l1, l2), max(l1, l2)));
+        YamlConfiguration config = raceManager.getRaceConfig(race);
+        if(config == null) {
+            main.log("§cCheckpoint " + ID + " for race " + race.getName() + " wasn't saved, see cause above.");
+            return null;
+        }
+
+        String path = "checkpoints." + ID;
+
+        config.set(path + ".world", min.getWorld().getName());
+        config.set(path + ".min", serialize(min));
+        config.set(path + ".max", serialize(max));
+        config.set(path + ".type", type.name());
+
+        try {
+            raceManager.saveRaceConfig(race, config);
+        } catch (IOException e) {
+            main.err("Couldn't save checkpoint " + ID + " for race " + race.getName() + " because the it's config threw an error on saving. ",e);
+            return null;
+        }
+
+        Checkpoint checkpoint = new Checkpoint(ID, min, max, type);
+        race.addCheckpoint(checkpoint);
+        return checkpoint;
     }
 
-    public void loadCheckpoints() {
-        checkpoints.clear();
+    public Checkpoint saveSectorCheckpoint(Race race, Location l1, Location l2) {
+        Location min = min(l1, l2);
+        Location max = max(l1, l2);
 
-        if (!main.getConfig().isConfigurationSection("checkpoints")) {
-            main.log("§eNo checkpoints to load.");
+        int ID = race.getCheckpoints().stream()
+                .mapToInt(Checkpoint::getId)
+                .max()
+                .orElse(0) + 1;
+
+        int sectorID = 1;
+        for(Checkpoint check : race.getCheckpoints()) {
+            //Add 1 for each existing sector
+            if(check.getType().equals(Checkpoint.Type.SECTOR)) sectorID++;
+        }
+
+        YamlConfiguration config = raceManager.getRaceConfig(race);
+        if(config == null) {
+            main.log("§cCheckpoint " + ID + " for race " + race.getName() + " wasn't saved, see cause above.");
+            return null;
+        }
+
+        String path = "checkpoints." + ID;
+
+        config.set(path + ".world", min.getWorld().getName());
+        config.set(path + ".min", serialize(min));
+        config.set(path + ".max", serialize(max));
+        config.set(path + ".type", Checkpoint.Type.SECTOR.name());
+        config.set(path + ".sectorID", sectorID);
+
+        try {
+            raceManager.saveRaceConfig(race, config);
+        } catch (IOException e) {
+            main.err("Couldn't save checkpoint " + ID + " for race " + race.getName() + " because the it's config threw an error on saving. ",e);
+            return null;
+        }
+
+        Checkpoint checkpoint = new Checkpoint(ID, sectorID, min, max);
+        race.addCheckpoint(checkpoint);
+        return checkpoint;
+    }
+
+    public void loadRaceCheckpoints(Race race) {
+        YamlConfiguration config = raceManager.getRaceConfig(race);
+        if(config == null) {
+            main.log("§cCheckpoints for race " + race.getName() + " were not loaded, see cause above.");
             return;
         }
-        int checkpointCount = 0;
+
+        race.clearCheckpoints();
+        if (!config.isConfigurationSection("checkpoints")) {
+            main.log("§eNo checkpoints to load for race " + race.getName());
+            return;
+        }
 
         for (String key : Objects.requireNonNull(
-                main.getConfig().getConfigurationSection("checkpoints")
+                config.getConfigurationSection("checkpoints")
         ).getKeys(false)) {
 
-            int index = Integer.parseInt(key);
-            String worldName = main.getConfig().getString("checkpoints." + key + ".world");
+            int ID = Integer.parseInt(key);
+            String worldName = config.getString("checkpoints." + key + ".world");
 
             Location min = deserialize(worldName,
-                    main.getConfig().getString("checkpoints." + key + ".min"));
+                    config.getString("checkpoints." + key + ".min"));
             Location max = deserialize(worldName,
-                    main.getConfig().getString("checkpoints." + key + ".max"));
+                    config.getString("checkpoints." + key + ".max"));
 
             if (min == null || max == null) continue;
 
-            String typeString = main.getConfig().getString("checkpoints." + key + ".type");
+            String typeString = config.getString("checkpoints." + key + ".type");
             Checkpoint.Type type = Checkpoint.Type.NORMAL;
 
             if (typeString != null) {
@@ -112,18 +262,16 @@ public class CheckpointManager {
             }
 
             if (type == Checkpoint.Type.SECTOR) {
-                int sectorIndex = main.getConfig().getInt("checkpoints." + key + ".sectorIndex");
-                add(new Checkpoint(index, sectorIndex, min, max));
+                int sectorID = config.getInt("checkpoints." + key + ".sectorID");
+                race.addCheckpoint(new Checkpoint(ID, sectorID, min, max));
             } else if (type == Checkpoint.Type.START_FINISH) {
-                add(new Checkpoint(index, min, max, Checkpoint.Type.START_FINISH));
+                race.addCheckpoint(new Checkpoint(ID, min, max, Checkpoint.Type.START_FINISH));
             } else {
-                add(new Checkpoint(index, min, max));
+                race.addCheckpoint(new Checkpoint(ID, min, max));
             }
-            checkpointCount++;
         }
 
-        checkpoints.sort(Comparator.comparingInt(Checkpoint::getIndex));
-        main.log("Loaded and sorted " + checkpointCount + " checkpoints.");
+        race.getCheckpoints().sort(Comparator.comparingInt(Checkpoint::getId));
     }
 
     private String serialize(Location loc) {
@@ -163,28 +311,39 @@ public class CheckpointManager {
                 Math.max(a.getZ(), b.getZ()));
     }
 
-    public void normalize() {
-        // Sort by current index first
-        checkpoints.sort(Comparator.comparingInt(Checkpoint::getIndex));
+    public void normalize(Race race) {
+        YamlConfiguration config = raceManager.getRaceConfig(race);
+        if(config == null) {
+            main.log("§cCheckpoints for race " + race.getName() + " were not normalized, see cause above.");
+            return;
+        }
+
+        List<Checkpoint> checkpoints = race.getCheckpoints();
+        // Sort by current ID first
+        checkpoints.sort(Comparator.comparingInt(Checkpoint::getId));
 
         // Clear old config checkpoints section
-        main.getConfig().set("checkpoints", null);
+        config.set("checkpoints", null);
 
         // Renumber checkpoints sequentially
         for (int i = 0; i < checkpoints.size(); i++) {
             Checkpoint old = checkpoints.get(i);
 
-            // Create a new checkpoint with updated index
+            // Create a new checkpoint with updated ID
             Checkpoint updated = new Checkpoint(i, old.getMin(), old.getMax());
             checkpoints.set(i, updated);
 
             // Save to config
             String path = "checkpoints." + i;
-            main.getConfig().set(path + ".world", updated.getMin().getWorld().getName());
-            main.getConfig().set(path + ".min", serialize(updated.getMin()));
-            main.getConfig().set(path + ".max", serialize(updated.getMax()));
+            config.set(path + ".world", updated.getMin().getWorld().getName());
+            config.set(path + ".min", serialize(updated.getMin()));
+            config.set(path + ".max", serialize(updated.getMax()));
         }
 
-        main.saveConfig();
+        try {
+            raceManager.saveRaceConfig(race, config);
+        } catch (IOException e) {
+            main.err("Couldn't normalize checkpoints for race " + race.getName() + " because the it's config threw an error on saving. ",e);
+        }
     }
 }

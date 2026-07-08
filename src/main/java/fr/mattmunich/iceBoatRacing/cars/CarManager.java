@@ -1,16 +1,21 @@
 package fr.mattmunich.iceBoatRacing.cars;
 
 import fr.mattmunich.iceBoatRacing.Main;
+import fr.mattmunich.iceBoatRacing.race.Race;
+import fr.mattmunich.iceBoatRacing.race.RaceManager;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.*;
 
 import static fr.mattmunich.iceBoatRacing.Main.c;
@@ -18,44 +23,56 @@ import static fr.mattmunich.iceBoatRacing.Main.s;
 
 public class CarManager {
     private final Main main;
-
-    public final List<Car> cars = new ArrayList<>();
+    private RaceManager raceManager;
 
     public CarManager(Main main) {
         this.main = main;
     }
 
-    public void add(Car car) {
-        cars.removeIf(c -> c.getId() == car.getId());
-        cars.add(car);
-        Player owner = Bukkit.getPlayer(car.getOwner());
-        if(owner != null && main.racers.containsKey(owner.getUniqueId())) {
-            main.racers.get(owner.getUniqueId()).car = car;
-        }
+    public void setRaceManager(RaceManager raceManager) {
+        this.raceManager = raceManager;
     }
 
-    public @Nullable Car get(int id) {
-        return cars.stream()
+    public @Nullable Car get(Race race, int id) {
+        return race.getCars().stream()
                 .filter(c -> c.getId() == id)
                 .findFirst()
                 .orElse(null);
     }
 
-    public List<Car> getAll() {
+    /**
+     * Get all the checkpoints
+     * @return a map of all the races as keys and their checkpoint list as values
+     */
+    public Map<Race, List<Car>> getAll() {
+        Map<Race, List<Car>> cars = new HashMap<>();
+        for (Race race : raceManager.races) {
+            cars.put(race, race.getCars());
+        }
         return cars;
     }
 
-    public void changeOwner(Car car, UUID newOwner) {
+    public boolean changeOwner(Race race, Car car, UUID newOwner) {
         car.setOwner(newOwner);
 
+        YamlConfiguration config = raceManager.getRaceConfig(race);
+        if(config == null) return false;
+
         String path = "cars." + car.getId() + ".owner";
-        main.getConfig().set(path, newOwner.toString());
-        main.saveConfig();
+        config.set(path, newOwner.toString());
+
+        try {
+            raceManager.saveRaceConfig(race, config);
+        } catch (IOException e) {
+            main.err("Couldn't rename car " + car.getId() + " for race " + race.getName(),e);
+            return false;
+        }
 
         Player p = Bukkit.getPlayer(newOwner);
-        if (p != null && main.racers.containsKey(p.getUniqueId())) {
-            main.racers.get(p.getUniqueId()).car = car;
+        if (p != null && race.racers.containsKey(p.getUniqueId())) {
+            race.racers.get(p.getUniqueId()).car = car;
         }
+        return true;
     }
 
     public void spawnCar(Car car, Player player) {
@@ -64,70 +81,87 @@ public class CarManager {
 
         // Spawn boat
         Boat boat = (Boat) loc.getWorld().spawnEntity(loc, boatEntityFromMaterial(boatMat));
-        boat.customName(c(car.getCustomName()));
+
+        Component customName;
+
+        if(car.getCustomName() == null) customName = c("Race car");
+        else customName = c(car.getCustomName());
+
+        boat.customName(customName);
+
         Location boatLocation = boat.getLocation();
+
         float startRotation = (float) main.getConfig().getInt("race.startRotation");
         boatLocation.setRotation(startRotation,0F);
         boat.teleport(boatLocation);
+
         boat.setInvulnerable(true);
 
         boat.addPassenger(player);
         car.setBoat(boat);
     }
 
-    public void saveCar(UUID owner, Location startingLocation, ItemStack boatItem) {
+    public void saveCar(Race race, UUID owner, Location startingLocation, ItemStack boatItem) {
 
-        int id = count();
+        int id = count(race);
         String path = "cars." + id;
-        String customName = s(boatItem.getItemMeta().customName()).isBlank() ? "Race car" : s(boatItem.getItemMeta().customName());
+        String customName = s(boatItem.getItemMeta().customName()) == null ? "Race car" : s(boatItem.getItemMeta().customName());
 
-        main.getConfig().set(path + ".world", startingLocation.getWorld().getName());
-        main.getConfig().set(path + ".startingLocation", serialize(startingLocation));
-        main.getConfig().set(path + ".owner", owner.toString());
-        main.getConfig().set(path + ".boatMaterial", boatItem.getType().name());
-        main.getConfig().set(path + ".boatCustomName", customName);
+        YamlConfiguration config = raceManager.getRaceConfig(race);
 
-        main.saveConfig();
+        config.set(path + ".world", startingLocation.getWorld().getName());
+        config.set(path + ".startingLocation", serialize(startingLocation));
+        config.set(path + ".owner", owner.toString());
+        config.set(path + ".boatMaterial", boatItem.getType().name());
+        config.set(path + ".boatCustomName", customName);
 
-        add(new Car(id, owner, startingLocation, boatItem.getType(), s(boatItem.getItemMeta().customName())));
+        try {
+            raceManager.saveRaceConfig(race,config);
+        } catch (IOException e) {
+            main.err("Couldn't save car " + id + " for race " + race.getName() + " because the it's config threw an error on saving. ",e);
+        }
+
+        race.addCar(new Car(id, owner, startingLocation, boatItem.getType(), s(boatItem.getItemMeta().customName())));
     }
 
-    public void loadCars() {
-        cars.clear();
+    public void loadCars(Race race) {
+        race.clearCars();
+        
+        YamlConfiguration config = raceManager.getRaceConfig(race);
 
-        if (!main.getConfig().isConfigurationSection("cars")) return;
+        if (!config.isConfigurationSection("cars")) return;
 
         for (String key : Objects.requireNonNull(
-                main.getConfig().getConfigurationSection("cars")
+                config.getConfigurationSection("cars")
         ).getKeys(false)) {
 
             int id = Integer.parseInt(key);
             String path = "cars." + id;
 
-            String worldName = main.getConfig().getString(path + ".world");
+            String worldName = config.getString(path + ".world");
             Location loc = deserialize(
                     worldName,
-                    main.getConfig().getString(path + ".startingLocation")
+                    config.getString(path + ".startingLocation")
             );
 
             if (loc == null) continue;
 
             UUID owner = UUID.fromString(
-                    Objects.requireNonNull(main.getConfig().getString(path + ".owner"))
+                    Objects.requireNonNull(config.getString(path + ".owner"))
             );
 
             Material material = Material.valueOf(
-                    main.getConfig().getString(path + ".boatMaterial", "OAK_BOAT")
+                    config.getString(path + ".boatMaterial", "OAK_BOAT")
             );
 
-            String customName = main.getConfig().getString(path + ".boatCustomName");
+            String customName = config.getString(path + ".boatCustomName");
 
-            cars.add(new Car(id, owner, loc, material,customName));
+            race.addCar(new Car(id, owner, loc, material, customName));
         }
     }
 
-    public int count() {
-        return getAll().size();
+    public int count(Race race) {
+        return race.getCars().size();
     }
 
     private String serialize(Location loc) {
@@ -149,12 +183,21 @@ public class CarManager {
         );
     }
 
-    public void remove(Car car) {
-        if (car == null) return;
+    public boolean remove(Race race, Car car) {
+        if (car == null) return false;
+        if (race == null) return false;
 
-        cars.remove(car);
-        main.getConfig().set("cars." + car.getId(), null);
-        main.saveConfig();
+        YamlConfiguration config = raceManager.getRaceConfig(race);
+        if(config == null) return false;
+
+        config.set("cars." + car.getId(), null);
+        try {
+            raceManager.saveRaceConfig(race, config);
+        } catch (IOException e) {
+            main.err("Couldn't remove car " + car.getId() + " for race " + race.getName(),e);
+            return false;
+        }
+        return race.removeCar(car);
     }
 
 

@@ -1,19 +1,18 @@
 package fr.mattmunich.iceBoatRacing;
 
 import fr.mattmunich.iceBoatRacing.cars.CarCommand;
+import fr.mattmunich.iceBoatRacing.cars.CarCreator;
 import fr.mattmunich.iceBoatRacing.cars.CarListener;
 import fr.mattmunich.iceBoatRacing.cars.CarManager;
 import fr.mattmunich.iceBoatRacing.listeners.Connection;
-import fr.mattmunich.iceBoatRacing.race.RaceData;
+import fr.mattmunich.iceBoatRacing.race.*;
 import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.CheckpointCommand;
 import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.CheckpointManager;
-import fr.mattmunich.iceBoatRacing.race.RaceCommand;
-import fr.mattmunich.iceBoatRacing.race.RaceListener;
-import fr.mattmunich.iceBoatRacing.race.RaceManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.*;
@@ -26,16 +25,16 @@ public final class Main extends JavaPlugin {
 
     CheckpointManager checkpointManager;
     CarManager carManager;
+    CarCreator carCreator;
     Messages messages;
     RaceManager raceManager;
+    RaceCreator raceCreator;
 
-    public Map<UUID, RaceData> racers = new HashMap<>();
+    public final Map<UUID, RaceData> racers = new HashMap<>();
     public Objective liveSidebar;
-    public boolean startingRace = false;
-    public boolean hasRaceStarted = false;
-    public boolean preparingRace = false;
     public int raceLapCount = 0;
-    public Map<UUID, Integer> finishedRace = new HashMap<>();
+
+    public final ArrayList<Player> testers = new ArrayList<>();
 
     @Override
     public void onEnable() {
@@ -45,12 +44,9 @@ public final class Main extends JavaPlugin {
 
         loadMessages();
 
-        loadCheckpoints();
+        loadManagers();
 
-        loadCars();
-
-        loadRaceManager();
-
+        loadCreators();
 
         if (registerScoreboard()) return;
 
@@ -59,15 +55,17 @@ public final class Main extends JavaPlugin {
         registerListeners();
 
         log("Done enabling plugin!");
+
     }
 
     private void registerListeners() {
         PluginManager pm = Bukkit.getPluginManager();
-        pm.registerEvents(new CarCommand(this, carManager), this);
-        pm.registerEvents(new CarListener(this),this);
-        pm.registerEvents(new Connection(this,carManager),this);
-        pm.registerEvents(new CheckpointCommand(checkpointManager,this),this);
-        pm.registerEvents(new RaceListener(this,checkpointManager),this);
+        pm.registerEvents(new CarListener(raceManager),this);
+        pm.registerEvents(new CarCreator(this, raceManager, carManager), this);
+        pm.registerEvents(new Connection(this,raceManager),this);
+        pm.registerEvents(new CheckpointCommand(checkpointManager,raceManager, this),this);
+        pm.registerEvents(new RaceListener(this,raceManager),this);
+        pm.registerEvents(new RaceCreator(this,raceManager,checkpointManager,carManager,carCreator), this);
     }
 
 
@@ -87,24 +85,30 @@ public final class Main extends JavaPlugin {
         log("Done loading messages!");
     }
 
-    private void loadCheckpoints() {
-        log("Loading checkpoints...");
-        checkpointManager = new CheckpointManager(this);
-        Bukkit.getScheduler().runTask(this, () -> checkpointManager.loadCheckpoints());
-        log("Done loading checkpoints!");
-    }
-
-    private void loadCars() {
-        log("Loading cars...");
+    private void loadManagers() {
+        log("Loading managers...");
+        //Preload car and checkpoint manager for racemanager
         carManager = new CarManager(this);
-        Bukkit.getScheduler().runTask(this, () -> carManager.loadCars());
-        log("Done loading cars!");
+        checkpointManager = new CheckpointManager(this);
+
+        //Load race manager
+        raceManager = new RaceManager(this,carManager, checkpointManager);
+        log("Done loading managers!");
+
+        //Initalise race manager in car and checkpoint manager
+        carManager.setRaceManager(raceManager);
+        checkpointManager.setRaceManager(raceManager);
+        log("Initiazed RaceManager for Car and Checkpoint managers");
+
+        //Load races after CarManager and CheckpointManager have RaceManager set and after server startup, so that all worlds are loaded.
+        Bukkit.getScheduler().runTask(this, () -> raceManager.loadAllRaces());
     }
 
-    private void loadRaceManager() {
-        log("Loading race manager...");
-        raceManager = new RaceManager(this,carManager);
-        log("Done loading race manager!");
+    private void loadCreators() {
+        log("Loading car and race creator...");
+        carCreator = new CarCreator(this, raceManager, carManager);
+        raceCreator = new RaceCreator(this,raceManager,checkpointManager,carManager,carCreator);
+        log("Done loading car and race creator!");
     }
 
     public boolean registerScoreboard() {
@@ -137,29 +141,45 @@ public final class Main extends JavaPlugin {
 
     private void registerCommands() {
         log("Registering commands...");
-        registerCommand("iceboatracing", "Command to manage the plugin", Collections.singleton("ibr"), new IBRCommand(this));
-        registerCommand("checkpoint", "Command to manage checkpoints", new CheckpointCommand(checkpointManager,this));
-        registerCommand("car", "Command to manage cars", new CarCommand(this,carManager));
-        registerCommand("race", "Command to manage the race", new RaceCommand(this,raceManager));
+        registerCommand("iceboatracing", "Command to manage the plugin", List.of("ibr"), new IBRCommand(this));
+        registerCommand("checkpoint", "Command to manage checkpoints", new CheckpointCommand(checkpointManager,raceManager, this));
+        registerCommand("car", "Command to manage cars", new CarCommand(carManager,raceManager,carCreator));
+        registerCommand("race", "Command to manage the race", new RaceCommand(this, raceManager,raceCreator));
         log("Done registering commands!");
     }
-
-
 
     @Override
     public void onDisable() {
         super.onDisable();
+        raceManager.saveAllRaces();
     }
 
     public void log(String message) {
         Bukkit.getConsoleSender().sendMessage("[IceBoatRacing] " + message);
     }
 
+    public void err(String message, Exception e) { getLogger().severe("[IceBoatRacing] " + message + "\nStacktrace: "  + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace())); }
+
+    public void warn(String message) { getLogger().warning("[IceBoatRacing] " + message); }
+
+    public void severe(String message) { getLogger().severe("[IceBoatRacing] " + message); }
+
     public static Component c(String message) {
-        return LegacyComponentSerializer.legacySection().deserialize(message);
+        try {
+            return LegacyComponentSerializer.legacySection().deserialize(message);
+        } catch (Exception e) {
+            return LegacyComponentSerializer.legacySection().deserialize("");
+        }
     }
 
-    public static String s(Component component) { return ((TextComponent) component).content(); }
+    public static String s(Component component) {
+        try {
+            return ((TextComponent) component).content();
+        } catch (Exception e) {
+            return null;
+        }
+
+    }
 
     public static String formatTime(long durationMs) {
         long minutes = durationMs / 60000;

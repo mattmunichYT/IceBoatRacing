@@ -9,13 +9,13 @@
 # ----------------------------------------------------------------
 # Some instructions:
 # - Color codes
-# You can use the § sign followed by a specific caracther to
+# You can use the § sign followed by a specific character to
 # add color to these messages.
 #
 # - Arguments/Variables
 # Some messages support arguments that will be formatted like:
 # %argument%. These will are hard-coded in the plugin and will
-# be replaced indenpendently from this config. If they are
+# be replaced independently of this config. If they are
 # missing, they just won't show up in the message.
 # ----------------------------------------------------------------
 
@@ -40,9 +40,9 @@ checkpoint:
   #Success messages
   startLineSaved: "§aStart line saved!\n§8ℹ Use /checkpoint setFinish if your finish line differs from the start"
   finishLineSaved: "§aFinish line saved!"
-  saved: "§aCheckpoint §2%index%§a saved"
-  sectorSaved: "§aSector §e%index% §asaved!"
-  removed: "§aCheckpoint §6%index%§a removed"
+  saved: "§aCheckpoint §2%ID%§a saved"
+  sectorSaved: "§aSector §e%ID% §asaved!"
+  removed: "§aCheckpoint §6%ID%§a removed"
   count: "§aThere are %count% checkpoints"
   resetPlayerScore: "§aScore of §6%player%§a reset"
   normalized: "§aCheckpoints normalized"
@@ -53,12 +53,14 @@ checkpoint:
 
 race:
   #Will be displayed to every player
-  start: "§aRace starting..." #Displayed when '/race start' is used
+  start: "§aRace %name% starting..." #Displayed when '/race start <name>' is used
+  notFound: "§cRace not found." #Displayed when the inputted race is invalid
   end: "§cThe race is over!" #Displayed when '/race end' is used
 
   #Only displayed to the command executor
   prepare: "§aPlayers will be placed automatically." #Displayed when '/race prepare' is used (and prepare toggled OFF)
   cancelPrepare: "§aPrepare mode disabled." #Displayed when '/race prepare' is used (and prepare toggled ON)
+  deleted: "§aThe race %name% has been deleted." #Displayed when '/race delete' is used and is successful
 
   #In race events
   onCompleteLap:
@@ -66,9 +68,135 @@ race:
     subtitle: "§alaps completed"
     message: "§3%player%§b finished lap §3%count%§b in §3%time%§b!"
   onCrossSector: "§b§3%player%§b's time at sector §3%count%§b: §3%time%§b"
+  onFinish:
+    message: "§2%player%§b finished the race in §2%time%§a and ranked §2#%ranking%§a!"
+    title: "§2Race finished!"
+    subtitle: "§aYou are #%ranking%"
+    statsMessage: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lRace Results §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n
+    §bRanking: §3#%ranking%§b/%players%\n
+    §bTotal time: §x§4§0§C§4§F§F%raceTime%\n
+    §bAverage lap: §3%meanLapTime%\n
+    §bBest lap: §a%bestLapTime%\n
+    §bSlowest lap: §c%worstLapTime%\n
+    \n
+    §bGap to winner: §c%gapToWinner%\n
+    §bGap to next player: §x§F§F§D§7§0§0%gapToNext%\n
+    §x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n
+    "
+    statsMessageWinner: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lRace Results §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n
+    §bRanking: §3§l#%ranking%§b/%players%\n
+    §bTotal time: §x§4§0§C§4§F§F%raceTime%\n
+    §bAverage lap: §3%meanLapTime%\n
+    §bBest lap: §a%bestLapTime%\n
+    §bSlowest lap: §c%worstLapTime%\n
+    §x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n
+    "
+  onEnd:
+    top: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lFinal Standings §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n"
+    playerFormat: "§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%\n"
+    highlights: "\n§b🏆 Best lap: §a%bestLapPlayer% §8(§a%bestLapTime%§8)\n
+    §b🐢 Slowest lap: §c%worstLapPlayer% §8(§c%worstLapTime%§8)\n
+    §b⚡ Victory gap: §3%winnerGap%\n"
+    bestSectorTimesTop: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬ §x§5§5§D§D§F§F§lBest Sector Times §x§0§0§A§D§F§F§l▬▬▬▬▬\n"
+    sectorFormat: "§bSector §3#%sectorID% §8» §a%player% §8(§e%time%§8)\n"
+    bottom: "§x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
 
   #Help message
   help: "§3--------- §b§l/race§r §3---------\n§3->§a start §8-§7 Start the race\n§3->§a prepare §8-§7 Prepare players\n§7§oℹ Automatically places players in their boats\n§3->§a end §8-§7 End the race"
+
+  select: "§bSelect a race:"
+  create:
+    confirm: "confirm" #Confirm race deletion
+    cancel: "cancel" #The message to send to cancel the race creation process
+    confirmCancel: "§eAre you sure you want to cancel the race creation?\nUse §c%confirm%§e to confirm and §a%cancel%§e to abort deletion."
+    cancelled: "§bRace creation has been cancelled." #When you cancel the creation
+    #Naming the race
+    1:
+      title: "§3Race Name"
+      subtitle: "§bEnter the §3name§b in chat"
+      message: "§bStart by entering the name of the race below (in chat)."
+      completed: "§bThe race name has been set to §3%name%"
+      alreadyExists: "§cA race with the same name already exists, please choose another name."
+
+    #Define the checkpoints?
+    2:
+      title: "§3Checkpoints?"
+      subtitle: "§bDefine checkpoints?"
+      start: "start"
+      later: "not now"
+      message: "§bDefine the points the race passes through. \n-> Enter §3%start%§b to begin or §3%later%§b to configure this later.\n§8§oℹ These will be used to update the live scoreboard of participants. You can always do this later!"
+
+    #Checkpoints definition process
+    3:
+      title: "§3Checkpoint Creation"
+      subtitle: "§bStart defining checkpoints"
+      message: "§bDefine the checkpoints of the race by going to each location.\n§b-> §3%define%§b to place a checkpoint\n§b-> §3%defineSector%§b to place a sector checkpoint\n§b-> §3%defineFinish%§b to define the finish line §8§o(if different from start)\n§b-> §3%help%§b to display help\n§b-> §3%done%§b to finish\n§8§oℹ A sector works like a checkpoint, but also announces the sector time in chat.\n§8§oℹ To define a checkpoint, left-click for point 1 and right-click for point 2 with a §3§owooden shovel§8§o, just like with WorldEdit."
+      checkpointCreation:
+        define: "define"
+        defineSector: "define sector"
+        defineFinish: "define finish"
+        help: "help"
+        done: "save"
+      feedback:
+        startDefined:
+          title: "§3Start Defined"
+          subtitle: "§bThe §3start§b line has been defined"
+        finishDefined:
+          title: "§3Finish Defined"
+          subtitle: "§bThe §3finish§b line has been defined"
+        checkpointDefined:
+          title: "§3Checkpoint Defined"
+          subtitle: "§bCheckpoint §3%checkpointID%§b has been defined"
+        sectorDefined:
+          title: "§3Sector Defined"
+          subtitle: "§bSector §3%sectorID%§b has been defined"
+        done:
+          title: "§2Completed"
+          subtitle: "§aCheckpoints saved!"
+        error:
+          #Will be shown if the player tries to define a sector first (before defining start line)
+          defineStartLineFirst: "§cStart by defining the start line before doing this."
+
+    4:
+      title: "§3Cars?"
+      subtitle: "§bDefine cars?"
+      message: "§bDefine the points where race participants' cars will be placed. \n-> Enter §3%start%§b to begin or §3%later%§b to configure this later.\n§8§oℹ These will be automatically placed when the race starts, and their passengers teleported inside. You can always do this later!"
+      start: "start"
+      later: "not now"
+    5:
+      title: "§3Car Creation"
+      subtitle: "§bCreation is about to start..."
+      message: "§bThe car creation process will now begin..."
+      checkpointCreation:
+        define: "define"
+        defineSector: "define sector"
+        defineFinish: "define finish"
+        help: "help"
+        done: "save"
+      feedback:
+        startDefined:
+          title: "§3Start Defined"
+          subtitle: "§bThe §3start§b line has been defined"
+        finishDefined:
+          title: "§3Finish Defined"
+          subtitle: "§bThe §3finish§b line has been defined"
+        checkpointDefined:
+          title: "§3Checkpoint Defined"
+          subtitle: "§bCheckpoint §3%checkpointID%§b has been defined"
+        sectorDefined:
+          title: "§3Sector Defined"
+          subtitle: "§bSector §3%sectorID%§b has been defined"
+        done:
+          title: "§2Completed"
+          subtitle: "§aCheckpoints saved!"
+        error:
+          #Will be shown if the player tries to define a sector first (before defining start line)
+          defineStartLineFirst: "§cStart by defining the start line before doing this."
+
+    done:
+      title: "§3Race Saved!"
+      subtitle: "§bThe race was created successfully"
+      message: "§aThe race has been saved successfully !\n§b-> §3/checkpoint create§b to add checkpoints to the race\n§b-> §3/car create§b to register cars\n§b-> §3/race info <raceName>§b to check race information"
 
 car:
   #Errors
@@ -82,29 +210,29 @@ car:
   #Messages/titles shown in the car creation process
   create:
     1:
-      title: "§aSet Spawn"
-      subtitle: "§e%check% §ato confirm"
-      message: "§aBreak the spawn block, then type %check%."
+      title: "§3Set Spawn"
+      subtitle: "§3%check% §bto confirm"
+      message: "§bBreak the spawn block, then type §3%check%§b."
       selected: "§bBlock selected, type §3%check%§b."
       noSelection: "§cSelect a block first!"
       check: "done"
       completed: "§aPosition saved."
 
     2:
-      title: "§aOwner Name"
-      subtitle: "§eEnter the owner's name in chat"
-      message: "§aType the owner's name in chat."
+      title: "§3Owner Name"
+      subtitle: "§bEnter the owner's name in chat"
+      message: "§bType the owner's name in chat."
       completed: "§aOwner: %owner%."
 
     3:
-      title: "§aChoose Boat"
-      subtitle: "§e%check% §ato confirm"
-      message: "§aHold a boat and type §e%check%§a."
+      title: "§3Choose Boat"
+      subtitle: "§3%check% §bto confirm"
+      message: "§bHold a boat and type §3%check%§b."
       invalidItem: "§cHold a boat in your hand!"
       check: "done"
 
     completed:
-      message: "§aThe car has been saved."
+      message: "§bThe car has been saved!"
       title: "§2§lDone!"
       subtitle: "§aCar saved"
 
@@ -113,3 +241,4 @@ error:
   invalidNumber: "§cInvalid number"
   playerNotFound: "§cPlayer not found"
   playerToExecuteCommand: "§cYou must be a player to do this."
+  unknown: "§cAn unknown error occurred. Please check the console for error messages."

@@ -72,7 +72,7 @@ Supports multiple languages and is designed for competitive Ice Boat Racing game
 ### 🏁 Race Commands
 
 | Command | Description       |
-| ------- | ----------------- |
+|---------|-------------------|
 | `/race` | Main race command |
 
 Handled by: `RaceCommand`, `RaceManager`
@@ -82,7 +82,7 @@ Handled by: `RaceCommand`, `RaceManager`
 ### 📍 Checkpoint Commands
 
 | Command       | Description             |
-| ------------- | ----------------------- |
+|---------------|-------------------------|
 | `/checkpoint` | Manage race checkpoints |
 
 Handled by: `CheckpointCommand`, `CheckpointManager`
@@ -92,7 +92,7 @@ Handled by: `CheckpointCommand`, `CheckpointManager`
 ### 🚗 Car Commands
 
 | Command | Description          |
-| ------- | -------------------- |
+|---------|----------------------|
 | `/car`  | Spawn or manage cars |
 
 Handled by: `CarCommand`, `CarManager`
@@ -102,7 +102,7 @@ Handled by: `CarCommand`, `CarManager`
 ### 🔧 Main Plugin Command
 
 | Command | Description                |
-| ------- | -------------------------- |
+|---------|----------------------------|
 | `/ibr`  | Main IceBoatRacing command |
 
 Handled by: `IBRCommand`

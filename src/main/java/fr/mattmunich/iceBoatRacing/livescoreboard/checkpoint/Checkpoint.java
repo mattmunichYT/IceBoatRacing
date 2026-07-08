@@ -10,34 +10,56 @@ public class Checkpoint {
         SECTOR
     }
 
-    int index; // checkpoint index in the race order
-    int sectorIndex = -1; // only used for sectors
-    Location min;
-    Location max;
-    Type type;
+    final int id; // checkpoint ID in the race order
+    int sectorID = -1; // only used for sectors
+    final Location min;
+    final Location max;
+    final Type type;
 
-    public Checkpoint(int index, Location min, Location max) {
-        this.index = index;
+    /**
+     * Type will be set to NORMAL
+     * @param id the checkpoint ID
+     * @param min position 1
+     * @param max position 2
+     */
+    public Checkpoint(int id, Location min, Location max) {
+        this.id = id;
         this.min = min;
         this.max = max;
         this.type = Type.NORMAL;
     }
 
-    public Checkpoint(int index, Location min, Location max, Type type) {
-        this.index = index;
+    /**
+     * @param id the checkpoint ID
+     * @param min position 1
+     * @param max position 2
+     * @param type the checkpoint type from the Checkpoint.Type enum
+     */
+    public Checkpoint(int id, Location min, Location max, Type type) {
+        this.id = id;
         this.min = min;
         this.max = max;
         this.type = type;
     }
 
-    public Checkpoint(int index, int sectorIndex, Location min, Location max) {
-        this.index = index;
-        this.sectorIndex = sectorIndex;
+    /**
+     *  Use for new SECTOR checkpoint only
+     * @param id the checkpoint ID
+     * @param sectorID the sector ID
+     * @param min position 1
+     * @param max position 2
+     */
+    public Checkpoint(int id, int sectorID, Location min, Location max) {
+        this.id = id;
+        this.sectorID = sectorID;
         this.min = min;
         this.max = max;
         this.type = Type.SECTOR;
     }
-
+    /**
+     * Check if the checkpoint contains the location loc
+     * @param loc the location to check
+     */
     public boolean contains(Location loc) {
         return loc.getWorld().equals(min.getWorld()) &&
                 loc.getX() >= min.getX() && loc.getX() <= max.getX() &&
@@ -46,8 +68,8 @@ public class Checkpoint {
     }
 
     // Getters
-    public int getIndex() { return index; }
-    public int getSectorIndex() { return sectorIndex; }
+    public int getId() { return id; }
+    public int getSectorID() { return sectorID; }
     public Location getMin() { return min; }
     public Location getMax() { return max; }
     public Type getType() { return type; }

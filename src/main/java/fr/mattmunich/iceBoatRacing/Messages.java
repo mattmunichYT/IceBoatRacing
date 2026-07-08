@@ -1,7 +1,6 @@
 package fr.mattmunich.iceBoatRacing;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -90,15 +89,14 @@ public class Messages {
     }
 
     public static String getStringMessage(String identifier) {
-
-        Component msg = getMessage(identifier);
-
-        if (msg instanceof TextComponent text) {
-            return text.content();
+        if (langConfig == null || !langConfig.contains(identifier)) {
+            main.getLogger().severe("Missing message string: " + identifier + " in lang/" + currentLang + ".yml");
+            return "MESSAGE NOT FOUND";
         }
 
-        return "MESSAGE NOT FOUND";
+        return langConfig.getString(identifier);
     }
+
 
     /**
      * Formats placeholders like %player%
@@ -145,9 +143,19 @@ public class Messages {
     }
 
     private static boolean addPrefix(String identifier) {
-        return !identifier.contains("noPrefix")
-                && !identifier.equals("prefix")
-                && !identifier.contains("title")
-                && !identifier.contains("check");
+        return !identifier.contains("noPrefix") //Currently used for join/quit and liveSidebarTitle
+                && !identifier.equals("prefix") //Don't add prefix after prefix
+                && !identifier.contains("title") //=> titles and subtitles
+                && !identifier.contains("actionBar") //actionBar messages
+                //Commands when creating race, checkpoints or cars
+                && !identifier.contains("check")
+                && !identifier.contains("start")
+                && !identifier.contains("later")
+                && !identifier.contains("checkpointCreation")
+                && !identifier.contains("carCreation")
+                //For race.onEnd messages
+                && !identifier.contains("playerFormat")
+                && !identifier.contains("highlights")
+                && !identifier.contains("bottom");
     }
 }
