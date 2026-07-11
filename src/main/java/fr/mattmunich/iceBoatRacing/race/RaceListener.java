@@ -2,11 +2,13 @@ package fr.mattmunich.iceBoatRacing.race;
 
 import fr.mattmunich.iceBoatRacing.Main;
 import fr.mattmunich.iceBoatRacing.Messages;
-import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.Checkpoint;
+import fr.mattmunich.iceBoatRacing.checkpoint.Checkpoint;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -14,12 +16,12 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static fr.mattmunich.iceBoatRacing.Main.c;
 import static fr.mattmunich.iceBoatRacing.Main.formatTime;
-import static fr.mattmunich.iceBoatRacing.Messages.formatArguments;
-import static fr.mattmunich.iceBoatRacing.Messages.getMessage;
+import static fr.mattmunich.iceBoatRacing.Messages.*;
 
 public class RaceListener implements Listener {
 
@@ -51,58 +53,70 @@ public class RaceListener implements Listener {
 
         Race race = data.race;
 
-        int nextCheckpointID = data.checkpointIndex+1;
-        Checkpoint nextCheckpoint = race.getCheckpoint(nextCheckpointID);
+        //Test the whole movement segment (not just the current point) against checkpoints, and
+        //loop rather than checking only one per tick. Looping matters: if two checkpoints sit close
+        //together (e.g. a sector gate right next to an auto-generated checkpoint on a narrow bridge),
+        //a single tick's movement could cross both — checking only the first would silently strand
+        //the racer on the second one forever, since next tick they're already past it.
+        Location from = event.getFrom();
+        Location to = event.getTo();
 
-        if (nextCheckpoint == null) {
-//            main.log("Checkpoint with ID " + nextCheckpointID + " is null, going back to 0");
-            data.checkpointIndex=0;
-            return;
-        }
+        while (true) {
+            int nextCheckpointID = data.checkpointIndex + 1;
+            Checkpoint nextCheckpoint = race.getCheckpoint(nextCheckpointID);
 
-        //Actually check if the player is crossing the checkpoint
-        if (!nextCheckpoint.contains(player.getLocation())) return;
-
-        // Start/finish checkpoint handling
-        long now = System.currentTimeMillis();
-        if (nextCheckpoint.getType().equals(Checkpoint.Type.START_FINISH)) {
-
-            //When starting the race/crossing the start line
-            if(data.lapCount==0) data.startTime=now;
-
-            //When completing lap
-            if (data.lapCount>0 && !(data.lapCount == main.raceLapCount)) onCompleteLap(data, now);
-
-            //When finishing race
-            if(data.lapCount == main.raceLapCount) {
-                onCompleteLap(data, now);
-                onFinishRace(data, now);
-
-                //End race automatically
-                if(race.racing.isEmpty()) {
-                    race.sendRanking();
-                    race.end();
-                }
+            if (nextCheckpoint == null) {
+//                main.log("Checkpoint with ID " + nextCheckpointID + " is null, going back to 0");
+                data.checkpointIndex = 0;
+                break;
             }
 
-            data.lapTime = now;
-            data.lapCount++;
-            data.checkpointIndex = 0;
-        }
+            if (!nextCheckpoint.crosses(from, to)) break;
 
-        if (nextCheckpoint.getType().equals(Checkpoint.Type.SECTOR)) {
-            data.sectorTimes.put(nextCheckpoint.getSectorID(), now-data.lapTime);
-            Bukkit.broadcast(getMessage("race.onCrossSector",
-                    formatArguments(
-                            "player", LegacyComponentSerializer.legacySection().serialize(player.displayName()),
-                            "ID", String.valueOf(nextCheckpoint.getSectorID()),
-                            "time", formatTime(now-data.lapTime)
-                    )
-            ));
-        }
+            long now = System.currentTimeMillis();
 
-        data.checkpointIndex++;
-        main.liveSidebar.getScore(player).setScore(((data.lapCount-1) * race.getCheckpoints().size()) + data.checkpointIndex);
+            if (nextCheckpoint.getType().equals(Checkpoint.Type.START_FINISH)) {
+
+                //When starting the race/crossing the start line
+                if(data.lapCount==0) data.startTime=now;
+
+                //When completing lap
+                if (data.lapCount>0 && !(data.lapCount == main.raceLapCount)) onCompleteLap(data, now);
+
+                //When finishing race
+                if(data.lapCount == main.raceLapCount) {
+                    onCompleteLap(data, now);
+                    onFinishRace(data, now);
+
+                    //End race automatically
+                    if(race.racing.isEmpty()) {
+                        race.sendRanking();
+                        race.end();
+                    }
+
+                    data.checkpointIndex = 0;
+                    break; //racer just finished; nothing more to process for them this tick
+                }
+
+                data.lapTime = now;
+                data.lapCount++;
+                data.checkpointIndex = 0;
+            }
+
+            if (nextCheckpoint.getType().equals(Checkpoint.Type.SECTOR)) {
+                data.addSectorTime(nextCheckpoint.getSectorID(), now, data.lapTime);
+                Bukkit.broadcast(getMessage("race.onCrossSector",
+                        formatArguments(
+                                "player", LegacyComponentSerializer.legacySection().serialize(player.displayName()),
+                                "ID", String.valueOf(nextCheckpoint.getSectorID()),
+                                "time", formatTime(now-data.lapTime)
+                        )
+                ));
+            }
+
+            data.checkpointIndex++;
+            main.liveSidebar.getScore(player).setScore(((data.lapCount-1) * race.getCheckpoints().size()) + data.checkpointIndex);
+        }
     }
 
     private void onCompleteLap(RaceData data, long now) {
@@ -129,10 +143,10 @@ public class RaceListener implements Listener {
             ));
         }
         Title title = Title.title(
-            Messages.getMessage("race.onCompleteLap.title", formatArguments(
-                "currentLapCount", "" + data.lapCount,
-                "raceLapCount", "" + main.raceLapCount
-        )), Messages.getMessage("race.onCompleteLap.subtitle"));
+                getMessage("race.onCompleteLap.title", formatArguments(
+                        "currentLapCount", "" + data.lapCount,
+                        "raceLapCount", "" + main.raceLapCount
+                )), getMessage("race.onCompleteLap.subtitle"));
 
         player.showTitle(title);
     }
@@ -154,6 +168,8 @@ public class RaceListener implements Listener {
         //get(ranking-1) = self ; get(ranking-2) = player #(ranking-1) ; because ranking = size (starts @ 1) and get(x) starts @ 0
         long gapToNext = isWinner ? -1 : finished.get(ranking-2).getRaceTime();
 
+        Map<Integer,Long> bestSectorsTimes = data.bestSectorsTimes();
+
         int players = race.racers.size();
 
         Bukkit.broadcast(getMessage("race.onFinish.message",
@@ -165,11 +181,20 @@ public class RaceListener implements Listener {
         ));
 
         Title title = Title.title(
-                Messages.getMessage("race.onFinish.title"),
-                Messages.getMessage("race.onFinish.subtitle", formatArguments("ranking", ranking + ""))
+                getMessage("race.onFinish.title"),
+                getMessage("race.onFinish.subtitle", formatArguments("ranking", ranking + ""))
         );
 
         player.showTitle(title);
+
+        Component bestSectorsTimesMessage = c("");
+        for (Map.Entry<Integer, Long> entry : bestSectorsTimes.entrySet()) {
+            bestSectorsTimesMessage = bestSectorsTimesMessage.append(getMessage("race.onFinish.sectorFormat",formatArguments(
+                "sectorID", "" + entry.getKey(),
+                    "time", formatTime(entry.getValue())
+            )));
+        }
+
 
         if(isWinner) {
             player.sendMessage(getMessage("race.onFinish.statsMessageWinner",
@@ -180,6 +205,9 @@ public class RaceListener implements Listener {
                             "meanLapTime", formatTime(data.meanLapTime()),
                             "bestLapTime", formatTime(data.bestLapTime()),
                             "worstLapTime", formatTime(data.worstLapTime())
+                    ),
+                    formatComponentArguments(
+                            "bestSectorsTimes", bestSectorsTimesMessage
                     )
             ));
         } else {
@@ -193,7 +221,9 @@ public class RaceListener implements Listener {
                             "worstLapTime", formatTime(data.worstLapTime()),
                             "gapToWinner", formatTime(gapToWinner),
                             "gapToNext", formatTime(gapToNext)
-
+                    ),
+                    formatComponentArguments(
+                            "bestSectorsTimes", bestSectorsTimesMessage
                     )
             ));
         }

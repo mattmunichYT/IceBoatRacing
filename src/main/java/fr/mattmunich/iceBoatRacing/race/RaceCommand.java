@@ -111,8 +111,6 @@ public class RaceCommand implements BasicCommand {
                 else source.getSender().sendMessage(Messages.getMessage("error.unknown"));
             });
         } else {
-            //TODO TESTING
-            if (source.getSender() instanceof Player p) main.testers.add(p);
             source.getSender().sendMessage(Messages.getMessage("race.help"));
         }
     }

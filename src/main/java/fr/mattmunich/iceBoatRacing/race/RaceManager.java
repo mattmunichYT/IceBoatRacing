@@ -4,7 +4,7 @@ import fr.mattmunich.iceBoatRacing.Main;
 import fr.mattmunich.iceBoatRacing.Messages;
 import fr.mattmunich.iceBoatRacing.cars.Car;
 import fr.mattmunich.iceBoatRacing.cars.CarManager;
-import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.CheckpointManager;
+import fr.mattmunich.iceBoatRacing.checkpoint.CheckpointManager;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.title.Title;

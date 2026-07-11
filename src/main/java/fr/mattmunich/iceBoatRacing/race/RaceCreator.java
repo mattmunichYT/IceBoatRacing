@@ -3,8 +3,8 @@ package fr.mattmunich.iceBoatRacing.race;
 import fr.mattmunich.iceBoatRacing.Main;
 import fr.mattmunich.iceBoatRacing.cars.CarCreator;
 import fr.mattmunich.iceBoatRacing.cars.CarManager;
-import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.Checkpoint;
-import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.CheckpointManager;
+import fr.mattmunich.iceBoatRacing.checkpoint.Checkpoint;
+import fr.mattmunich.iceBoatRacing.checkpoint.CheckpointManager;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.title.Title;
@@ -207,6 +207,7 @@ public class RaceCreator implements Listener {
         Integer step = creatingRace.get(p);
         if (step == null || step != 2) return;
 
+        firstCheckpointDefined.put(p, false);
         e.setCancelled(true);
         String message = ((TextComponent) e.message()).content();
         Bukkit.getScheduler().runTask(main, () -> {
@@ -217,7 +218,6 @@ public class RaceCreator implements Listener {
                 showStep3Info(p);
                 p.give(new ItemStack(Material.WOODEN_SHOVEL));
 
-                firstCheckpointDefined.put(p, false);
             } else if (message.equalsIgnoreCase(getStringMessage("race.create.2.later"))) {
                 //SKIP STEP 3 -> STEP 4
                 creatingRace.replace(p, 4);
@@ -277,8 +277,6 @@ public class RaceCreator implements Listener {
                         getMessage(basePath + "done.subtitle")
                 );
                 p.showTitle(title);
-
-                firstCheckpointDefined.remove(p);
 
                 Bukkit.getScheduler().runTaskLater(main, () -> {
                     creatingRace.replace(p, 4);
@@ -368,6 +366,14 @@ public class RaceCreator implements Listener {
     }
 
     private void endRaceCreation(Player p) {
+
+        //Register the race first
+        if(!firstCheckpointDefined.get(p)) {
+            Race race = new Race(raceName.get(p), p.getWorld());
+            raceManager.createRace(race);
+        }
+
+        firstCheckpointDefined.remove(p);
         creatingRace.remove(p);
         raceName.remove(p);
         pos1.remove(p);
