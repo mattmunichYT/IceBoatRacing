@@ -1,7 +1,7 @@
 package fr.mattmunich.iceBoatRacing.race;
 
 import fr.mattmunich.iceBoatRacing.cars.Car;
-import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.Checkpoint;
+import fr.mattmunich.iceBoatRacing.checkpoint.Checkpoint;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -11,7 +11,6 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 import static fr.mattmunich.iceBoatRacing.Main.formatTime;
-import static fr.mattmunich.iceBoatRacing.Main.s;
 import static fr.mattmunich.iceBoatRacing.Messages.formatArguments;
 import static fr.mattmunich.iceBoatRacing.Messages.getMessage;
 
@@ -109,12 +108,12 @@ public class Race {
                 }
             }
 
-            Map<Integer, Long> sectorTimes = data.getSectorTimes();
+            Map<Integer, List<Long>> sectorTimes = data.getSectorsTimes();
             if (sectorTimes != null) {
                 for (int sectorID : sectorTimes.keySet()) {
                     bestSectorTimes.putIfAbsent(sectorID, Long.MAX_VALUE);
 
-                    long playerSectorTime = sectorTimes.get(sectorID);
+                    Long playerSectorTime = Collections.min(sectorTimes.get(sectorID));
 
                     if (playerSectorTime < bestSectorTimes.get(sectorID)) {
                         bestSectorTimes.put(sectorID, playerSectorTime);

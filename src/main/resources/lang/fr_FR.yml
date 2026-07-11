@@ -45,11 +45,52 @@ checkpoint:
   removed: "§aCheckpoint §6%id%§a supprimé"
   count: "§aIl y a %count% checkpoints"
   resetPlayerScore: "§aScore de §6%player%§a réinitialisé"
-  normalized: "§aCheckpoints normalisés"
+
   #Errors
   notInCheckpoint: "§cTu n'es pas dans un checkpoint\n§8ℹ Tu peux aussi faire /checkpoint list"
   invalid: "§cNuméro de checkpoint invalide"
   noCheckpoint: "§cAucun checkpoint défini"
+
+  #Main /checkpoint help fallback
+  help: "§eCommandes checkpoint :\n§7- §f/checkpoint list\n§7- §f/checkpoint count\n§7- §f/checkpoint create <nomCourse> [\"SECTOR\"]\n§7- §f/checkpoint setFinish <nomCourse>\n§7- §f/checkpoint remove [nomCourse] [idCheckpoint]\n§7- §f/checkpoint resetData <joueur> <nomCourse>\n§7- §f/checkpoint autotrace start|stop|preview|sector|resize|delete|accept|cancel\n§7- §f/checkpoint addAlternate <nomCourse> <idCheckpoint>\n§7- §f/checkpoint clearAll <nomCourse>"
+
+  #Tags shown in /checkpoint list
+  list:
+    planeTag: " §7[plan]"
+    altTag: " §7[+%count% alt]"
+
+  #Auto-trace (recording/generation) commands
+  autotrace:
+    help: "§eCommandes d'auto-traçage :\n§7- §f/checkpoint autotrace start <nomCourse> [espacement] [largeur] [hauteur] [loop|noloop]\n§7- §f/checkpoint autotrace stop\n§7- §f/checkpoint autotrace preview §7(bascule)\n§7- §f/checkpoint autotrace sector §7(clique 2 blocs avec la pelle d'abord)\n§7- §f/checkpoint autotrace resize §7(clique 2 blocs délimitant la bonne largeur)\n§7- §f/checkpoint autotrace delete §7(reste près du checkpoint à supprimer)\n§7- §f/checkpoint autotrace accept\n§7- §f/checkpoint autotrace cancel"
+    usageStart: "§cUtilisation : /checkpoint autotrace start <nomCourse> [espacement] [largeur] [hauteur] [loop|noloop]"
+    started: "§aEnregistrement démarré pour la course §f%race%§a. Fais le tour complet du circuit en bateau ou à pied.\n§8ℹ L'enregistrement s'arrête automatiquement une fois de retour près du point de départ, ou fais §f/checkpoint autotrace stop §8manuellement."
+    noSession: "§cTu n'as pas de session d'auto-traçage active."
+    notEnoughPoints: "§cPas assez de points enregistrés pour générer des checkpoints. Réessaie."
+    stopped: "§aEnregistrement arrêté. §f%count% §acheckpoints générés.\n§8ℹ Fais §f/checkpoint autotrace preview §8pour les voir, §f/checkpoint autotrace sector §8pour marquer des secteurs, ou §f/checkpoint autotrace accept §8pour sauvegarder."
+    loopClosed: "§aBoucle fermée — enregistrement arrêté automatiquement. §f%count% §acheckpoints générés.\n§8ℹ Fais §f/checkpoint autotrace preview §8pour les voir."
+    noPreview: "§cAucun checkpoint généré à prévisualiser.\n§8ℹ Fais start puis stop d'abord."
+    previewOn: "§aAperçu activé §7— relance la commande pour le désactiver."
+    previewOff: "§7Aperçu désactivé."
+    noPreviewForSector: "§cAucun aperçu actif pour y ajouter un secteur.\n§8ℹ Fais start puis stop d'abord."
+    sectorMarked: "§aSecteur marqué.\n§8ℹ Fais §f/checkpoint autotrace preview §8pour le voir, ou marque d'autres secteurs."
+    sectorFailed: "§cImpossible de placer le secteur ici.\n§8ℹ Essaie de cliquer plus près du tracé enregistré."
+    resizeFailed: "§cAucun checkpoint trouvé près de ces clics.\n§8ℹ Essaie de cliquer plus près de celui à redimensionner."
+    resized: "§aLe checkpoint le plus proche a été redimensionné selon tes clics."
+    deleteFailed: "§cAucun checkpoint trouvé près de toi à supprimer."
+    deleted: "§7Le checkpoint le plus proche a été retiré de l'aperçu."
+    acceptFailed: "§cRien à sauvegarder.\n§8ℹ Génère d'abord un aperçu (start, puis stop)."
+    accepted: "§aCheckpoints auto-tracés sauvegardés !"
+    cancelled: "§7Session d'auto-traçage annulée."
+
+  #Alternate route (bypass gate) command
+  addAlternate:
+    added: "§aRoute alternative ajoutée pour le checkpoint §f#%id%§a."
+
+  #Bulk checkpoint clearing
+  clearAll:
+    warning: "§c⚠ Ceci supprimera définitivement les §f%count% §ccheckpoint(s) de la course §f%race%§c."
+    confirmHint: "§cRelance §f/checkpoint clearAll %race% §cdans les 10 secondes pour confirmer."
+    cleared: "§aTous les checkpoints de la course §f%race% §aont été supprimés."
 
 race:
   #Will be displayed to every player
@@ -79,6 +120,8 @@ race:
     §bTour moyen : §3%meanLapTime%\n
     §bMeilleur tour : §a%bestLapTime%\n
     §bTour le plus lent : §c%worstLapTime%\n
+    §bMeilleurs temps par secteur:\n
+    %bestSectorsTimes%
     \n
     §bÉcart avec le vainqueur : §c%gapToWinner%\n
     §bÉcart avec le joueur devant : §x§F§F§D§7§0§0%gapToNext%\n
@@ -90,8 +133,11 @@ race:
     §bTour moyen : §3%meanLapTime%\n
     §bMeilleur tour : §a%bestLapTime%\n
     §bTour le plus lent : §c%worstLapTime%\n
+    §bMeilleurs temps par secteur:\n
+    %bestSectorsTimes%
     §x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n
     "
+    sectorFormat: "§b- Secteur §3#%sectorID% §8» §a%time%\n"
   onEnd:
     top: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lClassement final §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n"
     playerFormat: "§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%\n"

@@ -1,6 +1,7 @@
 package fr.mattmunich.iceBoatRacing;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextReplacementConfig;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -112,6 +113,21 @@ public class Messages {
         return map;
     }
 
+    public static Map<String, Component> formatComponentArguments(Object... args) {
+
+        Map<String, Component> map = new HashMap<>();
+
+        try {
+            for (int i = 0; i < args.length; i += 2) {
+                map.put((String) args[i], (Component) args[i + 1]);
+            }
+        } catch (Exception e) {
+            return null;
+        }
+
+        return map;
+    }
+
     public static Component getMessage(String identifier, Map<String, String> arguments) {
 
         if (!langConfig.contains(identifier)) {
@@ -134,6 +150,48 @@ public class Messages {
         //Convert to component for PaperMC
         Component component = c(message);
 
+        //Add the prefix if required
+        if (addPrefix(identifier)) {
+            component = getMessage("prefix").append(c("§r ")).append(component);
+        }
+
+        return component;
+    }
+
+    public static Component getMessage(String identifier, Map<String, String> arguments, Map<String,Component> componentArguments) {
+
+        if (!langConfig.contains(identifier)) {
+            main.getLogger().severe("Missing message: " + identifier);
+            return c("§cMESSAGE NOT FOUND");
+        }
+
+        String message = langConfig.getString(identifier);
+
+        if (message == null) return c("§cMESSAGE NOT FOUND");
+
+        // Replace placeholders
+        for (Map.Entry<String, String> entry : arguments.entrySet()) {
+            //Ignore unset arguments
+            if(!message.contains("%" + entry.getKey() + "%")) continue;
+            //Actually replace
+            message = message.replace("%" + entry.getKey() + "%", entry.getValue());
+        }
+
+
+        //Convert to component for PaperMC
+        Component component = c(message);
+        for (Map.Entry<String, Component> entry : componentArguments.entrySet()) {
+            //Ignore unset arguments
+            if(!message.contains("%" + entry.getKey() + "%")) continue;
+
+            //Actually replace
+            TextReplacementConfig replacementConfig = TextReplacementConfig.builder()
+                    .match("%" + entry.getKey() + "%")
+                    .replacement(entry.getValue())
+                    .build();
+
+            component = component.replaceText(replacementConfig);
+        }
         //Add the prefix if required
         if (addPrefix(identifier)) {
             component = getMessage("prefix").append(c("§r ")).append(component);

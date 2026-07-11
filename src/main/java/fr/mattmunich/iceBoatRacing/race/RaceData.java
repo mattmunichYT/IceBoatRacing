@@ -15,7 +15,7 @@ public class RaceData {
     public long lapTime = 0;
     public long endTime = 0;
     public final List<Long> lapTimes = new ArrayList<>();
-    public final Map<Integer,Long> sectorTimes = new HashMap<>();
+    public final Map<Integer,List<Long>> sectorsTimes = new HashMap<>();
     public Race race;
 
     public RaceData(Player player) {
@@ -28,6 +28,15 @@ public class RaceData {
 
     public long worstLapTime() {
         return Collections.max(lapTimes);
+    }
+
+    public Map<Integer,Long> bestSectorsTimes() {
+        Map<Integer,Long> bestSectorsTimes = new HashMap<>();
+        for (Integer s : sectorsTimes.keySet()) {
+            List<Long> sTimes = sectorsTimes.get(s);
+            bestSectorsTimes.put(s, Collections.min(sTimes));
+        }
+        return bestSectorsTimes;
     }
 
     public long meanLapTime() {
@@ -45,7 +54,13 @@ public class RaceData {
         return lapTimes;
     }
 
-    public Map<Integer,Long> getSectorTimes() {
-        return sectorTimes;
+    public Map<Integer,List<Long>> getSectorsTimes() {
+        return sectorsTimes;
+    }
+
+    public void addSectorTime(int sectorID, long now, long lapTime) {
+        List<Long> sectorTimes = sectorsTimes.get(sectorID);
+        sectorTimes.add(now-lapTime);
+        sectorsTimes.put(sectorID, sectorTimes);
     }
 }

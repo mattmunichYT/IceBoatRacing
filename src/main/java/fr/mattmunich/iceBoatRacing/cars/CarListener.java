@@ -34,7 +34,7 @@ public class CarListener implements Listener {
     }
 
     @EventHandler
-    public void onMoveCar2(VehicleMoveEvent e) {
+    public void onMoveCar(VehicleMoveEvent e) {
         Vehicle vehicle = e.getVehicle();
         if(!(vehicle instanceof Boat)) return;
         Entity passenger;
