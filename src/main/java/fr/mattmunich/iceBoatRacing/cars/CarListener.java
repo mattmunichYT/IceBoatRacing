@@ -28,7 +28,7 @@ public class CarListener implements Listener {
         RaceData data = null;
         for(Race race : raceManager.activeRaces) if(race.racers.containsKey(p.getUniqueId())) data = race.racers.get(p.getUniqueId());
         if (data == null || data.race == null || data.car == null) return;
-        if(data.race.isNotStarting() && !data.race.isPreparing() && data.race.hasNotStarted()) return;
+        if(data.race.isNotStarting() && !data.race.isPreparing() && !data.race.hasStarted()) return;
 
         e.setCancelled(true);
     }

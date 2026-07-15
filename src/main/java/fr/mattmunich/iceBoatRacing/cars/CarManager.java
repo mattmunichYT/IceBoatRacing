@@ -55,14 +55,14 @@ public class CarManager {
     public boolean changeOwner(Race race, Car car, UUID newOwner) {
         car.setOwner(newOwner);
 
-        YamlConfiguration config = raceManager.getRaceConfig(race);
+        YamlConfiguration config = race.getConfig();
         if(config == null) return false;
 
         String path = "cars." + car.getId() + ".owner";
         config.set(path, newOwner.toString());
 
         try {
-            raceManager.saveRaceConfig(race, config);
+            race.saveConfig();
         } catch (IOException e) {
             main.err("Couldn't rename car " + car.getId() + " for race " + race.getName(),e);
             return false;
@@ -101,13 +101,38 @@ public class CarManager {
         car.setBoat(boat);
     }
 
+    public void spawnCar(Car car, Player player, Location spawnLocation) {
+        Material boatMat = car.getBoatMaterial();
+
+        // Spawn boat
+        Boat boat = (Boat) spawnLocation.getWorld().spawnEntity(spawnLocation, boatEntityFromMaterial(boatMat));
+
+        Component customName;
+
+        if(car.getCustomName() == null) customName = c("Race car");
+        else customName = c(car.getCustomName());
+
+        boat.customName(customName);
+
+        Location boatLocation = boat.getLocation();
+
+        float startRotation = (float) main.getConfig().getInt("race.startRotation");
+        boatLocation.setRotation(startRotation,0F);
+        boat.teleport(boatLocation);
+
+        boat.setInvulnerable(true);
+
+        boat.addPassenger(player);
+        car.setBoat(boat);
+    }
+
     public void saveCar(Race race, UUID owner, Location startingLocation, ItemStack boatItem) {
 
         int id = count(race);
         String path = "cars." + id;
         String customName = s(boatItem.getItemMeta().customName()) == null ? "Race car" : s(boatItem.getItemMeta().customName());
 
-        YamlConfiguration config = raceManager.getRaceConfig(race);
+        YamlConfiguration config = race.getConfig();
 
         config.set(path + ".world", startingLocation.getWorld().getName());
         config.set(path + ".startingLocation", serialize(startingLocation));
@@ -116,7 +141,7 @@ public class CarManager {
         config.set(path + ".boatCustomName", customName);
 
         try {
-            raceManager.saveRaceConfig(race,config);
+            race.saveConfig();
         } catch (IOException e) {
             main.err("Couldn't save car " + id + " for race " + race.getName() + " because the it's config threw an error on saving. ",e);
         }
@@ -127,7 +152,7 @@ public class CarManager {
     public void loadCars(Race race) {
         race.clearCars();
         
-        YamlConfiguration config = raceManager.getRaceConfig(race);
+        YamlConfiguration config = race.getConfig();
 
         if (!config.isConfigurationSection("cars")) return;
 
@@ -187,12 +212,12 @@ public class CarManager {
         if (car == null) return false;
         if (race == null) return false;
 
-        YamlConfiguration config = raceManager.getRaceConfig(race);
+        YamlConfiguration config = race.getConfig();
         if(config == null) return false;
 
         config.set("cars." + car.getId(), null);
         try {
-            raceManager.saveRaceConfig(race, config);
+            race.saveConfig();
         } catch (IOException e) {
             main.err("Couldn't remove car " + car.getId() + " for race " + race.getName(),e);
             return false;

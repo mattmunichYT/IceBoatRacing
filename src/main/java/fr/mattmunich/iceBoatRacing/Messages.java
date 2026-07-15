@@ -102,12 +102,11 @@ public class Messages {
     /**
      * Formats placeholders like %player%
      */
-    public static Map<String, String> formatArguments(String... args) {
-
-        Map<String, String> map = new HashMap<>();
+    public static Map<String, Object> formatArguments(Object... args) {
+        Map<String, Object> map = new HashMap<>();
 
         for (int i = 0; i < args.length; i += 2) {
-            map.put(args[i], args[i + 1]);
+            map.put(args[i].toString(), args[i + 1]);
         }
 
         return map;
@@ -128,7 +127,7 @@ public class Messages {
         return map;
     }
 
-    public static Component getMessage(String identifier, Map<String, String> arguments) {
+    public static Component getMessage(String identifier, Map<String, Object> arguments) {
 
         if (!langConfig.contains(identifier)) {
             main.getLogger().severe("Missing message: " + identifier);
@@ -140,11 +139,11 @@ public class Messages {
         if (message == null) return c("§cMESSAGE NOT FOUND");
 
         // Replace placeholders
-        for (Map.Entry<String, String> entry : arguments.entrySet()) {
+        for (Map.Entry<String, Object> entry : arguments.entrySet()) {
             //Ignore unset arguments
             if(!message.contains("%" + entry.getKey() + "%")) continue;
             //Actually replace
-            message = message.replace("%" + entry.getKey() + "%", entry.getValue());
+            message = message.replace("%" + entry.getKey() + "%", entry.getValue().toString());
         }
 
         //Convert to component for PaperMC
@@ -158,7 +157,7 @@ public class Messages {
         return component;
     }
 
-    public static Component getMessage(String identifier, Map<String, String> arguments, Map<String,Component> componentArguments) {
+    public static Component getMessage(String identifier, Map<String, Object> arguments, Map<String,Component> componentArguments) {
 
         if (!langConfig.contains(identifier)) {
             main.getLogger().severe("Missing message: " + identifier);
@@ -170,11 +169,11 @@ public class Messages {
         if (message == null) return c("§cMESSAGE NOT FOUND");
 
         // Replace placeholders
-        for (Map.Entry<String, String> entry : arguments.entrySet()) {
+        for (Map.Entry<String, Object> entry : arguments.entrySet()) {
             //Ignore unset arguments
             if(!message.contains("%" + entry.getKey() + "%")) continue;
             //Actually replace
-            message = message.replace("%" + entry.getKey() + "%", entry.getValue());
+            message = message.replace("%" + entry.getKey() + "%", entry.getValue().toString());
         }
 
 
@@ -201,7 +200,9 @@ public class Messages {
     }
 
     private static boolean addPrefix(String identifier) {
-        return !identifier.contains("noPrefix") //Currently used for join/quit and liveSidebarTitle
+        return
+        (
+                !identifier.contains("noPrefix") //Currently used for join/quit and liveSidebarTitle
                 && !identifier.equals("prefix") //Don't add prefix after prefix
                 && !identifier.contains("title") //=> titles and subtitles
                 && !identifier.contains("actionBar") //actionBar messages
@@ -214,6 +215,8 @@ public class Messages {
                 //For race.onEnd messages
                 && !identifier.contains("playerFormat")
                 && !identifier.contains("highlights")
-                && !identifier.contains("bottom");
+                && !identifier.contains("bottom")
+        )
+                || identifier.contains("checkpoint.");
     }
 }

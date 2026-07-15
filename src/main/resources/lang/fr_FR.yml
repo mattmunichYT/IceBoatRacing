@@ -20,7 +20,7 @@
 # ----------------------------------------------------------------
 
 
-#The prefix used in the beggining of every message
+#The prefix used in the beginning of every message
 #(except titles and messages under the "noPrefix" section)
 prefix: "<b><gradient:#8DABF3:#10CA9A>[Ice Boat Racing]</gradient></b>"
 
@@ -45,6 +45,7 @@ checkpoint:
   removed: "§aCheckpoint §6%id%§a supprimé"
   count: "§aIl y a %count% checkpoints"
   resetPlayerScore: "§aScore de §6%player%§a réinitialisé"
+  nearestCheckpointID: "§bLe checkpoint de la course §3%race%§b le plus proche a pour ID §3%id%"
 
   #Errors
   notInCheckpoint: "§cTu n'es pas dans un checkpoint\n§8ℹ Tu peux aussi faire /checkpoint list"
@@ -75,9 +76,9 @@ checkpoint:
     sectorMarked: "§aSecteur marqué.\n§8ℹ Fais §f/checkpoint autotrace preview §8pour le voir, ou marque d'autres secteurs."
     sectorFailed: "§cImpossible de placer le secteur ici.\n§8ℹ Essaie de cliquer plus près du tracé enregistré."
     resizeFailed: "§cAucun checkpoint trouvé près de ces clics.\n§8ℹ Essaie de cliquer plus près de celui à redimensionner."
-    resized: "§aLe checkpoint le plus proche a été redimensionné selon tes clics."
+    resized: "§aCheckpoint §f#%position% §a(§f%type%§a) redimensionné selon tes clics §7(à %distance% blocs)."
     deleteFailed: "§cAucun checkpoint trouvé près de toi à supprimer."
-    deleted: "§7Le checkpoint le plus proche a été retiré de l'aperçu."
+    deleted: "§7Checkpoint §f#%position% §7(§f%type%§7) retiré de l'aperçu §7(à %distance% blocs)."
     acceptFailed: "§cRien à sauvegarder.\n§8ℹ Génère d'abord un aperçu (start, puis stop)."
     accepted: "§aCheckpoints auto-tracés sauvegardés !"
     cancelled: "§7Session d'auto-traçage annulée."
@@ -94,14 +95,26 @@ checkpoint:
 
 race:
   #Will be displayed to every player
-  start: "§aCourse %name% démarre..." #Displayed when '/race start <name>' is used
+  start: "§aCourse %race% démarre..." #Displayed when '/race start <name>' is used
   notFound: "§cCourse non trouvée." #Displayed when the inputted race is invalid
   end: "§cLa course est terminée !" #Displayed when '/race end' is used
 
   #Only displayed to the command executor
   prepare: "§aLes joueurs seront placés automatiquement." #Displayed when '/race prepare' is used (and prepare toggled OFF)
   cancelPrepare: "§aMode préparation désactivé." #Displayed when '/race prepare' is used (and prepare toggled ON)
-  deleted: "§aLa course %name% a été supprimée."#Displayed when '/race delete' is used and is successful
+  deleted: "§aLa course %race% a été supprimée."#Displayed when '/race delete' is used and is successful
+  currentLapCount: "§bLe nombre de tours de la course %race% est défini à §3%lapCount%§b. \n§8ℹ Utilisez /race setLapCount <nom> <nombre>"
+  updatedLapCount: "§bLe nombre de tours de la course §3%race%§b a été à §3%lapCount%§b."
+  invalidNumber: "§cLe nombre de tours entré est invalide."
+
+  #Help message
+  help: "§3--------- §b§l/race§r §3---------
+  \n§3->§a start [nom] §8-§7 Lancer la course
+  \n§3->§a prepare [nom] §8-§7 Préparer les joueurs
+  \n§7§oℹ Placement automatique des joueurs dans leurs voitures
+  \n§3->§a end [nom] §8-§7 Finir la course
+  \n§3->§a delete [nom] §8-§7 Supprimer la course
+  \n§3->§a setLapCount [nom] <nombre> §8-§7 Définir le nombre de tours"
 
   #In race events
   onCompleteLap:
@@ -148,8 +161,6 @@ race:
     sectorFormat: "§bSecteur §3#%sectorID% §8» §a%player% §8(§e%time%§8)\n"
     bottom: "§x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
 
-  #Help message
-  help: "§3--------- §b§l/race§r §3---------\n§3->§a start §8-§7 Lancer la course\n§3->§a prepare §8-§7 Préparer les joueurs\n§7§oℹ Placement automatique des joueurs dans leurs voitures\n§3->§a end §8-§7 Finir la course"
 
   select: "§bSélectionnez une course:"
   create:
@@ -164,9 +175,14 @@ race:
       message: "§bCommencez par entrer le nom de la course ci-dessous (dans le chat)."
       completed: "§bLe nom de la course a été défini à §3%name%"
       alreadyExists: "§cUne course avec le même nom existe déjà, veuillez choisir un autre nom."
+    2:
+      title: "§3Nombre de tours"
+      subtitle: "§bEntrez le §3nombre§b dans le chat"
+      message: "§bEntrez le nombre de §3tours§b à §3compléter§b pour §3terminer§b la course (dans le chat)."
+      completed: "§bLe §3nombre de tours§b de la course a été défini à §3%lapCount%"
 
     #Define the checkpoints?
-    2:
+    3:
       title: "§3Checkpoints?"
       subtitle: "§bDéfinir les checkpoints ?"
       start: "commencer"
@@ -175,7 +191,7 @@ race:
 
 
     #Checkpoints definition process
-    3:
+    4:
       title: "§3Création checkpoints"
       subtitle: "§bCommencez à définir les checkpoints"
       message: "§bDéfinissez les checkpoints de la course en vous rendant à chaque emplacement.\n§b-> §3%define%§b pour poser un checkpoint\n§b-> §3%defineSector%§b pour poser un checkpoint de secteur\n§b-> §3%defineFinish%§b pour définir la ligne d'arrivée §8§o(si différente du départ)\n§b-> §3%help%§b pour afficher l'aide\n§b-> §3%done%§b pour terminer\n§8§oℹ︎ Un secteur fonctionne comme un checkpoint, mais annonce également le temps au secteur dans le chat.\n§8§oℹ︎ Pour définir un checkpoint, faites un clic gauche pour le point 1 et un clic droit pour le point 2 avec une §3§opelle en bois§8§o, comme avec WorldEdit."
@@ -205,13 +221,13 @@ race:
           #Will be shown if the player tries to define a sector first (before defining start line)
           defineStartLineFirst: "§cCommencez par définir la ligne de départ avant de faire cela."
 
-    4:
+    5:
       title: "§3Voitures?"
       subtitle: "§bDéfinir les voitures ?"
       message: "§bDéfinissez les points par lesquels voitures des participant de la course. \n-> Entrez §3%start%§b pour commencer ou §3%later%§b pour configurer cela plus tard.\n§8§oℹ︎ Celles-ci seront automatiquement placées lorsque la course commencera, et leurs passagers téléportés dedans. Vous pouvez toujours faire cela plus tard!"
       start: "commencer"
       later: "pas maintenant"
-    5:
+    6:
       title: "§3Création voitures"
       subtitle: "§bLa création va commencer..."
       message: "§bLe processus de création des voitures va commencer...\n§8§oℹEnvoyez %done% pour sauvergarder lorsque vous avez terminé."

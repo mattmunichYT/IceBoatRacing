@@ -5,9 +5,11 @@ import fr.mattmunich.iceBoatRacing.checkpoint.Checkpoint;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.*;
 
 import static fr.mattmunich.iceBoatRacing.Main.formatTime;
@@ -21,12 +23,14 @@ public class Race {
     public void setRaceManager(RaceManager raceManager) {
         this.raceManager = raceManager;
     }
-
+    YamlConfiguration config = null;
     final String name;
     final World world;
+    int lapCount = 10;
     final List<Checkpoint> checkpoints = new ArrayList<>();
     final List<Car> cars = new ArrayList<>();
     public final Map<UUID, RaceData> racers = new HashMap<>();
+
     /**
      * List of the racers who hae finished the race.
      * rankings.get(0) is first, rankings.get(1) is second and so on
@@ -51,6 +55,18 @@ public class Race {
             ) {
         this.name = name;
         this.world = world;
+    }
+
+    public void setConfig(YamlConfiguration config) {
+        this.config = config;
+    }
+
+    public YamlConfiguration getConfig() {
+        return config;
+    }
+
+    public void saveConfig() throws IOException {
+        raceManager.saveRaceConfig(this, config);
     }
 
     public void start() {
@@ -159,6 +175,12 @@ public class Race {
     public World getWorld() {
         return world;
     }
+    public int getLapCount() {
+        return lapCount;
+    }
+    public void setLapCount(int lapCount) {
+        this.lapCount = Math.max(lapCount, 1);
+    }
 
     //Checkpoints
     public List<Checkpoint> getCheckpoints() {
@@ -209,7 +231,7 @@ public class Race {
         return preparingRace;
     }
 
-    public boolean hasNotStarted() {
-        return !hasRaceStarted;
+    public boolean hasStarted() {
+        return hasRaceStarted;
     }
 }

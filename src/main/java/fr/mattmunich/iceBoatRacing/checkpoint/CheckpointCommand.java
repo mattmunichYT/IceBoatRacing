@@ -80,19 +80,19 @@ public class CheckpointCommand implements Listener, BasicCommand {
 
     @Override
     public void execute(CommandSourceStack source, String @NonNull [] args) {
-        if(!(source.getSender() instanceof Player player)) {
+        if(!(source.getSender() instanceof Player p)) {
             return;
         }
 
         if (args.length >= 1 && args[0].equalsIgnoreCase("create")) {
             // Get positions first
-            Location l1 = pos1.get(player);
-            Location l2 = pos2.get(player);
-            pos1.remove(player);
-            pos2.remove(player);
+            Location l1 = pos1.get(p);
+            Location l2 = pos2.get(p);
+            pos1.remove(p);
+            pos2.remove(p);
 
             if (l1 == null || l2 == null) {
-                player.sendMessage(getMessage("checkpoint.pos.notSet"));
+                p.sendMessage(getMessage("checkpoint.pos.notSet"));
                 return;
             }
 
@@ -107,10 +107,10 @@ public class CheckpointCommand implements Listener, BasicCommand {
             if (args.length >= 3 && args[2].equalsIgnoreCase("SECTOR")) {
                 Checkpoint checkpoint = checkpointManager.saveSectorCheckpoint(race, l1, l2);
                 if(checkpoint == null) {
-                    player.sendMessage(getMessage("error.unknown"));
+                    p.sendMessage(getMessage("error.unknown"));
                     return;
                 }
-                player.sendMessage(getMessage("checkpoint.sectorSaved",
+                p.sendMessage(getMessage("checkpoint.sectorSaved",
                         formatArguments("sectorID", "" + checkpoint.getSectorID())
                 ));
                 return;
@@ -119,30 +119,30 @@ public class CheckpointCommand implements Listener, BasicCommand {
             // Otherwise normal checkpoint
             if(race.getCheckpoints().isEmpty()) {
                 checkpointManager.saveCheckpoint(race, l1, l2, Checkpoint.Type.START_FINISH);
-                player.sendMessage(getMessage("checkpoint.startLineSaved"));
+                p.sendMessage(getMessage("checkpoint.startLineSaved"));
             }
 
             Checkpoint checkpoint = checkpointManager.saveCheckpoint(race, l1, l2, Checkpoint.Type.NORMAL);
             if(checkpoint == null) {
-                player.sendMessage(getMessage("error.unknown"));
+                p.sendMessage(getMessage("error.unknown"));
                 return;
             }
-            player.sendMessage(getMessage("checkpoint.saved",
+            p.sendMessage(getMessage("checkpoint.saved",
                     formatArguments("id", String.valueOf(checkpoint.getId()))
             ));
 
         } else if (args.length == 2 && args[0].equalsIgnoreCase("setFinish")) {
 
-            Location l1 = pos1.get(player);
-            Location l2 = pos2.get(player);
+            Location l1 = pos1.get(p);
+            Location l2 = pos2.get(p);
 
             if (l1 == null || l2 == null) {
-                player.sendMessage(getMessage("checkpoint.posNotSet"));
+                p.sendMessage(getMessage("checkpoint.posNotSet"));
                 return;
             }
 
-            pos1.remove(player);
-            pos2.remove(player);
+            pos1.remove(p);
+            pos2.remove(p);
 
             String raceName = args[1];
             Race race = raceManager.getRace(raceName);
@@ -154,33 +154,33 @@ public class CheckpointCommand implements Listener, BasicCommand {
             Checkpoint checkpoint = checkpointManager.saveCheckpoint(race, l1, l2, Checkpoint.Type.START_FINISH);
 
             if(checkpoint == null) {
-                player.sendMessage(getMessage("error.unknown"));
+                p.sendMessage(getMessage("error.unknown"));
                 return;
             }
 
-            player.sendMessage(getMessage("checkpoint.finishLineSaved"));
+            p.sendMessage(getMessage("checkpoint.finishLineSaved"));
 
 
         } else if (args.length == 1 && args[0].equalsIgnoreCase("remove")) {
 
-            Map<Race,Checkpoint> check = checkpointManager.getAt(player.getLocation());
+            Map<Race,Checkpoint> check = checkpointManager.getAt(p.getLocation());
             Race race = check.keySet().iterator().next();
             Checkpoint checkpoint = check.values().iterator().next();
 
             if (checkpoint == null) {
-                player.sendMessage(getMessage("checkpoint.notInCheckpoint"));
+                p.sendMessage(getMessage("checkpoint.notInCheckpoint"));
                 return;
             }
 
             checkpointManager.remove(race, checkpoint);
-            player.sendMessage(Messages.getMessage("checkpoint.removed",formatArguments("ID","" + checkpoint.getId())));
+            p.sendMessage(Messages.getMessage("checkpoint.removed",formatArguments("ID","" + checkpoint.getId())));
         } else if (args.length == 3 && args[0].equalsIgnoreCase("remove")) {
 
             int checkpointNum;
             try {
                 checkpointNum = Integer.parseInt(args[1]);
             }  catch (NumberFormatException e) {
-                player.sendMessage(getMessage("error.invalidNumber"));
+                p.sendMessage(getMessage("error.invalidNumber"));
                 return;
             }
 
@@ -194,26 +194,23 @@ public class CheckpointCommand implements Listener, BasicCommand {
             Checkpoint checkpoint = race.getCheckpoint(checkpointNum);
 
             if (checkpoint == null) {
-                player.sendMessage(getMessage("checkpoint.invalid"));
+                p.sendMessage(getMessage("checkpoint.invalid"));
                 return;
             }
 
             boolean success = checkpointManager.remove(race, checkpoint);
             if (!success) {
-                player.sendMessage(getMessage("error.unknown"));
+                p.sendMessage(getMessage("error.unknown"));
                 return;
             }
-            player.sendMessage(Messages.getMessage("checkpoint.removed",
+            p.sendMessage(Messages.getMessage("checkpoint.removed",
                     formatArguments("id","" + checkpointNum)
             ));
         } else if (args.length <= 2 && args[0].equalsIgnoreCase("list")) {
-            //Generated by Claude
-            //TODO check if it works
-
             Map<Race, List<Checkpoint>> all = checkpointManager.getAll();
 
             if (all.values().stream().allMatch(List::isEmpty)) {
-                player.sendMessage(getMessage("checkpoint.noCheckpoints"));
+                p.sendMessage(getMessage("checkpoint.noCheckpoints"));
                 return;
             }
 
@@ -233,20 +230,20 @@ public class CheckpointCommand implements Listener, BasicCommand {
                 try {
                     page = Integer.parseInt(args[1]);
                 } catch (NumberFormatException e) {
-                    player.sendMessage(getMessage("error.invalidNumber"));
+                    p.sendMessage(getMessage("error.invalidNumber"));
                     return;
                 }
             }
 
             if (page < 1 || page > totalPages) {
-                player.sendMessage(c("§cInvalid page (1-" + totalPages + ")"));
+                p.sendMessage(c("§cInvalid page (1-" + totalPages + ")"));
                 return;
             }
 
             int start = (page - 1) * PAGE_SIZE;
             int end = Math.min(start + PAGE_SIZE, entries.size());
 
-            player.sendMessage(c("§bCheckpoints §7(page §f" + page + "§7/§f" + totalPages + "§7):"));
+            p.sendMessage(c("§bCheckpoints §7(page §f" + page + "§7/§f" + totalPages + "§7):"));
 
             String lastRaceName = null;
             for (int i = start; i < end; i++) {
@@ -256,7 +253,7 @@ public class CheckpointCommand implements Listener, BasicCommand {
                 // Print race header when the race changes
                 if (!race.getName().equals(lastRaceName)) {
                     lastRaceName = race.getName();
-                    player.sendMessage(c("§3▌ §b" + race.getName()));
+                    p.sendMessage(c("§3▌ §b" + race.getName()));
                 }
 
                 Location min = checkpoint.getMin();
@@ -274,9 +271,9 @@ public class CheckpointCommand implements Listener, BasicCommand {
                 String altTag = checkpoint.getAlternates().isEmpty() ? "" :
                         getStringMessage("checkpoint.list.altTag").replace("%count%", "" + checkpoint.getAlternates().size());
 
-                player.sendMessage(c(
+                p.sendMessage(c(
                         "§e  #" + checkpoint.getId()
-                                + " §7[" + min.getWorld().getName() + "]"
+                                + " §7[" + race.getName() + "]"
                                 + shapeTag
                                 + altTag
                                 + " §fX:" + min.getBlockX() + " Y:" + min.getBlockY() + " Z:" + min.getBlockZ()
@@ -297,16 +294,16 @@ public class CheckpointCommand implements Listener, BasicCommand {
                         ClickEvent.Payload.string("/checkpoint list " + (page + 1))))
                         : c("§8[→]");
 
-                player.sendMessage(prev.append(c("  §7Page §f" + page + " §7of §f" + totalPages + "  ")).append(next));
+                p.sendMessage(prev.append(c("  §7Page §f" + page + " §7of §f" + totalPages + "  ")).append(next));
             }
         } else if (args.length == 1 && args[0].equalsIgnoreCase("count")) {
-
             int count = checkpointManager.getAllNoRaceInfo().size();
-            player.sendMessage(Messages.getMessage("checkpoint.count",formatArguments("count", "" + count)));
+
+            p.sendMessage(Messages.getMessage("checkpoint.count",formatArguments("count", "" + count)));
         } else if (args.length == 3 && args[0].equalsIgnoreCase("resetData")) {
             Player target = Bukkit.getPlayer(args[1]);
             if(target == null) {
-                player.sendMessage(getMessage("error.playerNotFound"));
+                p.sendMessage(getMessage("error.playerNotFound"));
                 return;
             }
 
@@ -324,15 +321,27 @@ public class CheckpointCommand implements Listener, BasicCommand {
 
             //Reset player's data on live scoreboard
             main.liveSidebar.getScore(target.getName()).resetScore();
-            player.sendMessage(Messages.getMessage("checkpoint.resetPlayerScore",formatArguments("player",player.getName())));
+            p.sendMessage(Messages.getMessage("checkpoint.resetPlayerScore",formatArguments("player",p.getName())));
         } else if (args.length >= 1 && args[0].equalsIgnoreCase("autotrace")) {
-            handleAutoTrace(player, args);
+            handleAutoTrace(p, args);
         } else if (args.length == 3 && args[0].equalsIgnoreCase("addAlternate")) {
-            handleAddAlternate(player, args);
+            handleAddAlternate(p, args);
         } else if (args.length == 2 && args[0].equalsIgnoreCase("clearAll")) {
-            handleClearAll(player, args[1]);
+            handleClearAll(p, args[1]);
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("getID")) {
+            String raceName = args[1];
+            Race race = raceManager.getRace(raceName);
+            if(race == null) {
+                source.getSender().sendMessage(Messages.getMessage("race.notFound"));
+                return;
+            }
+            int id = checkpointManager.getNearestCheckpoint(race, p.getLocation());
+            p.sendMessage(getMessage("checkpoint.nearestCheckpointID",formatArguments(
+                    "race",race.getName(),
+                    "id", "" + id
+            )));
         } else {
-            player.sendMessage(getMessage("checkpoint.help"));
+            p.sendMessage(getMessage("checkpoint.help"));
         }
     }
 
@@ -365,7 +374,7 @@ public class CheckpointCommand implements Listener, BasicCommand {
             }
 
             double spacing = args.length >= 4 ? parseDoubleOr(args[3], 10.0) : 10.0;
-            double halfWidth = args.length >= 5 ? parseDoubleOr(args[4], 3.0) : 3.0;
+            double halfWidth = args.length >= 5 ? parseDoubleOr(args[4], 5.0) : 5.0;
             double halfHeight = args.length >= 6 ? parseDoubleOr(args[5], 2.5) : 2.5;
             boolean loop = args.length < 7 || !args[6].equalsIgnoreCase("noloop");
 
@@ -434,22 +443,30 @@ public class CheckpointCommand implements Listener, BasicCommand {
             pos1.remove(player);
             pos2.remove(player);
 
-            boolean success = autoTraceManager.resizeNearest(player, l1, l2);
-            if (!success) {
+            AutoTraceManager.EditInfo info = autoTraceManager.resizeNearest(player, l1, l2);
+            if (info == null) {
                 player.sendMessage(getMessage("checkpoint.autotrace.resizeFailed"));
                 return;
             }
 
-            player.sendMessage(getMessage("checkpoint.autotrace.resized"));
+            player.sendMessage(getMessage("checkpoint.autotrace.resized", formatArguments(
+                    "position", "" + info.previewPosition(),
+                    "type", info.type().name(),
+                    "distance", String.format("%.1f", info.distance())
+            )));
 
         } else if (sub.equalsIgnoreCase("delete")) {
-            boolean success = autoTraceManager.deleteNearest(player, player.getLocation());
-            if (!success) {
+            AutoTraceManager.EditInfo info = autoTraceManager.deleteNearest(player, player.getLocation());
+            if (info == null) {
                 player.sendMessage(getMessage("checkpoint.autotrace.deleteFailed"));
                 return;
             }
 
-            player.sendMessage(getMessage("checkpoint.autotrace.deleted"));
+            player.sendMessage(getMessage("checkpoint.autotrace.deleted", formatArguments(
+                    "position", "" + info.previewPosition(),
+                    "type", info.type().name(),
+                    "distance", String.format("%.1f", info.distance())
+            )));
 
         } else if (sub.equalsIgnoreCase("accept")) {
             boolean success = autoTraceManager.accept(player);
@@ -585,6 +602,7 @@ public class CheckpointCommand implements Listener, BasicCommand {
             suggestions.add("autotrace");
             suggestions.add("addAlternate");
             suggestions.add("clearAll");
+            suggestions.add("getID");
             return suggestions;
         }
 
@@ -602,7 +620,7 @@ public class CheckpointCommand implements Listener, BasicCommand {
                     suggestions.add("SECTOR");
                 }
             }
-            case "setfinish" -> {
+            case "setfinish", "clearall", "getid" -> {
                 if (args.length == 2) {
                     for (Race race : raceManager.races) suggestions.add(race.getName());
                 }
@@ -646,11 +664,6 @@ public class CheckpointCommand implements Listener, BasicCommand {
                     if (race != null) {
                         for (Checkpoint cp : race.getCheckpoints()) suggestions.add("" + cp.getId());
                     }
-                }
-            }
-            case "clearall" -> {
-                if (args.length == 2) {
-                    for (Race race : raceManager.races) suggestions.add(race.getName());
                 }
             }
         }

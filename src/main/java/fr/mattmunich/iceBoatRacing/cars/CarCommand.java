@@ -232,7 +232,7 @@ public class CarCommand implements BasicCommand, Listener {
             suggestions.add("changeOwner");
             suggestions.add("remove");
         }
-        if(!suggestions.isEmpty() && !args[0].isEmpty()) {
+        if(args[0] != null && !suggestions.isEmpty() && !args[0].isEmpty()) {
             suggestions.removeIf(s -> !s.startsWith(args[0]));
         }
         return suggestions;

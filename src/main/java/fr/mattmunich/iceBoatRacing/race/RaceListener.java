@@ -1,10 +1,8 @@
 package fr.mattmunich.iceBoatRacing.race;
 
 import fr.mattmunich.iceBoatRacing.Main;
-import fr.mattmunich.iceBoatRacing.Messages;
 import fr.mattmunich.iceBoatRacing.checkpoint.Checkpoint;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -19,8 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static fr.mattmunich.iceBoatRacing.Main.c;
-import static fr.mattmunich.iceBoatRacing.Main.formatTime;
+import static fr.mattmunich.iceBoatRacing.Main.*;
 import static fr.mattmunich.iceBoatRacing.Messages.*;
 
 public class RaceListener implements Listener {
@@ -81,10 +78,10 @@ public class RaceListener implements Listener {
                 if(data.lapCount==0) data.startTime=now;
 
                 //When completing lap
-                if (data.lapCount>0 && !(data.lapCount == main.raceLapCount)) onCompleteLap(data, now);
+                if (data.lapCount>0 && !(data.lapCount == race.getLapCount())) onCompleteLap(data, now);
 
                 //When finishing race
-                if(data.lapCount == main.raceLapCount) {
+                if(data.lapCount == race.getLapCount()) {
                     onCompleteLap(data, now);
                     onFinishRace(data, now);
 
@@ -107,7 +104,7 @@ public class RaceListener implements Listener {
                 data.addSectorTime(nextCheckpoint.getSectorID(), now, data.lapTime);
                 Bukkit.broadcast(getMessage("race.onCrossSector",
                         formatArguments(
-                                "player", LegacyComponentSerializer.legacySection().serialize(player.displayName()),
+                                "player", l(player.displayName()),
                                 "ID", String.valueOf(nextCheckpoint.getSectorID()),
                                 "time", formatTime(now-data.lapTime)
                         )
@@ -128,7 +125,7 @@ public class RaceListener implements Listener {
         if(bestLapTimeYet) {
             Bukkit.broadcast(getMessage("race.onCompleteLap.messageBestLapTimeYet",
                     formatArguments(
-                            "player", LegacyComponentSerializer.legacySection().serialize(player.displayName()),
+                            "player", l(player.displayName()),
                             "ID",  "" + data.lapCount,
                             "time", formatTime(lapDuration)
                     )
@@ -136,7 +133,7 @@ public class RaceListener implements Listener {
         } else {
             Bukkit.broadcast(getMessage("race.onCompleteLap.message",
                     formatArguments(
-                            "player", LegacyComponentSerializer.legacySection().serialize(player.displayName()),
+                            "player", l(player.displayName()),
                             "ID",  "" + data.lapCount,
                             "time", formatTime(lapDuration)
                     )
@@ -145,7 +142,7 @@ public class RaceListener implements Listener {
         Title title = Title.title(
                 getMessage("race.onCompleteLap.title", formatArguments(
                         "currentLapCount", "" + data.lapCount,
-                        "raceLapCount", "" + main.raceLapCount
+                        "raceLapCount", "" + data.race.getLapCount()
                 )), getMessage("race.onCompleteLap.subtitle"));
 
         player.showTitle(title);
@@ -174,7 +171,7 @@ public class RaceListener implements Listener {
 
         Bukkit.broadcast(getMessage("race.onFinish.message",
                 formatArguments(
-                        "player", LegacyComponentSerializer.legacySection().serialize(player.displayName()),
+                        "player", l(player.displayName()),
                         "time", formatTime(raceTime),
                         "ranking", ranking + ""
                 )

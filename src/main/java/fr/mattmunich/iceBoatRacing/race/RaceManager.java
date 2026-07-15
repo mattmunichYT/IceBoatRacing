@@ -46,6 +46,20 @@ public class RaceManager {
         return null;
     }
 
+    public void saveAllRaces() {
+        if (races.isEmpty()) {
+            main.warn("No races found, therefore none were saved.");
+        } else {
+            for (Race race : races) {
+                try {
+                    race.saveConfig();
+                } catch (IOException e) {
+                    main.err("Could not save race " + race.getName(), e);
+                }
+            }
+        }
+    }
+
     public List<Race> getRaces() {
         return races;
     }
@@ -54,8 +68,7 @@ public class RaceManager {
         main.log("Loading all races...");
         int loadedRaces = 0;
 
-        //noinspection ConstantValue
-        if(races!=null) {
+        if(!races.isEmpty()) {
             for (Race race : races) race.end();
             races.clear();
         }
@@ -83,6 +96,7 @@ public class RaceManager {
             }
             Race race = new Race(name, world);
             race.setRaceManager(this);
+            race.setConfig(config);
             checkpointManager.loadRaceCheckpoints(race);
             carManager.loadCars(race);
 
@@ -93,11 +107,24 @@ public class RaceManager {
         main.log("Loaded " + loadedRaces + " race(s)!");
     }
 
-    public void saveAllRaces() {
-        if(races.isEmpty()) return;
-        for (Race race : races) {
-            saveRace(race);
+    public void updateAllRaces() {
+        main.log("Updating all races...");
+        int loadedRaces = 0;
+
+        if(!races.isEmpty()) {
+            for (Race race : races) race.end();
+            races.clear();
         }
+        File racesFolder = new File(main.getDataFolder(), "races");
+        if (!racesFolder.exists()) return;
+
+        for (Race race : races) {
+            boolean success = updateRace(race);
+            if(success) main.log("Race " + race.getName() + " has been updated");
+            else main.warn("Could not update race " + race.getName() + ", see error above.");
+            loadedRaces++;
+        }
+        main.log("Updated " + loadedRaces + " race(s)!");
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -109,6 +136,7 @@ public class RaceManager {
         YamlConfiguration config = new YamlConfiguration();
         config.set("name", race.getName());
         config.set("world", race.getWorld().getName());
+        config.set("lapCount", race.getLapCount());
 
         try {
             config.save(raceFile);
@@ -121,42 +149,64 @@ public class RaceManager {
         //Update race in race list
         races.add(race);
         race.setRaceManager(this);
+        race.setConfig(config);
         return race;
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    public boolean saveRace(Race race) {
-        File raceFile = new File(main.getDataFolder(), "races/" + race.getName().replace(" ","_") + ".yml");
-        raceFile.getParentFile().mkdirs();
+    /**
+     * Updates the race from its config file
+     * @param race The race to update
+     * @return Whether the operation succeeded
+     */
 
-        YamlConfiguration config;
+    public boolean updateRace(Race race) {
         try {
-            config = YamlConfiguration.loadConfiguration(raceFile);
+            File raceFile = new File(main.getDataFolder(), "races/" + race.getName().replace(" ","_") + ".yml");
+            if (!raceFile.exists()) {
+                main.warn("Race " + race.getName() + " wasn't updated because it's config file does not exist.");
+                return false;
+            }
+
+            YamlConfiguration config;
+            try {
+                config = YamlConfiguration.loadConfiguration(raceFile);
+            } catch (Exception e) {
+                main.err("Couldn't save race " + race.getName(),e);
+                return false;
+            }
+
+            try {
+                config.save(raceFile);
+            } catch (IOException e) {
+                main.err("Couldn't save race " + race.getName(),e);
+                return false;
+            }
+
+            int lapCount = config.getInt("lapCount");
+            if (lapCount <= 0) {
+                lapCount = 10;
+                main.warn(race.getName() + "'s lap count wasn't found, therefore was set to the default value : 10" );
+            }
+            race.setLapCount(lapCount);
+
+            //More like reload from file if file/Race unsynced (not really load)
+            carManager.loadCars(race);
+            checkpointManager.loadRaceCheckpoints(race);
+            race.setConfig(config);
+
+            //Update race in race list
+            races.remove(race);
+            races.add(race);
+
+            if(activeRaces.contains(race)) {
+                activeRaces.remove(race);
+                activeRaces.add(race);
+            }
+            return true;
         } catch (Exception e) {
-            main.err("Couldn't save race " + race.getName(),e);
+            main.err("An error occurred when updating the race " + race.getName(), e);
             return false;
         }
-
-        try {
-            config.save(raceFile);
-        } catch (IOException e) {
-            main.err("Couldn't save race " + race.getName(),e);
-            return false;
-        }
-
-        //More like update (not really load)
-        carManager.loadCars(race);
-        checkpointManager.loadRaceCheckpoints(race);
-
-        //Update race in race list
-        races.remove(race);
-        races.add(race);
-
-        if(activeRaces.contains(race)) {
-            activeRaces.remove(race);
-            activeRaces.add(race);
-        }
-        return true;
     }
 
     public boolean deleteRace(Race race) {
@@ -336,7 +386,7 @@ public class RaceManager {
     }
 
     public void endRace(Race race) {
-        if(race.hasNotStarted()) return;
+        if(!race.hasStarted()) return;
         activeRaces.remove(race);
 
         Bukkit.broadcast(Messages.getMessage("race.end", Messages.formatArguments("name", race.getName())));

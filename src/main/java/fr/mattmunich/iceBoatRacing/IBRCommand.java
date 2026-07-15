@@ -34,8 +34,7 @@ public class IBRCommand implements BasicCommand {
 
             // Reload in-memory data from the freshly loaded config
             Bukkit.getScheduler().runTask(main, () -> {
-                main.raceManager.saveAllRaces();
-                main.raceManager.loadAllRaces();
+                main.raceManager.updateAllRaces();
                 main.registerScoreboard();
                 s.sendMessage(getMessage("prefix").append(c("§bDone reloading!")));
             });

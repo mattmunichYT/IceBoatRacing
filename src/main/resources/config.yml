@@ -20,10 +20,14 @@ language: en_US
 race:
   # The number of laps required to finish the race
   lapCount: 10
+  # Whether a player should be allowed to continue racing even after logging out and back in
+  allowRejoin: true
+  # Whether a player's car should be removed when they log out
+  removeCarWhenLoggingOut: false
   # Configure the race lights
   # -> colored glass that will change on
   #    race start to simulate race lights
-  ligths:
+  lights:
     enabled: false
     from:
       x: 123456789

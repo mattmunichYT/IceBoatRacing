@@ -11,6 +11,7 @@ import fr.mattmunich.iceBoatRacing.checkpoint.CheckpointCommand;
 import fr.mattmunich.iceBoatRacing.checkpoint.CheckpointManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
@@ -22,6 +23,7 @@ import java.util.*;
 import static fr.mattmunich.iceBoatRacing.Messages.getMessage;
 
 public final class Main extends JavaPlugin {
+    public static String version;
 
     CheckpointManager checkpointManager;
     CarManager carManager;
@@ -33,11 +35,13 @@ public final class Main extends JavaPlugin {
 
     public final Map<UUID, RaceData> racers = new HashMap<>();
     public Objective liveSidebar;
-    public int raceLapCount = 0;
 
     @Override
     public void onEnable() {
-        log("Enabling plugin...");
+        version = getPluginMeta().getVersion();
+        Component name = MiniMessage.miniMessage().deserialize("<b><gradient:#8DABF3:#10CA9A>Ice Boat Racing</gradient></b>");
+        String stringName = l(name);
+        log("§bEnabling " + stringName + " §3v" + version + "§b...");
 
         loadConfigs();
 
@@ -53,7 +57,7 @@ public final class Main extends JavaPlugin {
 
         registerListeners();
 
-        log("Done enabling plugin!");
+        log("Done enabling!");
 
     }
 
@@ -61,10 +65,10 @@ public final class Main extends JavaPlugin {
         PluginManager pm = Bukkit.getPluginManager();
         pm.registerEvents(new CarListener(raceManager),this);
         pm.registerEvents(new CarCreator(this, raceManager, carManager), this);
-        pm.registerEvents(new Connection(this,raceManager),this);
+        pm.registerEvents(new Connection(this, raceManager, carManager),this);
         pm.registerEvents(new CheckpointCommand(checkpointManager, raceManager, autoTraceManager, this),this);
-        pm.registerEvents(new RaceListener(this,raceManager),this);
-        pm.registerEvents(new RaceCreator(this,raceManager,checkpointManager,carManager,carCreator), this);
+        pm.registerEvents(new RaceListener(this, raceManager),this);
+        pm.registerEvents(new RaceCreator(this, raceManager,checkpointManager,carManager,carCreator), this);
     }
 
 
@@ -74,7 +78,6 @@ public final class Main extends JavaPlugin {
         reloadConfig();
         saveResource("lang/en_US.yml", true);
         saveResource("lang/fr_FR.yml", true);
-        raceLapCount = getConfig().getInt("race.lapCount");
         log("Done configuring config files!");
     }
 
@@ -178,7 +181,10 @@ public final class Main extends JavaPlugin {
         } catch (Exception e) {
             return null;
         }
+    }
 
+    public static String l(Component component) {
+        return LegacyComponentSerializer.legacySection().serialize(component);
     }
 
     public static String formatTime(long durationMs) {

@@ -1,7 +1,9 @@
 package fr.mattmunich.iceBoatRacing.race;
 
 import fr.mattmunich.iceBoatRacing.cars.Car;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
 
@@ -17,6 +19,7 @@ public class RaceData {
     public final List<Long> lapTimes = new ArrayList<>();
     public final Map<Integer,List<Long>> sectorsTimes = new HashMap<>();
     public Race race;
+    public Location logoutLocation;
 
     public RaceData(Player player) {
         this.player = player;
@@ -59,8 +62,16 @@ public class RaceData {
     }
 
     public void addSectorTime(int sectorID, long now, long lapTime) {
-        List<Long> sectorTimes = sectorsTimes.get(sectorID);
+        List<Long> sectorTimes = sectorsTimes.getOrDefault(sectorID, new ArrayList<>());
         sectorTimes.add(now-lapTime);
         sectorsTimes.put(sectorID, sectorTimes);
+    }
+
+    public Location getLogoutLocation() {
+        return logoutLocation;
+    }
+
+    public void setLogoutLocation(Location logoutLocation) {
+        this.logoutLocation = logoutLocation;
     }
 }

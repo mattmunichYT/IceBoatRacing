@@ -191,7 +191,12 @@ public class AutoTraceManager {
         session.preview.add(insertAt, newCheckpoint);
     }
 
+    /** Info about which preview checkpoint an edit command (resize/delete) actually affected. */
     private static final double MAX_EDIT_DISTANCE = 15.0;
+
+    public record EditInfo(int previewPosition, Checkpoint.Type type, double distance) {}
+
+    private record NearestResult(int index, double distance) {}
 
     /**
      * Replaces the geometry of the nearest preview checkpoint to the given click points, using
@@ -199,17 +204,17 @@ public class AutoTraceManager {
      * the original checkpoint). Keeps the checkpoint's original orientation, type, and ID slot —
      * only its width/position change. Use this to fix checkpoints where track-surface detection
      * got the width wrong (e.g. bridges with no ice for the scanner to measure).
-     * @return true if a nearby checkpoint was found and resized
+     * @return info about the checkpoint that was resized, or null if none was found nearby
      */
-    public boolean resizeNearest(Player p, Location l1, Location l2) {
+    public EditInfo resizeNearest(Player p, Location l1, Location l2) {
         AutoTraceSession session = sessions.get(p);
-        if (session == null || session.preview.isEmpty()) return false;
+        if (session == null || session.preview.isEmpty()) return null;
 
         Location clickMid = CheckpointGeometry.midpoint(l1, l2);
-        int idx = nearestPreviewCheckpoint(session, clickMid);
-        if (idx < 0) return false;
+        NearestResult nearest = findNearestPreviewCheckpoint(session, clickMid);
+        if (nearest.index() < 0) return null;
 
-        Checkpoint original = session.preview.get(idx);
+        Checkpoint original = session.preview.get(nearest.index());
         Vector right = original.getRight();
         Vector normal = original.getNormal();
 
@@ -223,28 +228,28 @@ public class AutoTraceManager {
         Checkpoint replacement = new Checkpoint(original.getId(), newCenter, normal, newHalfWidth, original.getHalfHeight(), original.getType());
         if (original.getType() == Checkpoint.Type.SECTOR) replacement.setSectorID(original.getSectorID());
 
-        session.preview.set(idx, replacement);
-        return true;
+        session.preview.set(nearest.index(), replacement);
+        return new EditInfo(nearest.index() + 1, replacement.getType(), nearest.distance());
     }
 
     /**
      * Removes the preview checkpoint nearest to the given location (typically the player's current
      * position — walk up to the one you want gone and run the command). Useful for e.g. deleting a
      * redundant auto-generated checkpoint that ended up overlapping a manually-placed sector.
-     * @return true if a nearby checkpoint was found and removed
+     * @return info about the checkpoint that was removed, or null if none was found nearby
      */
-    public boolean deleteNearest(Player p, Location point) {
+    public EditInfo deleteNearest(Player p, Location point) {
         AutoTraceSession session = sessions.get(p);
-        if (session == null || session.preview.isEmpty()) return false;
+        if (session == null || session.preview.isEmpty()) return null;
 
-        int idx = nearestPreviewCheckpoint(session, point);
-        if (idx < 0) return false;
+        NearestResult nearest = findNearestPreviewCheckpoint(session, point);
+        if (nearest.index() < 0) return null;
 
-        session.preview.remove(idx);
-        return true;
+        Checkpoint removed = session.preview.remove(nearest.index());
+        return new EditInfo(nearest.index() + 1, removed.getType(), nearest.distance());
     }
 
-    private int nearestPreviewCheckpoint(AutoTraceSession session, Location point) {
+    private NearestResult findNearestPreviewCheckpoint(AutoTraceSession session, Location point) {
         int best = -1;
         double bestDist = MAX_EDIT_DISTANCE;
         for (int i = 0; i < session.preview.size(); i++) {
@@ -254,7 +259,7 @@ public class AutoTraceManager {
                 best = i;
             }
         }
-        return best;
+        return new NearestResult(best, bestDist);
     }
 
     /**
