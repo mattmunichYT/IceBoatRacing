@@ -190,7 +190,8 @@ public final class Main extends JavaPlugin {
     public static String formatTime(long durationMs) {
         long minutes = durationMs / 60000;
         long seconds = (durationMs / 1000) % 60;
-        long milliseconds = durationMs % 1000;
-        return minutes + "m" + seconds + "," + milliseconds;
+//        long milliseconds = durationMs % 1000;
+        long centiseconds = (durationMs % 1000) / 10;
+        return minutes + "m" + String.format("%02d", seconds) + "," + String.format("%02d", centiseconds);
     }
 }

@@ -153,7 +153,8 @@ race:
     sectorFormat: "§b- Secteur §3#%sectorID% §8» §a%time%\n"
   onEnd:
     top: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lClassement final §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n"
-    playerFormat: "§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%\n"
+    winnerFormat: "§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%§b\n"
+    playerFormat: "§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%§b (écart: §x§4§0§C§4§F§F%gapToNext%§b)\n"
     highlights: "\n§b🏆 Meilleur tour : §a%bestLapPlayer% §8(§a%bestLapTime%§8)\n
     §b🐢 Tour le plus lent : §c%worstLapPlayer% §8(§c%worstLapTime%§8)\n
     §b⚡ Écart victoire : §3%winnerGap%\n"

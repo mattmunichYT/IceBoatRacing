@@ -316,8 +316,8 @@ public class CheckpointCommand implements Listener, BasicCommand {
 
             //Remove data
             race.racers.remove(target.getUniqueId());
-            //Replace with some new clear data
-            race.racers.put(target.getUniqueId(), new RaceData(target));
+//            Replace with some new clear data
+//            race.racers.put(target.getUniqueId(), new RaceData(target));
 
             //Reset player's data on live scoreboard
             main.liveSidebar.getScore(target.getName()).resetScore();

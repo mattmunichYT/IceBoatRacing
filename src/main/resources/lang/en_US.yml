@@ -126,8 +126,10 @@ race:
     sectorFormat: "§b- Sector §3#%sectorID% §8» §a%time%\n"
   onEnd:
     top: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lFinal Standings §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n"
-    playerFormat: "§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%\n"
-    highlights: "\n§b🏆 Best Lap : §a%bestLapPlayer% §8(§a%bestLapTime%§8)\n\n    §b🐢 Slowest Lap : §c%worstLapPlayer% §8(§c%worstLapTime%§8)\n\n    §b⚡ Victory Gap : §3%winnerGap%\n"
+    playerFormat: "§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%§b (gap: §x§4§0§C§4§F§F%gapToNext%§b)\n"
+    highlights: "\n§b🏆 Best Lap : §a%bestLapPlayer% §8(§a%bestLapTime%§8)\n\n
+        §b🐢 Slowest Lap : §c%worstLapPlayer% §8(§c%worstLapTime%§8)\n\n
+        §b⚡ Victory Gap : §3%winnerGap%\n"
     bestSectorTimesTop: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬ §x§5§5§D§D§F§F§lBest Sectors §x§0§0§A§D§F§F§l▬▬▬▬▬\n"
     sectorFormat: "§bSector §3#%sectorID% §8» §a%player% §8(§e%time%§8)\n"
     bottom: "§x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"

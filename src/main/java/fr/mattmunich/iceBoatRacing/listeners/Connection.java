@@ -31,10 +31,9 @@ public class Connection implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
         Player p = e.getPlayer();
-        RaceData racer = main.racers.get(p.getUniqueId());
-
         if (!raceManager.races.isEmpty()) {
             for(Race race : raceManager.races) {
+                RaceData racer = race.racers.get(p.getUniqueId());
                 if(race.isPreparing() && race.racers.containsKey(p.getUniqueId())) {
                     final Car[] car = new Car[1];
                     race.getCars().forEach(c -> {

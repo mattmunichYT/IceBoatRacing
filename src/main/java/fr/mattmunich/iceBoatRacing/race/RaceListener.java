@@ -151,19 +151,20 @@ public class RaceListener implements Listener {
     private static void onFinishRace(RaceData data, long now) {
         Player player = data.player;
         Race race = data.race;
-        List<RaceData> finished = race.rankings;
+        Map<Integer, RaceData> finished = race.rankings;
         race.racing.remove(data);
         data.endTime= now;
-        race.rankings.add(data);
+        race.rankings.put(finished.size(), data);
 
         int ranking = finished.size();
         data.ranking = ranking; //Used for the final ranking later on
         boolean isWinner = ranking==1;
 
         long raceTime = now - data.startTime;
-        long gapToWinner = isWinner ? -1 : finished.getFirst().getRaceTime();
+        long gapToWinner = isWinner ? -1 : finished.get(0).getRaceTime();
         //get(ranking-1) = self ; get(ranking-2) = player #(ranking-1) ; because ranking = size (starts @ 1) and get(x) starts @ 0
         long gapToNext = isWinner ? -1 : finished.get(ranking-2).getRaceTime();
+        data.gapToNextTime = gapToNext;
 
         Map<Integer,Long> bestSectorsTimes = data.bestSectorsTimes();
 

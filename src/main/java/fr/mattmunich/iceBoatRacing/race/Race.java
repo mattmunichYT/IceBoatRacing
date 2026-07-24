@@ -35,7 +35,7 @@ public class Race {
      * List of the racers who hae finished the race.
      * rankings.get(0) is first, rankings.get(1) is second and so on
      */
-    public final List<RaceData> rankings = new ArrayList<>();
+    public Map<Integer, RaceData> rankings = new HashMap<>();
 
     public long currentBestLapTime = Long.MAX_VALUE;
 
@@ -43,7 +43,7 @@ public class Race {
      * List of the racers that are actively racing
      * (-> those who have finished the race are not included)
      */
-    public final List<RaceData> racing = new ArrayList<>();
+    public List<RaceData> racing = new ArrayList<>();
 
     boolean startingRace = false;
     boolean preparingRace = false;
@@ -107,11 +107,22 @@ public class Race {
         Map<Integer, Player> bestSectorPlayers = new HashMap<>();
 
         for (RaceData data : racers.values()) {
-            Bukkit.broadcast(getMessage("race.onEnd.playerFormat", formatArguments(
-                    "ranking", data.ranking + "",
-                    "player", data.player == null ? "OFFLINE" : data.player.getName(),
-                    "raceTime", formatTime(data.getRaceTime())
-            )));
+            if(rankings.get(0).equals(data)) {
+                Bukkit.broadcast(getMessage("race.onEnd.winnerFormat", formatArguments(
+                        "ranking", data.ranking + "",
+                        "player", data.player == null ? "OFFLINE" : data.player.getName(),
+                        "raceTime", formatTime(data.getRaceTime())
+                )));
+            } else {
+                Bukkit.broadcast(getMessage("race.onEnd.playerFormat", formatArguments(
+                        "ranking", data.ranking + "",
+                        "player", data.player == null ? "OFFLINE" : data.player.getName(),
+                        "raceTime", formatTime(data.getRaceTime()),
+                        "gapToNext", formatTime(data.gapToNextTime)
+                )));
+            }
+
+
 
             for (long lapTime : data.getLapTimes()) {
                 if (lapTime < bestLapTime) {
@@ -139,8 +150,8 @@ public class Race {
             }
         }
 
-        long winnerTime = rankings.getFirst().getRaceTime();
-        long lastTime = rankings.getLast().getRaceTime();
+        long winnerTime = rankings.get(0).getRaceTime();
+        long lastTime = rankings.get(rankings.size()).getRaceTime();
         long winnerGap = lastTime - winnerTime;
 
         Bukkit.broadcast(getMessage("race.onEnd.highlights", formatArguments(

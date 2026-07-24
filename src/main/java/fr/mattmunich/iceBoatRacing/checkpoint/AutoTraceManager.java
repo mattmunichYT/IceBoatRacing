@@ -70,7 +70,7 @@ public class AutoTraceManager {
             Location current = p.getLocation().clone();
 
             if (!session.rawPoints.isEmpty()) {
-                Location last = session.rawPoints.get(session.rawPoints.size() - 1);
+                Location last = session.rawPoints.getLast();
                 session.traveledDistance += last.distance(current);
             }
             session.rawPoints.add(current);
@@ -78,7 +78,7 @@ public class AutoTraceManager {
             if (session.loop
                     && session.traveledDistance > MIN_DISTANCE_BEFORE_LOOP_CHECK
                     && session.rawPoints.size() > 1) {
-                Location first = session.rawPoints.get(0);
+                Location first = session.rawPoints.getFirst();
                 if (current.getWorld().equals(first.getWorld()) && current.distance(first) <= LOOP_CLOSE_THRESHOLD) {
                     stop(p);
                     List<Checkpoint> generated = generatePreview(p);

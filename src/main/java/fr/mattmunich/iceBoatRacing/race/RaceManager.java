@@ -112,19 +112,18 @@ public class RaceManager {
         int loadedRaces = 0;
 
         if(!races.isEmpty()) {
-            for (Race race : races) race.end();
-            races.clear();
+            List<Race> raceListCopy = new ArrayList<>(races);
+            for (Race race : raceListCopy) {
+                boolean success = updateRace(race);
+                if(success) main.log("Race " + race.getName() + " has been updated");
+                else main.warn("Could not update race " + race.getName() + ", see error above.");
+                loadedRaces++;
+                race.end();
+            }
+            main.log("Updated " + loadedRaces + " race(s)!");
+        } else {
+            main.warn("No races updated.");
         }
-        File racesFolder = new File(main.getDataFolder(), "races");
-        if (!racesFolder.exists()) return;
-
-        for (Race race : races) {
-            boolean success = updateRace(race);
-            if(success) main.log("Race " + race.getName() + " has been updated");
-            else main.warn("Could not update race " + race.getName() + ", see error above.");
-            loadedRaces++;
-        }
-        main.log("Updated " + loadedRaces + " race(s)!");
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -158,7 +157,6 @@ public class RaceManager {
      * @param race The race to update
      * @return Whether the operation succeeded
      */
-
     public boolean updateRace(Race race) {
         try {
             File raceFile = new File(main.getDataFolder(), "races/" + race.getName().replace(" ","_") + ".yml");
@@ -388,6 +386,15 @@ public class RaceManager {
     public void endRace(Race race) {
         if(!race.hasStarted()) return;
         activeRaces.remove(race);
+        race.rankings = new HashMap<>();
+
+        race.currentBestLapTime = Long.MAX_VALUE;
+
+        race.racing = new ArrayList<>();
+
+        race.startingRace = false;
+        race.preparingRace = false;
+        race.hasRaceStarted = false;
 
         Bukkit.broadcast(Messages.getMessage("race.end", Messages.formatArguments("name", race.getName())));
         for (Car car : race.getCars()) {
@@ -398,6 +405,10 @@ public class RaceManager {
             race.racers.remove(owner.getUniqueId());
 
             main.liveSidebar.getScore(owner.getName()).resetScore();
+        }
+
+        if(!race.racers.isEmpty()) {
+            race.racing.clear();
         }
 
         race.hasRaceStarted=false;
