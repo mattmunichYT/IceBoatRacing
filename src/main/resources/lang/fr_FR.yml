@@ -151,9 +151,6 @@ race:
     §x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n
     "
     sectorFormat: "§b- Secteur §3#%sectorID% §8» §a%time%\n"
-    error:
-      noRacers: "§4Impossible d'envoyer le classement de la course:§c aucun joueur trouvé."
-      noRanking: "§4Impossible d'envoyer le classement de la course:§c pas de classement."
   onEnd:
     top: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lClassement final §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n"
     winnerFormat: "§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%§b\n"
@@ -164,6 +161,9 @@ race:
     bestSectorTimesTop: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬ §x§5§5§D§D§F§F§lMeilleurs Secteurs §x§0§0§A§D§F§F§l▬▬▬▬▬\n"
     sectorFormat: "§bSecteur §3#%sectorID% §8» §a%player% §8(§e%time%§8)\n"
     bottom: "§x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
+    error:
+      noRacers: "§4Impossible d'envoyer le classement de la course:§c aucun joueur trouvé."
+      noRanking: "§4Impossible d'envoyer le classement de la course:§c pas de classement."
 
 
   select: "§bSélectionnez une course:"

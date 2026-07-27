@@ -168,8 +168,8 @@ public class RaceListener implements Listener {
                     race.end(true);
                 } catch (Exception e) {
                     switch (e.getMessage()) {
-                        case "NO_RANKING" -> Bukkit.getConsoleSender().sendMessage(Messages.getMessage("race.onFinish.error.noRanking"));
-                        case "NO_RACERS" -> Bukkit.getConsoleSender().sendMessage(Messages.getMessage("race.onFinish.error.noRacers"));
+                        case "NO_RANKING" -> Bukkit.getConsoleSender().sendMessage(Messages.getMessage("race.onEnd.errornoRanking"));
+                        case "NO_RACERS" -> Bukkit.getConsoleSender().sendMessage(Messages.getMessage("race.onEnd.errornoRacers"));
                         default -> Bukkit.getConsoleSender().sendMessage(Messages.getMessage("error.unknown"));
                     }
                 }
