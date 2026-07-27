@@ -1,11 +1,13 @@
 package fr.mattmunich.iceBoatRacing.listeners;
 
 import fr.mattmunich.iceBoatRacing.Main;
+import fr.mattmunich.iceBoatRacing.Messages;
 import fr.mattmunich.iceBoatRacing.cars.Car;
 import fr.mattmunich.iceBoatRacing.cars.CarManager;
 import fr.mattmunich.iceBoatRacing.race.Race;
 import fr.mattmunich.iceBoatRacing.race.RaceData;
 import fr.mattmunich.iceBoatRacing.race.RaceManager;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -14,6 +16,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import static fr.mattmunich.iceBoatRacing.Main.REMOVE_CAR_ON_LOGOUT;
 import static fr.mattmunich.iceBoatRacing.Messages.formatArguments;
 import static fr.mattmunich.iceBoatRacing.Messages.getMessage;
 
@@ -87,25 +90,39 @@ public class Connection implements Listener {
         e.quitMessage(getMessage("noPrefix.quit",formatArguments("player", p.getName())));
 
 
-        RaceData racer = main.racers.get(p.getUniqueId());
-        if(racer == null) return;
-        Race race = racer.race;
-        Car car = racer.car;
-        if (race != null && car != null) {
-            race.racing.remove(racer);
-            if (main.getConfig().getBoolean("allowRejoin")) {
-                if (main.getConfig().getBoolean("removeCarWhenLoggingOut")) {
+        for (Race race : raceManager.activeRaces) {
+            RaceData racer = race.racers.get(p.getUniqueId());
+            if(racer == null) return;
+            Car car = racer.car;
+            if (car != null) {
+                race.racing.remove(racer);
+                if (main.getConfig().getBoolean("allowRejoin")) {
+                    if (REMOVE_CAR_ON_LOGOUT) {
+                        car.destroy();
+                    }
+                    racer.setLogoutLocation(car.getLocation());
+                } else {
                     car.destroy();
+                    main.liveSidebar.getScore(p.getName()).resetScore();
+                    race.racers.remove(p.getUniqueId());
                 }
-                racer.setLogoutLocation(car.getLocation());
             } else {
-                car.destroy();
                 main.liveSidebar.getScore(p.getName()).resetScore();
-                race.racers.remove(p.getUniqueId());
             }
-        } else {
-            main.liveSidebar.getScore(p.getName()).resetScore();
+
+            if(race.racing.isEmpty()) {
+                try {
+                    race.end(true);
+                } catch (Exception err) {
+                    switch (err.getMessage()) {
+                        case "NO_RANKING" -> Bukkit.getConsoleSender().sendMessage(Messages.getMessage("race.onEnd.errornoRanking"));
+                        case "NO_RACERS" -> Bukkit.getConsoleSender().sendMessage(Messages.getMessage("race.onEnd.errornoRacers"));
+                        default -> Bukkit.getConsoleSender().sendMessage(Messages.getMessage("error.unknown"));
+                    }
+                }
+            }
         }
+
 
     }
 }

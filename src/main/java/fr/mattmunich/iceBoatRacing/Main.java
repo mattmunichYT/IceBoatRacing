@@ -14,6 +14,7 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.*;
@@ -33,8 +34,13 @@ public final class Main extends JavaPlugin {
     RaceCreator raceCreator;
     AutoTraceManager autoTraceManager;
 
-    public final Map<UUID, RaceData> racers = new HashMap<>();
     public Objective liveSidebar;
+
+    //Config
+    public static GameMode RACING_GAMEMODE;
+    public static Boolean ENFORCE_RACING_GAMEMODE;
+    public static Boolean SPECTATE_ON_FINISH;
+    public static Boolean REMOVE_CAR_ON_LOGOUT;
 
     @Override
     public void onEnable() {
@@ -71,6 +77,24 @@ public final class Main extends JavaPlugin {
         pm.registerEvents(new RaceCreator(this, raceManager,checkpointManager,carManager,carCreator), this);
     }
 
+    public void updateConstants() {
+        //Racing game mode
+        try {
+            RACING_GAMEMODE = GameMode.valueOf(getConfig().getString("race.racingGameMode"));
+        } catch (IllegalArgumentException e) {
+            warn("Could not parse racingGameMode from config file, set to default ADVENTURE");
+            RACING_GAMEMODE = GameMode.ADVENTURE;
+        }
+
+        //Enforce racing game mode
+        ENFORCE_RACING_GAMEMODE = getConfig().getBoolean("race.enforceRacingGameMode");
+
+        //Spectate on finish
+        SPECTATE_ON_FINISH = getConfig().getBoolean("race.spectateOnFinish");
+
+        //Remove car on logout
+        REMOVE_CAR_ON_LOGOUT = getConfig().getBoolean("race.removeCarWhenLoggingOut");
+    }
 
     public void loadConfigs() {
         log("Configuring config files");
@@ -78,8 +102,10 @@ public final class Main extends JavaPlugin {
         reloadConfig();
         saveResource("lang/en_US.yml", true);
         saveResource("lang/fr_FR.yml", true);
+        updateConstants();
         log("Done configuring config files!");
     }
+
 
     void loadMessages() {
         log("Loading messages...");

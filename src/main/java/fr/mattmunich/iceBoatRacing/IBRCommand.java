@@ -28,12 +28,11 @@ public class IBRCommand implements BasicCommand {
         if (args.length == 1 && args[0].equalsIgnoreCase("reload")) {
             if (!s.hasPermission("iceBoatRacing.reload")) return;
             s.sendMessage(getMessage("prefix").append(c(" §r§b§oReloading...")));
-
-            main.loadConfigs();                // reloads config.yml from disk
-            main.loadMessages();               // reloads lang files
-
-            // Reload in-memory data from the freshly loaded config
             Bukkit.getScheduler().runTask(main, () -> {
+                main.loadConfigs(); //reload configs
+                main.loadMessages(); //reload lang config / change language
+
+                // Reload in-memory data
                 main.raceManager.updateAllRaces();
                 main.registerScoreboard();
                 s.sendMessage(getMessage("prefix").append(c(" §r§bDone reloading!")));
@@ -41,19 +40,22 @@ public class IBRCommand implements BasicCommand {
 
 
         } else if (args.length == 1 && args[0].equalsIgnoreCase("info")) {
-            s.sendMessage("""
+            s.sendMessage(
+                            """
                             §3---§b Ice Boat Racing §3---
                             §3Created by§b mattmunich
-                            §3Created for §bGP 2026§3 of§b Mini Jeux Entre Potes
+                            §3Created for §bGrands Prix§3 by§b Mini Jeux Entre Potes
                             \s
                             """
             );
         } else {
             s.sendMessage(
-                    getStringMessage("prefix")
-                    + "§3---§b /iceboatracing §3---\n"
-                    + "§3- reload §7- §bReloads the plugin\n "
-                    + "§3- info   §7- §bSome basic info\n"
+                            """
+                            §3---§b /iceboatracing §3---
+                            §3- reload §7- §bReloads the plugin
+                             \
+                            §3- info   §7- §bSome basic info
+                            """
             );
         }
 

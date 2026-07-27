@@ -47,7 +47,7 @@ public class RaceListener implements Listener {
             return;
         }
 
-        if(!player.getGameMode().equals(GameMode.ADVENTURE)) {
+        if(ENFORCE_RACING_GAMEMODE && !player.getGameMode().equals(RACING_GAMEMODE)) {
             player.sendActionBar(Objects.requireNonNull(c("§cIllegal GameMode!")));
             return;
         }
@@ -311,9 +311,12 @@ public class RaceListener implements Listener {
             ));
         }
 
-        //TODO make optional via config
-        player.setGameMode(GameMode.SPECTATOR);
-        boolean success = data.car.destroy();
-        if (!success && player.getVehicle() != null) player.getVehicle().remove();
+        if (SPECTATE_ON_FINISH) {
+            player.setGameMode(GameMode.SPECTATOR);
+            boolean success = data.car.destroy();
+            if (!success && player.getVehicle() != null) player.getVehicle().remove();
+        } else {
+            race.racing.remove(data);
+        }
     }
 }

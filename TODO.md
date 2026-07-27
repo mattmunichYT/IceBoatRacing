@@ -12,11 +12,12 @@
   
   * <s> With try/catching if there isn't enough data </s>
 * **Fix** the logout and back in during the race
+  * <s> End race if last racer logs out</s>
   * <s> Verify the teleport world, always remove car on reconnect and place back</s>
   * <s> Set GameMode</s>
   * Make sure the checkpoints keep updating
   * <s> Fix the LVL bug</s> <b>NOTE</b>: <i>should</i> be fixed
-    
+  
     * <s> → like when crossing the finish line: didn't end the race and didn't put him in spectator mode</s> 
 * **Config** updates:
   * `racingGameMode`: race GameMode (default: Adventure)

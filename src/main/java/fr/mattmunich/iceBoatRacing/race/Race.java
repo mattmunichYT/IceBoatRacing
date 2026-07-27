@@ -76,11 +76,15 @@ public class Race {
     /**
      * Ends the race
      * @param sendRanking Whether the ranking message should be sent
-     * @throws Exception Only when {@code sendRanking} is true: rethrows {@link Race#sendRanking()}
+     * @throws Exception Only when {@code sendRanking} is true: rethrows {@link Race#sendRanking()}, race will still be ended properly
      */
     public void end(boolean sendRanking) throws Exception {
-        if (sendRanking) sendRanking();
-        raceManager.endRace(this);
+        try {
+            if (sendRanking) sendRanking();
+        } finally {
+            raceManager.endRace(this);
+        }
+
     }
 
     public void togglePrepare(CommandSender sender) {
