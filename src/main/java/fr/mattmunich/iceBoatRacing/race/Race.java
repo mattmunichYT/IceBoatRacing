@@ -73,7 +73,13 @@ public class Race {
         raceManager.startRace(this);
     }
 
-    public void end() {
+    /**
+     * Ends the race
+     * @param sendRanking Whether the ranking message should be sent
+     * @throws Exception Only when {@code sendRanking} is true: rethrows {@link Race#sendRanking()}
+     */
+    public void end(boolean sendRanking) throws Exception {
+        if (sendRanking) sendRanking();
         raceManager.endRace(this);
     }
 
@@ -94,7 +100,14 @@ public class Race {
         else return -1;
     }
 
-    public void sendRanking() {
+    /**
+     * Sends the ranking message for the race
+     * @throws Exception Throws {@code NO_RACERS} when the race had no racers and {@code NO_RAKING} when there was no ranking for the race
+     */
+    public void sendRanking() throws Exception {
+        if (racers.isEmpty()) throw new Exception("NO_RACERS");
+        if (rankings.isEmpty()) throw new Exception("NO_RANKING");
+
         Bukkit.broadcast(getMessage("race.onEnd.top"));
 
         long bestLapTime = Long.MAX_VALUE;
@@ -123,17 +136,19 @@ public class Race {
             }
 
 
-
-            for (long lapTime : data.getLapTimes()) {
-                if (lapTime < bestLapTime) {
-                    bestLapTime = lapTime;
-                    bestLapPlayer = data.player;
-                }
-                if (lapTime > worstLapTime) {
-                    worstLapTime = lapTime;
-                    worstLapPlayer = data.player;
+            if (!data.getLapTimes().isEmpty()) {
+                for (long lapTime : data.getLapTimes()) {
+                    if (lapTime < bestLapTime) {
+                        bestLapTime = lapTime;
+                        bestLapPlayer = data.player;
+                    }
+                    if (lapTime > worstLapTime) {
+                        worstLapTime = lapTime;
+                        worstLapPlayer = data.player;
+                    }
                 }
             }
+
 
             Map<Integer, List<Long>> sectorTimes = data.getSectorsTimes();
             if (sectorTimes != null) {
@@ -163,17 +178,19 @@ public class Race {
         )));
 
         // 4. Affichage des Secteurs
-        Bukkit.broadcast(getMessage("race.onEnd.bestSectorTimesTop"));
-        for (int sectorID : bestSectorTimes.keySet()) {
-            Player sectorRecordHolder = bestSectorPlayers.get(sectorID);
-            String playerName = (sectorRecordHolder == null) ? "§c§oUnknown" : sectorRecordHolder.getName();
-            long recordTime = bestSectorTimes.get(sectorID);
+        if (!bestSectorTimes.isEmpty()) {
+            Bukkit.broadcast(getMessage("race.onEnd.bestSectorTimesTop"));
+            for (int sectorID : bestSectorTimes.keySet()) {
+                Player sectorRecordHolder = bestSectorPlayers.get(sectorID);
+                String playerName = (sectorRecordHolder == null) ? "§c§oUnknown" : sectorRecordHolder.getName();
+                long recordTime = bestSectorTimes.get(sectorID);
 
-            Bukkit.broadcast(getMessage("race.onEnd.sectorFormat", formatArguments(
-                    "sectorID", String.valueOf(sectorID),
-                    "player", playerName,
-                    "time", recordTime == Long.MAX_VALUE ? "N/A" : formatTime(recordTime)
-            )));
+                Bukkit.broadcast(getMessage("race.onEnd.sectorFormat", formatArguments(
+                        "sectorID", String.valueOf(sectorID),
+                        "player", playerName,
+                        "time", recordTime == Long.MAX_VALUE ? "N/A" : formatTime(recordTime)
+                )));
+            }
         }
 
         Bukkit.broadcast(getMessage("race.onEnd.bottom"));

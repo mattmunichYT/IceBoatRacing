@@ -1,17 +1,23 @@
-### Todo
+### To-do / Planning
 *Below you'll find a list of what I've planned to add/modify to this plugin*
 
-* Send **ranking** on race end
-  * With try/catching if there isn't enough data
+**Note:**
+* <s>[TODO]</s> is completed
+* Unless there is something more written next to it
+  * <s> Example</s> <b>UPDATE</b>: Some example   
+---
+* <s> Send **ranking** on race end</s>
+  
+  * <s> With try/catching if there isn't enough data </s>
 * **Fix** the logout and back in during the race
-  * Verify the teleport world, always remove car on reconnect and place back
-  <s>* Set GameMode</s>
+  * <s> Verify the teleport world, always remove car on reconnect and place back</s>
+  * <s> Set GameMode</s>
   * Make sure the checkpoints keep updating
   * Fix the LVL bug 
     * → like when crossing the finish line: didn't end the race and didn't put him in spectator mode 
 * **Config** updates:
   * `racingGameMode`: race GameMode (default: Adventure)
-  * Rename `lapCount` to `defaultLapCount`
+  * <s> Rename `lapCount` to `defaultLapCount`</s> <b>UPDATE</b>: removed
   * `spectateOnFinish`
     * True = players get put to spectator when they finish the race
     * False = players can continue racing but won't count the laps (until `/race end`)

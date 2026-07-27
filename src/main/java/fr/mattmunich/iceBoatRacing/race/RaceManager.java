@@ -69,7 +69,9 @@ public class RaceManager {
         int loadedRaces = 0;
 
         if(!races.isEmpty()) {
-            for (Race race : races) race.end();
+            for (Race race : races) {
+                try { race.end(false); } catch (Exception ignored) {}
+            }
             races.clear();
         }
         File racesFolder = new File(main.getDataFolder(), "races");
@@ -118,7 +120,7 @@ public class RaceManager {
                 if(success) main.log("Race " + race.getName() + " has been updated");
                 else main.warn("Could not update race " + race.getName() + ", see error above.");
                 loadedRaces++;
-                race.end();
+                try { race.end(false); } catch (Exception ignored) {}
             }
             main.log("Updated " + loadedRaces + " race(s)!");
         } else {
@@ -208,7 +210,7 @@ public class RaceManager {
 
     public boolean deleteRace(Race race) {
         main.log("Deleting race " + race.getName());
-        race.end();
+        try { race.end(false); } catch (Exception ignored) {}
 
         File raceFile = new File(main.getDataFolder(), "races/" + race.getName().replace(" ","_") + ".yml");
         boolean deleted = raceFile.delete();

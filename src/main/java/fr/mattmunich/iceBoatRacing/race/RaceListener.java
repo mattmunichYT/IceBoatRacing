@@ -1,6 +1,7 @@
 package fr.mattmunich.iceBoatRacing.race;
 
 import fr.mattmunich.iceBoatRacing.Main;
+import fr.mattmunich.iceBoatRacing.Messages;
 import fr.mattmunich.iceBoatRacing.checkpoint.Checkpoint;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
@@ -156,15 +157,22 @@ public class RaceListener implements Listener {
         //2. Complete lap
         if (data.lapCount>0 && !(data.lapCount == race.getLapCount())) onCompleteLap(data, now);
 
-        //3. Finisih race
+        //3. Finish race
         if(data.lapCount == race.getLapCount()) {
             onCompleteLap(data, now);
             onFinishRace(data, now);
 
             //End race automatically
             if(race.racing.isEmpty()) {
-                race.sendRanking();
-                race.end();
+                try {
+                    race.end(true);
+                } catch (Exception e) {
+                    switch (e.getMessage()) {
+                        case "NO_RANKING" -> Bukkit.getConsoleSender().sendMessage(Messages.getMessage("race.onFinish.error.noRanking"));
+                        case "NO_RACERS" -> Bukkit.getConsoleSender().sendMessage(Messages.getMessage("race.onFinish.error.noRacers"));
+                        default -> Bukkit.getConsoleSender().sendMessage(Messages.getMessage("error.unknown"));
+                    }
+                }
             }
 
             data.checkpointIndex = 0;
