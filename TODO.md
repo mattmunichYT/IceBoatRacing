@@ -1,5 +1,7 @@
 ### To-do / Planning
-*Below you'll find a list of what I've planned to add/modify to this plugin*
+*Below you'll find a list of what I've planned on adding or modifying.*
+
+---
 
 **Note:**
 * <s>[TODO]</s> is completed
@@ -13,8 +15,9 @@
   * <s> Verify the teleport world, always remove car on reconnect and place back</s>
   * <s> Set GameMode</s>
   * Make sure the checkpoints keep updating
-  * Fix the LVL bug 
-    * → like when crossing the finish line: didn't end the race and didn't put him in spectator mode 
+  * <s> Fix the LVL bug</s> <b>NOTE</b>: <i>should</i> be fixed
+    
+    * <s> → like when crossing the finish line: didn't end the race and didn't put him in spectator mode</s> 
 * **Config** updates:
   * `racingGameMode`: race GameMode (default: Adventure)
   * <s> Rename `lapCount` to `defaultLapCount`</s> <b>UPDATE</b>: removed

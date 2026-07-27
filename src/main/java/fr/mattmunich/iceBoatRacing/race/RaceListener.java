@@ -252,10 +252,10 @@ public class RaceListener implements Listener {
 
         Bukkit.broadcast(getMessage("race.onFinish.message",
                 formatArguments(
-                        "player", l(player.displayName()),
                         "time", formatTime(raceTime),
                         "ranking", ranking + ""
-                )
+                ),
+                formatComponentArguments("player", player.displayName())
         ));
 
         Title title = Title.title(
@@ -265,12 +265,17 @@ public class RaceListener implements Listener {
 
         player.showTitle(title);
 
-        Component bestSectorsTimesMessage = c("");
-        for (Map.Entry<Integer, Long> entry : bestSectorsTimes.entrySet()) {
-            bestSectorsTimesMessage = bestSectorsTimesMessage.append(getMessage("race.onFinish.sectorFormat",formatArguments(
-                "sectorID", "" + entry.getKey(),
-                    "time", formatTime(entry.getValue())
-            )));
+        Component bestSectorsTimesMessage = c("§cNo data");
+        if (!bestSectorsTimes.isEmpty()) {
+            bestSectorsTimesMessage = c("");
+            for (Map.Entry<Integer, Long> entry : bestSectorsTimes.entrySet()) {
+                if (entry.getKey() == null || entry.getValue() == null) continue;
+                bestSectorsTimesMessage = bestSectorsTimesMessage.append(getMessage("race.onFinish.sectorFormat",formatArguments(
+                    "sectorID", "" + entry.getKey(),
+                        "time", formatTime(entry.getValue())
+                )));
+            }
+            if (bestSectorsTimesMessage.equals(c(""))) bestSectorsTimesMessage = c("§cNo data");
         }
 
 
@@ -308,6 +313,7 @@ public class RaceListener implements Listener {
 
         //TODO make optional via config
         player.setGameMode(GameMode.SPECTATOR);
-        try { data.car.destroy(); } catch (Exception ignored) {}
+        boolean success = data.car.destroy();
+        if (!success && player.getVehicle() != null) player.getVehicle().remove();
     }
 }
