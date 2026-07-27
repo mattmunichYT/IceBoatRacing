@@ -6,6 +6,7 @@ import org.bukkit.util.Vector;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 public class Checkpoint {
 
     public enum Type {
@@ -49,8 +50,8 @@ public class Checkpoint {
 
     final int id; // checkpoint ID in the race order
     int sectorID = -1; // only used for sectors
-    Location min;
-    Location max;
+    final Location min;
+    final Location max;
     final Type type;
     Shape shape = Shape.BOX;
 

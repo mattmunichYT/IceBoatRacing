@@ -38,6 +38,7 @@ public class AutoTraceManager {
         return session != null && session.samplingTask != null;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean hasSession(Player p) {
         return sessions.containsKey(p);
     }
@@ -124,8 +125,8 @@ public class AutoTraceManager {
         List<Location> centerline = new ArrayList<>();
         List<Double> halfWidths = new ArrayList<>();
         for (CheckpointGeometry.RecenterResult r : recentered) {
-            centerline.add(r.center);
-            halfWidths.add(r.halfWidth);
+            centerline.add(r.center());
+            halfWidths.add(r.halfWidth());
         }
 
         int startId = session.race.getCheckpoints().stream()

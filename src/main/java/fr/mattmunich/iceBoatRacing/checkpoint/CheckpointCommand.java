@@ -3,7 +3,6 @@ package fr.mattmunich.iceBoatRacing.checkpoint;
 import fr.mattmunich.iceBoatRacing.Main;
 import fr.mattmunich.iceBoatRacing.Messages;
 import fr.mattmunich.iceBoatRacing.race.Race;
-import fr.mattmunich.iceBoatRacing.race.RaceData;
 import fr.mattmunich.iceBoatRacing.race.RaceManager;
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -322,7 +321,7 @@ public class CheckpointCommand implements Listener, BasicCommand {
             //Reset player's data on live scoreboard
             main.liveSidebar.getScore(target.getName()).resetScore();
             p.sendMessage(Messages.getMessage("checkpoint.resetPlayerScore",formatArguments("player",p.getName())));
-        } else if (args.length >= 1 && args[0].equalsIgnoreCase("autotrace")) {
+        } else if (args[0].equalsIgnoreCase("autotrace")) {
             handleAutoTrace(p, args);
         } else if (args.length == 3 && args[0].equalsIgnoreCase("addAlternate")) {
             handleAddAlternate(p, args);

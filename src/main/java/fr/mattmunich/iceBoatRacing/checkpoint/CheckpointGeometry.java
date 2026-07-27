@@ -14,6 +14,7 @@ import java.util.Set;
  * Pure geometry helpers used by the auto-trace checkpoint generator.
  * No Bukkit scheduling or persistence here on purpose — keep this class trivially testable.
  */
+@SuppressWarnings("ALL")
 public class CheckpointGeometry {
 
     /**
@@ -237,14 +238,7 @@ public class CheckpointGeometry {
     // Track surface detection / recentering
     // ---------------------------------------------------------------
 
-    public static class RecenterResult {
-        public final Location center;
-        public final double halfWidth;
-
-        public RecenterResult(Location center, double halfWidth) {
-            this.center = center;
-            this.halfWidth = halfWidth;
-        }
+    public record RecenterResult(Location center, double halfWidth) {
     }
 
     /**
@@ -333,6 +327,8 @@ public class CheckpointGeometry {
         return maxDist;
     }
 
+    /// @param loc The location to check for the track
+    /// @return Whether the track surface is at {@code loc}
     private static boolean isTrackSurfaceAt(Location loc) {
         Block below = loc.clone().subtract(0, 1, 0).getBlock();
         Block at = loc.getBlock();

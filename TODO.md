@@ -16,6 +16,7 @@
     * True = players get put to spectator when they finish the race
     * False = players can continue racing but won't count the laps (until `/race end`)
 * Allow to convert legacy `config.yml` races to  new `races/[race].yml`
+* Update RaceCreator to support auto-checkpoints
 * Encourage people to use the new `PLANE` checkpoints
   * Easier to define
   * Work more reliably

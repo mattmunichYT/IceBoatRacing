@@ -126,7 +126,6 @@ public class RaceManager {
         }
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     public Race createRace(Race race) {
         main.log("Creating race " + race.getName());
         File raceFile = new File(main.getDataFolder(), "races/" + race.getName().replace(" ","_") + ".yml");
