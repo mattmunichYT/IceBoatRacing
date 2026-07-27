@@ -43,6 +43,7 @@ public class Connection implements Listener {
                     });
 
                     //TP to spawn of the world -- else player won't be in the car
+                    if (p.getVehicle() != null) p.getVehicle().remove();
                     p.teleport(car[0].getStartingLocation().getWorld().getSpawnLocation());
 
                     raceManager.prepareRacer(race, car[0]);

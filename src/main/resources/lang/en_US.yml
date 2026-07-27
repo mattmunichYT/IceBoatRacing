@@ -105,7 +105,7 @@ race:
   deleted: "§aRace %race% has been deleted."#Displayed when '/race delete' is used and is successful
   currentLapCount: "§bThe lap count for race %race% is set to §3%lapCount%§b. \n§8ℹ Use /race setLapCount <name> <amount>"
   updatedLapCount: "§bThe lap count for race §3%race%§b has been set to §3%lapCount%§b."
-  invalidNumber: "§cThe entered lap count is invalid."
+  invalidLapCount: "§cThe entered lap count is invalid."
 
   #Help message
   help: "§3--------- §b§l/race§r §3---------\n§3->§a start [name] §8-§7 Start the race\n§3->§a prepare [name] §8-§7 Prepare the players\n§7§oℹ Automatically places players in their cars\n§3->§a end [name] §8-§7 End the race\n§3->§a delete [name] §8-§7 Delete the race\n§3->§a setLapCount [name] <amount> §8-§7 Set the lap count"
@@ -126,6 +126,7 @@ race:
     sectorFormat: "§b- Sector §3#%sectorID% §8» §a%time%\n"
   onEnd:
     top: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lFinal Standings §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n"
+    winnerFormat: "§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%§b\n" #Gap to next makes no sense for the winner of the race
     playerFormat: "§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%§b (gap: §x§4§0§C§4§F§F%gapToNext%§b)\n"
     highlights: "\n§b🏆 Best Lap : §a%bestLapPlayer% §8(§a%bestLapTime%§8)\n\n
         §b🐢 Slowest Lap : §c%worstLapPlayer% §8(§c%worstLapTime%§8)\n\n

@@ -8,16 +8,21 @@ import java.util.*;
 
 public class RaceData {
     public Player player;
+
     public int ranking = -1;
     public int checkpointIndex = 0;
     public int lapCount = -1;
+    public Location from;
+
     public Car car;
+
     public long startTime = 0;
     public long lapTime = 0;
     public long endTime = 0;
     public long gapToNextTime = 0;
     public final List<Long> lapTimes = new ArrayList<>();
     public final Map<Integer,List<Long>> sectorsTimes = new HashMap<>();
+
     public Race race;
     public Location logoutLocation;
 

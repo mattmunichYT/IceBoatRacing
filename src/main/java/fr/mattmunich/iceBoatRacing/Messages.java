@@ -101,6 +101,7 @@ public class Messages {
 
     /**
      * Formats placeholders like %player%
+     * @param args Format: "key1", "value1", "key2", "value2"
      */
     public static Map<String, Object> formatArguments(Object... args) {
         Map<String, Object> map = new HashMap<>();

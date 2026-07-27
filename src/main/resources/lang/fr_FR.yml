@@ -105,7 +105,7 @@ race:
   deleted: "§aLa course %race% a été supprimée."#Displayed when '/race delete' is used and is successful
   currentLapCount: "§bLe nombre de tours de la course %race% est défini à §3%lapCount%§b. \n§8ℹ Utilisez /race setLapCount <nom> <nombre>"
   updatedLapCount: "§bLe nombre de tours de la course §3%race%§b a été à §3%lapCount%§b."
-  invalidNumber: "§cLe nombre de tours entré est invalide."
+  invalidLapCount: "§cLe nombre de tours entré est invalide."
 
   #Help message
   help: "§3--------- §b§l/race§r §3---------

@@ -26,11 +26,12 @@ public class CheckpointGeometry {
     );
 
     /**
-     * Extra half-width added beyond the detected ice edge on every auto-measured checkpoint.
-     * The scan stops at the exact last ice block, but a boat hugging that wall can still be
-     * partially over it — this margin keeps those crossings from being missed.
+     * Extra half-width added beyond the detected/clicked span on every checkpoint gate.
+     * Package-visible so CheckpointCommand can apply the same margin to manually-placed
+     * alternate routes, where a missed crossing means a stranded lap rather than just a
+     * slightly-off timing split.
      */
-    private static final double WIDTH_PADDING = 0.75;
+    static final double WIDTH_PADDING = 0.75;
 
     // ---------------------------------------------------------------
     // Simplification / resampling

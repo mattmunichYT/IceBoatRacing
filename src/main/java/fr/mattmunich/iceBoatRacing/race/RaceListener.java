@@ -36,7 +36,6 @@ public class RaceListener implements Listener {
 
         if (!player.isInsideVehicle()) return;
         if (!(player.getVehicle() instanceof Boat)) return;
-        if(!player.getGameMode().equals(GameMode.ADVENTURE)) return;
 
         RaceData data = null;
         for(Race race : raceManager.activeRaces) {
@@ -48,6 +47,11 @@ public class RaceListener implements Listener {
             return;
         }
 
+        if(!player.getGameMode().equals(GameMode.ADVENTURE)) {
+            player.sendActionBar(Objects.requireNonNull(c("§cIllegal GameMode!")));
+            return;
+        }
+
         Race race = data.race;
 
         //Test the whole movement segment (not just the current point) against checkpoints, and
@@ -55,65 +59,134 @@ public class RaceListener implements Listener {
         //together (e.g. a sector gate right next to an auto-generated checkpoint on a narrow bridge),
         //a single tick's movement could cross both — checking only the first would silently strand
         //the racer on the second one forever, since next tick they're already past it.
-        Location from = event.getFrom();
+        Location from = data.from == null ? event.getFrom() :  data.from;
         Location to = event.getTo();
+        data.from = to;
 
         while (true) {
             int nextCheckpointID = data.checkpointIndex + 1;
             Checkpoint nextCheckpoint = race.getCheckpoint(nextCheckpointID);
 
             if (nextCheckpoint == null) {
-//                main.log("Checkpoint with ID " + nextCheckpointID + " is null, going back to 0");
+                // Shouldn't happen
                 data.checkpointIndex = 0;
                 break;
             }
 
-            if (!nextCheckpoint.crosses(from, to)) break;
+            if (!nextCheckpoint.crosses(from, to)) {
+                //Allow to skip 1 checkpoint if detection fails
+                int afterNextCheckpointID = data.checkpointIndex + 2;
+                Checkpoint afterNextCheckpoint = race.getCheckpoint(afterNextCheckpointID);
+
+                if(afterNextCheckpoint == null || !afterNextCheckpoint.crosses(from, to)) break;
+                main.warn("Allowed " + player.getName() + " to skip checkpoint " + nextCheckpoint.getId() + " as they crossed checkpoint " + afterNextCheckpoint.getId()
+                        + "\nIf this happens often, please check your server performances and if the player has an unstable connection or some kind of cheats.");
+                long now = System.currentTimeMillis();
+
+                //process skipped checkpoint
+                if (nextCheckpoint.getType().equals(Checkpoint.Type.START_FINISH)) {
+                    crossStartFinish(data, now, race);
+                    break;
+                } else if (nextCheckpoint.getType().equals(Checkpoint.Type.SECTOR)) {
+                    crossSector(data, nextCheckpoint, now, player);
+                }
+
+                //process actually crossed checkpoint
+                if (afterNextCheckpoint.getType().equals(Checkpoint.Type.START_FINISH)) {
+                    crossStartFinish(data, now, race);
+                    break;
+                } else if (afterNextCheckpoint.getType().equals(Checkpoint.Type.SECTOR)) {
+                    crossSector(data, afterNextCheckpoint, now, player);
+                }
+
+                data.checkpointIndex+=2;
+                main.liveSidebar.getScore(player).setScore(((data.lapCount-1) * race.getCheckpoints().size()) + data.checkpointIndex);
+                break;
+            }
 
             long now = System.currentTimeMillis();
 
             if (nextCheckpoint.getType().equals(Checkpoint.Type.START_FINISH)) {
-
-                //When starting the race/crossing the start line
-                if(data.lapCount==0) data.startTime=now;
-
-                //When completing lap
-                if (data.lapCount>0 && !(data.lapCount == race.getLapCount())) onCompleteLap(data, now);
-
-                //When finishing race
-                if(data.lapCount == race.getLapCount()) {
-                    onCompleteLap(data, now);
-                    onFinishRace(data, now);
-
-                    //End race automatically
-                    if(race.racing.isEmpty()) {
-                        race.sendRanking();
-                        race.end();
-                    }
-
-                    data.checkpointIndex = 0;
-                    break; //racer just finished; nothing more to process for them this tick
-                }
-
-                data.lapTime = now;
-                data.lapCount++;
-                data.checkpointIndex = 0;
+                crossStartFinish(data, now, race);
+                break;
             }
 
             if (nextCheckpoint.getType().equals(Checkpoint.Type.SECTOR)) {
-                data.addSectorTime(nextCheckpoint.getSectorID(), now, data.lapTime);
-                Bukkit.broadcast(getMessage("race.onCrossSector",
-                        formatArguments(
-                                "player", l(player.displayName()),
-                                "ID", String.valueOf(nextCheckpoint.getSectorID()),
-                                "time", formatTime(now-data.lapTime)
-                        )
-                ));
+                crossSector(data, nextCheckpoint, now, player);
             }
 
             data.checkpointIndex++;
             main.liveSidebar.getScore(player).setScore(((data.lapCount-1) * race.getCheckpoints().size()) + data.checkpointIndex);
         }
+    }
+
+    /// # Cross start finish
+    /// _The method that handles the event of a player crossing the start/finish line._
+    /// ---
+    /// The system resembles to how Mario Cart handles laps, but it is in no way a copy, this is code is
+    /// in no way the code Mario Cart and has been written by me (mattmunich).
+    ///
+    /// What I mean by that is: when you start your final lap, a title saying "3/3" (for example) will be sent,
+    /// indicating that you are starting the 3rd lap out of 3 (in this example), which is the final lap.
+    ///
+    /// #### 1. Handles when a player starts the race: they cross the start line for the first time
+    /// -> Lap count is set to 1 below.
+    ///
+    /// #### 2. Complete lap is handles by [onCompleteLap]
+    ///
+    /// #### 3. Handles when a player finishes the race
+    /// > -> run [onCompleteLap] <br/>
+    /// > -> run [onFinishRace] <br/>
+    /// > -> Check if there are no more racers <br/>
+    /// >   -> If so: send the ranking with [Race#sendRanking] and end the race using [Race#end]
+    ///
+    /// #### Finally:
+    /// - update {@code lapTime} to `now`
+    /// - update {@code lapCount} to += 1
+    /// - update {@code checkpointIndex} to 1 (so that we handle checkpoint 2 on next {@link PlayerMoveEvent})
+    /// - update the SideBar
+    ///
+    /// @param data The racer's data
+    /// @param now The current time in millis
+    /// @param race The race (like what else am I meant to say)
+    private void crossStartFinish(RaceData data, long now, Race race) {
+        //1. When starting the race = crossing the start line for the first time
+        // -> lapCount is set to 1 below
+        if(data.lapCount==0) data.startTime = now;
+
+        //2. Complete lap
+        if (data.lapCount>0 && !(data.lapCount == race.getLapCount())) onCompleteLap(data, now);
+
+        //3. Finisih race
+        if(data.lapCount == race.getLapCount()) {
+            onCompleteLap(data, now);
+            onFinishRace(data, now);
+
+            //End race automatically
+            if(race.racing.isEmpty()) {
+                race.sendRanking();
+                race.end();
+            }
+
+            data.checkpointIndex = 0;
+            return;  //racer just finished; nothing more to process for them this tick
+        }
+
+        data.lapTime = now;
+        data.lapCount++;
+        data.checkpointIndex = 1;
+        main.liveSidebar.getScore(data.player).setScore(((data.lapCount-1) * race.getCheckpoints().size()) + data.checkpointIndex);
+    }
+
+    private static void crossSector(RaceData data, Checkpoint nextCheckpoint, long now, Player player) {
+        data.addSectorTime(nextCheckpoint.getSectorID(), now, data.lapTime);
+        Bukkit.broadcast(getMessage("race.onCrossSector",
+                formatArguments(
+                        "player", l(player.displayName()),
+                        "ID", String.valueOf(nextCheckpoint.getSectorID()),
+                        "time", formatTime(now - data.lapTime)
+                )
+        ));
     }
 
     private void onCompleteLap(RaceData data, long now) {
@@ -161,9 +234,9 @@ public class RaceListener implements Listener {
         boolean isWinner = ranking==1;
 
         long raceTime = now - data.startTime;
-        long gapToWinner = isWinner ? -1 : finished.get(0).getRaceTime();
+        long gapToWinner = isWinner ? -1 : (raceTime - finished.get(0).getRaceTime());
         //get(ranking-1) = self ; get(ranking-2) = player #(ranking-1) ; because ranking = size (starts @ 1) and get(x) starts @ 0
-        long gapToNext = isWinner ? -1 : finished.get(ranking-2).getRaceTime();
+        long gapToNext = isWinner ? -1 : (raceTime - finished.get(ranking-2).getRaceTime());
         data.gapToNextTime = gapToNext;
 
         Map<Integer,Long> bestSectorsTimes = data.bestSectorsTimes();

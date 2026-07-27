@@ -529,7 +529,7 @@ public class CheckpointCommand implements Listener, BasicCommand {
         Vector normal = CheckpointGeometry.snapToCardinal(rawNormal);
 
         Location center = CheckpointGeometry.midpoint(l1, l2);
-        double halfWidth = Math.max(l1.distance(l2) / 2.0, 0.5);
+        double halfWidth = Math.max(l1.distance(l2) / 2.0 + CheckpointGeometry.WIDTH_PADDING, 0.5);
         double heightDiff = Math.abs(l1.getY() - l2.getY());
         double halfHeight = heightDiff > 0.5 ? heightDiff / 2.0 : 2.5;
 
