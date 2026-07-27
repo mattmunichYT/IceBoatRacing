@@ -5,7 +5,7 @@
   * With try/catching if there isn't enough data
 * **Fix** the logout and back in during the race
   * Verify the teleport world, always remove car on reconnect and place back
-  * Set GameMode
+  <s>* Set GameMode</s>
   * Make sure the checkpoints keep updating
   * Fix the LVL bug 
     * → like when crossing the finish line: didn't end the race and didn't put him in spectator mode 

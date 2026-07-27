@@ -104,6 +104,10 @@ public class CarManager {
     public void spawnCar(Car car, Player player, Location spawnLocation) {
         Material boatMat = car.getBoatMaterial();
 
+        //No double cars
+        if(car.getBoat() != null) car.destroy();
+
+
         // Spawn boat
         Boat boat = (Boat) spawnLocation.getWorld().spawnEntity(spawnLocation, boatEntityFromMaterial(boatMat));
 
@@ -116,7 +120,9 @@ public class CarManager {
 
         Location boatLocation = boat.getLocation();
 
-        float startRotation = (float) main.getConfig().getInt("race.startRotation");
+        float startRotation = car.getStartingLocation() == spawnLocation
+                            ? (float) main.getConfig().getInt("race.startRotation")
+                            : spawnLocation.getYaw();
         boatLocation.setRotation(startRotation,0F);
         boat.teleport(boatLocation);
 
@@ -239,6 +245,15 @@ public class CarManager {
             case BAMBOO_RAFT -> EntityType.BAMBOO_RAFT;
             case PALE_OAK_BOAT -> EntityType.PALE_OAK_BOAT;
             case BAMBOO_CHEST_RAFT -> EntityType.BAMBOO_CHEST_RAFT;
+            case ACACIA_CHEST_BOAT -> EntityType.ACACIA_CHEST_BOAT;
+            case BIRCH_CHEST_BOAT -> EntityType.BIRCH_CHEST_BOAT;
+            case CHERRY_CHEST_BOAT -> EntityType.CHERRY_CHEST_BOAT;
+            case DARK_OAK_CHEST_BOAT -> EntityType.DARK_OAK_CHEST_BOAT;
+            case JUNGLE_CHEST_BOAT -> EntityType.JUNGLE_CHEST_BOAT;
+            case MANGROVE_CHEST_BOAT -> EntityType.MANGROVE_CHEST_BOAT;
+            case OAK_CHEST_BOAT -> EntityType.OAK_CHEST_BOAT;
+            case PALE_OAK_CHEST_BOAT -> EntityType.PALE_OAK_CHEST_BOAT;
+            case SPRUCE_CHEST_BOAT -> EntityType.SPRUCE_CHEST_BOAT;
             default -> EntityType.OAK_BOAT;
         };
     }

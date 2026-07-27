@@ -35,6 +35,10 @@ public class Car {
         return boat;
     }
 
+    public Location getLocation() {
+        return boat.getLocation();
+    }
+
     public Material getBoatMaterial() {
         return boatMaterial;
     }
