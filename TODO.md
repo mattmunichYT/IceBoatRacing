@@ -19,14 +19,14 @@
   * <s> Fix the LVL bug</s> <b>NOTE</b>: <i>should</i> be fixed
   
     * <s> → like when crossing the finish line: didn't end the race and didn't put him in spectator mode</s> 
-* **Config** updates:
-  * `racingGameMode`: race GameMode (default: Adventure)
+* **Config** updates: <br/>
+  * <s> `racingGameMode`: race GameMode (default: Adventure) </s>
   * <s> Rename `lapCount` to `defaultLapCount`</s> <b>UPDATE</b>: removed
-  * `spectateOnFinish`
-    * True = players get put to spectator when they finish the race
-    * False = players can continue racing but won't count the laps (until `/race end`)
+  * <s> `spectateOnFinish` </s><br/>
+    * <s> True = players get put to spectator when they finish the race</s><br/>
+    * <s> False = players can continue racing but won't count the laps (until `/race end`) </s>
 * Allow to convert legacy `config.yml` races to  new `races/[race].yml`
-* Update RaceCreator to support auto-checkpoints
+* <s> Update RaceCreator to support auto-checkpoints </s>
 * Encourage people to use the new `PLANE` checkpoints
   * Easier to define
   * Work more reliably
