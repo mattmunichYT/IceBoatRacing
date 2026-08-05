@@ -53,7 +53,19 @@ checkpoint:
   noCheckpoint: "§cAucun checkpoint défini"
 
   #Main /checkpoint help fallback
-  help: "§eCommandes checkpoint :\n§7- §f/checkpoint list\n§7- §f/checkpoint count\n§7- §f/checkpoint create <nomCourse> [\"SECTOR\"]\n§7- §f/checkpoint setFinish <nomCourse>\n§7- §f/checkpoint remove [nomCourse] [idCheckpoint]\n§7- §f/checkpoint resetData <joueur> <nomCourse>\n§7- §f/checkpoint autotrace start|stop|preview|sector|resize|delete|accept|cancel\n§7- §f/checkpoint addAlternate <nomCourse> <idCheckpoint>\n§7- §f/checkpoint clearAll <nomCourse>"
+  help: "§eSous-commandes de /checkpoint :
+  \n§7- §f/checkpoint list
+  \n§7- §f/checkpoint count
+  \n§7- §f/checkpoint autotrace start|stop|preview|sector|resize|delete|accept|cancel
+  \n§7- §f/checkpoint addAlternate <nomCourse> <idCheckpoint>
+  \n§7- §f/checkpoint view <nomCourse>
+  \n§7- §f/checkpoint remove [nomCourse] [idCheckpoint]
+  \n§7- §f/checkpoint clearAll <nomCourse>
+  \n§7- §f/checkpoint resetData <joueur> <nomCourse>
+  \n§7 --- Obsolète ---
+  \n§7- §f/checkpoint create <nomCourse> [\"SECTOR\"]
+  \n§7- §f/checkpoint setFinish <nomCourse>"
+
 
   #Tags shown in /checkpoint list
   list:
@@ -187,9 +199,10 @@ race:
       noRacers: "§4Impossible d'envoyer le classement de la course:§c aucun joueur trouvé."
       noRanking: "§4Impossible d'envoyer le classement de la course:§c pas de classement."
 
-
   select: "§bSélectionnez une course:"
   create:
+    start: "oui"
+    later: "non"
     confirm: "confirmer" #Confirm race deletion
     cancel: "annuler" #The message to send to cancel the race creation process
     confirmCancel: "§eVoulez-vous vraiment annuler la création de la course?\nUtilisez §c%confirm%§e pour confirmer et §a%cancel%§e pour annuler la suppression."
@@ -209,53 +222,24 @@ race:
 
     #Define the track?
     3:
-      title: "§3Trajet?"
-      subtitle: "§bDéfinir les trajet ?"
-      start: "commencer"
-      later: "pas maintenant"
-      message: "§bDéfinissez les points par lesquels passe la course. 
+      title: "§3Circuit?"
+      subtitle: "§bDéfinir le circuit ?"
+      message: "§bVoulez-vous définir le circuit de la course ? 
       \n-> Entrez §3%start%§b pour commencer ou §3%later%§b pour configurer cela plus tard.
       \n§8§oℹ Celui-ci sera utilisé pour mettre a jour le score en direct des participants. Vous pouvez toujours faire cela plus tard!"
 
-
     #Track definition process
     4:
-      title: "§3Définition du trajet"
+      title: "§3Définition du circuit"
       subtitle: "§bPositionnez-vous au départ"
-      message: "§bPositionnez-vous sur la ligne de départ, puis entrez §3%start%§b dans le chat."
-      editorMessage: "§bDéfinissez les checkpoints de la course en vous rendant à chaque emplacement.\n§b-> §3%define%§b pour poser un checkpoint\n§b-> §3%defineSector%§b pour poser un checkpoint de secteur\n§b-> §3%defineFinish%§b pour définir la ligne d'arrivée §8§o(si différente du départ)\n§b-> §3%help%§b pour afficher l'aide\n§b-> §3%done%§b pour terminer\n§8§oℹ︎ Un secteur fonctionne comme un checkpoint, mais annonce également le temps au secteur dans le chat.\n§8§oℹ︎ Pour définir un checkpoint, faites un clic gauche pour le point 1 et un clic droit pour le point 2 avec une §3§opelle en bois§8§o, comme avec WorldEdit."
-      checkpointCreation:
-        define: "definir"
-        defineSector: "definir secteur"
-        defineFinish: "definir fin"
-        help: "aide"
-        done: "sauvegarder"
-      feedback:
-        startDefined:
-          title: "§3Départ défini"
-          subtitle: "§bLa ligne de §3départ§b a été définie"
-        finishDefined:
-          title: "§3Arrivée définie"
-          subtitle: "§bLa ligne d'§3arrivée§b a été définie"
-        checkpointDefined:
-          title: "§3Checkpoint défini"
-          subtitle: "§bLe checkpoint §3%checkpointID%§b a été défini"
-        sectorDefined:
-          title: "§3Secteur défini"
-          subtitle: "§bLe secteur §3%sectorID%§b a été défini"
-        done:
-          title: "§2Terminé"
-          subtitle: "§aCheckpoints sauvegardés!"
-        error:
-          #Will be shown if the player tries to define a sector first (before defining start line)
-          defineStartLineFirst: "§cCommencez par définir la ligne de départ avant de faire cela."
-
+      message: "§bPositionnez-vous sur la ligne de départ, puis entrez §3quelque chose§b dans le chat."
+      done:
+        title: "§2Terminé"
+        subtitle: "§aCircuit sauvegardé!"
     5:
       title: "§3Voitures?"
       subtitle: "§bDéfinir les voitures ?"
-      message: "§bDéfinissez les points par lesquels voitures des participant de la course. \n-> Entrez §3%start%§b pour commencer ou §3%later%§b pour configurer cela plus tard.\n§8§oℹ︎ Celles-ci seront automatiquement placées lorsque la course commencera, et leurs passagers téléportés dedans. Vous pouvez toujours faire cela plus tard!"
-      start: "commencer"
-      later: "pas maintenant"
+      message: "§bSouhaitez-vous définir les voitures des participants? \n-> Entrez §3%start%§b pour commencer ou §3%later%§b pour configurer cela plus tard.\n§8§oℹ︎ Celles-ci seront automatiquement placées lorsque la course commencera, et leurs passagers téléportés dedans. Vous pouvez toujours faire cela plus tard!"
     6:
       title: "§3Création voitures"
       subtitle: "§bLa création va commencer..."
@@ -272,7 +256,7 @@ race:
     done:
       title: "§3Course sauvegardée !"
       subtitle: "§bLa course a été créée avec succès"
-      message: "§aLa course a été sauvegardée avec succès !\n§b-> §3/checkpoint create§b pour ajouter des checkpoints à la course\n§b-> §3/car create§b pour enregistrer des voitures\n§b-> §3/race info <nomCourse>§b pour consulter les informations de la course"
+      message: "§aLa course a été sauvegardée avec succès !\n§b-> §3/checkpoint autotrace§b pour définir/modifer le circuit\n§b-> §3/car create§b pour enregistrer des voitures\n§b-> §3/race info <nomCourse>§b pour consulter les informations de la course"
 
 car:
   #Errors

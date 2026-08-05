@@ -207,7 +207,10 @@ public class RaceCreator implements Listener {
                 getMessage("race.create.3.subtitle")
         );
         p.showTitle(title);
-        p.sendMessage(getMessage("race.create.3.message", formatArguments("start", getStringMessage("race.create.3.start"), "later", getStringMessage("race.create.3.later"))));
+        p.sendMessage(getMessage("race.create.3.message", formatArguments(
+                "start", getStringMessage("race.create.start"),
+                "later", getStringMessage("race.create.later")
+        )));
     }
 
     @EventHandler
@@ -221,11 +224,11 @@ public class RaceCreator implements Listener {
         String message = s(e.message());
         Bukkit.getScheduler().runTask(main, () -> {
             String basePath = "race.create.3.";
-            if (message.equalsIgnoreCase(getStringMessage(basePath + "start"))) {
+            if (message.equalsIgnoreCase(getStringMessage("race.create.start"))) {
                 //STEP 4
                 creatingRace.replace(p, 4);
                 step4(p);
-            } else if (message.equalsIgnoreCase(getStringMessage(basePath + "later"))) {
+            } else if (message.equalsIgnoreCase(getStringMessage("race.create.later"))) {
                 //SKIP STEP 4 -> STEP 5
                 creatingRace.replace(p, 5);
                 showStep5(p);
@@ -237,7 +240,7 @@ public class RaceCreator implements Listener {
                         getMessage(basePath + "subtitle")
                 );
                 p.showTitle(title);
-                p.sendMessage(getMessage(basePath + "message", formatArguments("start", getStringMessage(basePath + "start"), "later", getStringMessage(basePath + "later"))));
+                p.sendMessage(getMessage(basePath + "message", formatArguments("start", getStringMessage("race.create.start"), "later", getStringMessage("race.create.later"))));
             }
         });
     }
@@ -274,10 +277,10 @@ public class RaceCreator implements Listener {
     }
 
     public void goToStep5RaceCreation(Player p) {
-        String basePath = "race.create.4.feedback.";
+        String basePath = "race.create.4.done.";
         Title title = Title.title(
-                getMessage(basePath + "done.title"),
-                getMessage(basePath + "done.subtitle")
+                getMessage(basePath + "title"),
+                getMessage(basePath + "subtitle")
         );
         p.showTitle(title);
 
@@ -300,8 +303,8 @@ public class RaceCreator implements Listener {
         );
         p.showTitle(title);
         p.sendMessage(getMessage(basePath + "message", formatArguments(
-                "start", getStringMessage(basePath + "start"),
-                "later", getStringMessage(basePath + "later")
+                "start", getStringMessage("race.create.start"),
+                "later", getStringMessage("race.create.later")
         )));
     }
 
@@ -318,10 +321,10 @@ public class RaceCreator implements Listener {
         Bukkit.getScheduler().runTask(main, () -> {
 
             String basePath = "race.create.5";
-            if (message.equalsIgnoreCase(getStringMessage(basePath + ".start"))) {
+            if (message.equalsIgnoreCase(getStringMessage("race.create.start"))) {
                 //STEP 6
                 step6(p);
-            } else if (message.equalsIgnoreCase(getStringMessage(basePath + ".later"))) {
+            } else if (message.equalsIgnoreCase(getStringMessage("race.create.later"))) {
                 //SKIP STEP 6 -> END
                 endRaceCreation(p);
             } else if (message.equalsIgnoreCase(getStringMessage("race.create.cancel"))) {
@@ -332,7 +335,10 @@ public class RaceCreator implements Listener {
                         getMessage(basePath + ".subtitle")
                 );
                 p.showTitle(title);
-                p.sendMessage(getMessage(basePath + ".message", formatArguments("start", getStringMessage(basePath + ".start"), "later", getStringMessage(basePath + ".later"))));
+                p.sendMessage(getMessage(basePath + ".message", formatArguments(
+                        "start", getStringMessage("race.create.start"),
+                        "later", getStringMessage("race.create.later")
+                )));
             }
         });
     }
