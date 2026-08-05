@@ -139,8 +139,9 @@ public class RaceCreator implements Listener {
 
             // Save race name temporarily
             Race race = new Race(message, p.getWorld());
-            Race resultRace = raceManager.createRace(race);
-            tempRace.put(p, resultRace);
+            raceManager.createRace(race);
+            tempRace.put(p, raceManager.getRace(message));
+            main.log("Created race " + race + " with name " + race.getName());
 
             p.sendMessage(getMessage(
                     "race.create.1.completed",
@@ -273,7 +274,7 @@ public class RaceCreator implements Listener {
             cancel(p);
             return;
         }
-        Bukkit.getScheduler().runTask(main, () -> p.performCommand("checkpoint autotrace start --create"));
+        Bukkit.getScheduler().runTask(main, () -> p.performCommand("checkpoint autotrace start " + tempRace.get(p).getName() + " --create"));
     }
 
     public void goToStep5RaceCreation(Player p) {
@@ -452,7 +453,7 @@ public class RaceCreator implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         Player p = e.getPlayer();
-        cancelCleanUp(p);
+        if (creatingRace.containsKey(p)) cancelCleanUp(p);
     }
 
     public void cancel(Player p) {
@@ -490,8 +491,7 @@ public class RaceCreator implements Listener {
 
         if (race == null) {
             p.sendMessage(getMessage("error.unknown"));
-            main.severe("Couldn't delete race for " + p.getName() + " because it didn't exist (race creating process - cancel clean up)");
-            return true;
+            main.warn("Couldn't delete race for " + p.getName() + " because it didn't exist (race creating process - cancel clean up)");
         }
 
         p.performCommand("checkpoint autotrace cancel --noRestart");

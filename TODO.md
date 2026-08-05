@@ -30,5 +30,7 @@
 * Encourage people to use the new `PLANE` checkpoints
   * Easier to define
   * Work more reliably
+* Checkpoint autotrace resize not working
+* Prevent from creating 2 cars with same owner
 * Make checkpoint alternate adding easier
 * Add pit boxes
