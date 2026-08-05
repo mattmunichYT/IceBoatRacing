@@ -46,6 +46,32 @@ public class Checkpoint {
             this.halfWidth = halfWidth;
             this.halfHeight = halfHeight;
         }
+
+        public double getHalfHeight() {
+            return halfHeight;
+        }
+
+        public double getHalfWidth() {
+            return halfWidth;
+        }
+
+        public Location getCenter() {
+            return center;
+        }
+
+// --Commented out by Inspection START (05/08/2026, 16:51):
+//        public Vector getNormal() {
+//            return normal;
+//        }
+// --Commented out by Inspection STOP (05/08/2026, 16:51)
+
+        public Vector getRight() {
+            return right;
+        }
+
+        public Vector getUp() {
+            return up;
+        }
     }
 
     final int id; // checkpoint ID in the race order

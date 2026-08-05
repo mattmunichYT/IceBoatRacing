@@ -136,7 +136,7 @@ public class CarManager {
 
         int id = count(race);
         String path = "cars." + id;
-        String customName = s(boatItem.getItemMeta().customName()) == null ? "Race car" : s(boatItem.getItemMeta().customName());
+        String customName = s(boatItem.getItemMeta().customName()).isEmpty() ? "Race car" : s(boatItem.getItemMeta().customName());
 
         YamlConfiguration config = race.getConfig();
 

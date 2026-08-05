@@ -2,7 +2,11 @@ package fr.mattmunich.iceBoatRacing.checkpoint;
 
 import fr.mattmunich.iceBoatRacing.Main;
 import fr.mattmunich.iceBoatRacing.Messages;
+import fr.mattmunich.iceBoatRacing.checkpoint.autotrace.AutoTraceManager;
+import fr.mattmunich.iceBoatRacing.checkpoint.autotrace.AutoTraceSession;
+import fr.mattmunich.iceBoatRacing.checkpoint.autotrace.PendingAutoTraceConfig;
 import fr.mattmunich.iceBoatRacing.race.Race;
+import fr.mattmunich.iceBoatRacing.race.RaceCreator;
 import fr.mattmunich.iceBoatRacing.race.RaceManager;
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -33,13 +37,15 @@ public class CheckpointCommand implements Listener, BasicCommand {
     private final CheckpointManager checkpointManager;
     private final RaceManager raceManager;
     private final AutoTraceManager autoTraceManager;
+    private final RaceCreator raceCreator;
 
     private final Main main;
 
-    public CheckpointCommand(CheckpointManager checkpointManager, RaceManager raceManager, AutoTraceManager autoTraceManager, Main main) {
+    public CheckpointCommand(CheckpointManager checkpointManager, RaceManager raceManager, AutoTraceManager autoTraceManager, RaceCreator raceCreator, Main main) {
         this.checkpointManager = checkpointManager;
         this.raceManager = raceManager;
         this.autoTraceManager = autoTraceManager;
+        this.raceCreator = raceCreator;
         this.main = main;
     }
 
@@ -178,14 +184,14 @@ public class CheckpointCommand implements Listener, BasicCommand {
             int checkpointNum;
             try {
                 checkpointNum = Integer.parseInt(args[1]);
-            }  catch (NumberFormatException e) {
+            } catch (NumberFormatException e) {
                 p.sendMessage(getMessage("error.invalidNumber"));
                 return;
             }
 
             String raceName = args[2];
             Race race = raceManager.getRace(raceName);
-            if(race == null) {
+            if (race == null) {
                 source.getSender().sendMessage(Messages.getMessage("race.notFound"));
                 return;
             }
@@ -203,8 +209,18 @@ public class CheckpointCommand implements Listener, BasicCommand {
                 return;
             }
             p.sendMessage(Messages.getMessage("checkpoint.removed",
-                    formatArguments("id","" + checkpointNum)
+                    formatArguments("id", "" + checkpointNum)
             ));
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("view")) {
+            String raceName = args[1];
+            Race race = raceManager.getRace(raceName);
+            if(race == null) {
+                source.getSender().sendMessage(Messages.getMessage("race.notFound"));
+                return;
+            }
+
+            boolean nowOn = checkpointManager.toggleViewCheckpoints(p, race);
+            p.sendMessage(getMessage(nowOn ? "checkpoint.view.on" : "checkpoint.view.off",formatArguments("race", race.getName())));
         } else if (args.length <= 2 && args[0].equalsIgnoreCase("list")) {
             Map<Race, List<Checkpoint>> all = checkpointManager.getAll();
 
@@ -372,13 +388,103 @@ public class CheckpointCommand implements Listener, BasicCommand {
                 return;
             }
 
-            double spacing = args.length >= 4 ? parseDoubleOr(args[3], 10.0) : 10.0;
-            double halfWidth = args.length >= 5 ? parseDoubleOr(args[4], 5.0) : 5.0;
-            double halfHeight = args.length >= 6 ? parseDoubleOr(args[5], 2.5) : 2.5;
-            boolean loop = args.length < 7 || !args[6].equalsIgnoreCase("noloop");
+            boolean isCreating = args.length == 4 && args[3].equalsIgnoreCase("--create");
 
-            autoTraceManager.start(player, race, spacing, halfWidth, halfHeight, loop);
+            PendingAutoTraceConfig pendingAutoTraceConfig = new PendingAutoTraceConfig(race);
+            pendingAutoTraceConfig.isCreatingRace = isCreating;
+            autoTraceManager.setPendingConfig(player, pendingAutoTraceConfig);
+            player.sendMessage(buildAutoTracePanel(pendingAutoTraceConfig));
+        } else if (sub.equalsIgnoreCase("confirm")) {
+            PendingAutoTraceConfig pendingConfig = autoTraceManager.getPendingConfig(player);
+            if(pendingConfig == null) {
+                player.sendMessage(getMessage("checkpoint.autotrace.config.error.noneDefined")); //tells that player should use the start command first
+                return;
+            }
+
+            Race race = pendingConfig.race;
+            double spacing = pendingConfig.spacing;
+            double halfWidth = pendingConfig.width/2;
+            double halfHeight = pendingConfig.height/2;
+            boolean loop = pendingConfig.loop;
+            boolean isCreating = pendingConfig.isCreatingRace;
+
+            autoTraceManager.start(player, race, spacing, halfWidth, halfHeight, loop, isCreating);
             player.sendMessage(getMessage("checkpoint.autotrace.started", formatArguments("race", race.getName())));
+            autoTraceManager.clearPendingConfig(player);
+        } else if (sub.equalsIgnoreCase("configure")) {
+            /*
+            /checkpoint autotrace configure <param> <value>
+            */
+            if (args.length != 4) {
+                player.sendMessage(getMessage("checkpoint.autotrace.usageConfigure"));
+                return;
+            }
+
+            String param = args[2];
+            String value = args[3];
+            PendingAutoTraceConfig pendingConfig = autoTraceManager.getPendingConfig(player);
+            if(pendingConfig == null) {
+                player.sendMessage(getMessage("checkpoint.autotrace.config.error.noneDefined")); //tells that player should use the start command first
+                return;
+            }
+
+            switch (param.toLowerCase()) {
+                case "width" -> {
+                    double numValue;
+                    try {
+                        numValue = Double.parseDouble(value);
+                    } catch (NumberFormatException e) {
+                        player.sendMessage(getMessage("checkpoint.autotrace.config.error.invalidNumerical"));
+                        return;
+                    }
+
+                    pendingConfig.width = numValue;
+                    player.sendMessage(getMessage("checkpoint.autotrace.config.defined", formatArguments(
+                            "param", param.toLowerCase(),
+                            "value", String.valueOf(numValue)
+                    )));
+                }
+                case "height" -> {
+                    double numValue;
+                    try {
+                        numValue = Double.parseDouble(value);
+                    } catch (NumberFormatException e) {
+                        player.sendMessage(getMessage("checkpoint.autotrace.config.error.invalidNumerical"));
+                        return;
+                    }
+
+                    pendingConfig.height = numValue;
+                    player.sendMessage(getMessage("checkpoint.autotrace.config.defined", formatArguments(
+                            "param", param.toLowerCase(),
+                            "value", String.valueOf(numValue)
+                    )));
+                }
+                case "spacing" -> {
+                    double numValue;
+                    try {
+                        numValue = Double.parseDouble(value);
+                    } catch (NumberFormatException e) {
+                        player.sendMessage(getMessage("checkpoint.autotrace.config.error.invalidNumerical"));
+                        return;
+                    }
+
+                    pendingConfig.spacing = numValue;
+                    player.sendMessage(getMessage("checkpoint.autotrace.config.defined", formatArguments(
+                            "param", param.toLowerCase(),
+                            "value", String.valueOf(numValue)
+                    )));
+                }
+                case "loop" -> {
+                    pendingConfig.loop = !pendingConfig.loop;
+                    player.sendMessage(getMessage("checkpoint.autotrace.config.defined", formatArguments(
+                            "param", param.toLowerCase(),
+                            "value", String.valueOf(pendingConfig.loop)
+                    )));
+                }
+                default -> player.sendMessage(getMessage("checkpoint.autotrace.config.error.invalidParam")); //sends param list
+            }
+
+            player.sendMessage(buildAutoTracePanel(pendingConfig));
 
         } else if (sub.equalsIgnoreCase("stop")) {
             if (!autoTraceManager.hasSession(player)) {
@@ -468,20 +574,82 @@ public class CheckpointCommand implements Listener, BasicCommand {
             )));
 
         } else if (sub.equalsIgnoreCase("accept")) {
+            AutoTraceSession session = autoTraceManager.getSession(player);
+            boolean isCreating = session != null && session.isCreating;
+
             boolean success = autoTraceManager.accept(player);
             if (!success) {
                 player.sendMessage(getMessage("checkpoint.autotrace.acceptFailed"));
+                if (isCreating) raceCreator.step4(player);
                 return;
             }
             player.sendMessage(getMessage("checkpoint.autotrace.accepted"));
+            if(isCreating) raceCreator.goToStep5RaceCreation(player);
 
         } else if (sub.equalsIgnoreCase("cancel")) {
+            AutoTraceSession session = autoTraceManager.getSession(player);
+            boolean isCreating = session != null && session.isCreating && !(args.length == 3 && args[2].equals("--noRestart"));
+
             autoTraceManager.cancel(player);
             player.sendMessage(getMessage("checkpoint.autotrace.cancelled"));
-
+            if (isCreating) raceCreator.step4(player);
         } else {
             sendAutoTraceHelp(player);
         }
+    }
+
+    /**
+     * Builds the clickable auto-trace settings panel: current values plus buttons to edit
+     * each one (via SUGGEST_COMMAND, so the player just types the number and hits enter) and
+     * a button to confirm and start recording.
+     */
+    private Component buildAutoTracePanel(PendingAutoTraceConfig config) {
+        Component header = c(getStringMessage("checkpoint.autotrace.config.panel.header")
+                .replace("%race%", config.race.getName()));
+
+        Component spacingLine = c(getStringMessage("checkpoint.autotrace.config.panel.spacing")
+                .replace("%value%", formatNum(config.spacing)))
+                .append(c(" ")).append(editButton("spacing"));
+
+        Component widthLine = c(getStringMessage("checkpoint.autotrace.config.panel.width")
+                .replace("%value%", formatNum(config.width)))
+                .append(c(" ")).append(editButton("width"));
+
+        Component heightLine = c(getStringMessage("checkpoint.autotrace.config.panel.height")
+                .replace("%value%", formatNum(config.height)))
+                .append(c(" ")).append(editButton("height"));
+
+        String loopKey = config.loop
+                ? "checkpoint.autotrace.config.panel.loopOn"
+                : "checkpoint.autotrace.config.panel.loopOff";
+        Component loopLine = c(getStringMessage(loopKey))
+                .append(c(" "))
+                .append(c(getStringMessage("checkpoint.autotrace.config.panel.toggle"))
+                        .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND,
+                                ClickEvent.Payload.string("/checkpoint autotrace configure loop toggle"))));
+
+        Component startButton = c(getStringMessage("checkpoint.autotrace.config.panel.start"))
+                .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND,
+                        ClickEvent.Payload.string("/checkpoint autotrace confirm")));
+
+        return header
+                .append(c("\n")).append(spacingLine)
+                .append(c("\n")).append(widthLine)
+                .append(c("\n")).append(heightLine)
+                .append(c("\n")).append(loopLine)
+                .append(c("\n")).append(startButton);
+    }
+
+    private Component editButton(String param) {
+        return c(getStringMessage("checkpoint.autotrace.config.panel.edit"))
+                .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.SUGGEST_COMMAND,
+                        ClickEvent.Payload.string("/checkpoint autotrace configure " + param + " ")));
+    }
+
+    /** Whole numbers print without a trailing ".0"; anything else keeps one decimal place. */
+    private String formatNum(double value) {
+        if (value == Math.floor(value)) return String.valueOf((long) value);
+        return String.format("%.1f", value);
     }
 
     /**
@@ -579,14 +747,6 @@ public class CheckpointCommand implements Listener, BasicCommand {
         player.sendMessage(getMessage("checkpoint.autotrace.help"));
     }
 
-    private double parseDoubleOr(String s, double fallback) {
-        try {
-            return Double.parseDouble(s);
-        } catch (NumberFormatException e) {
-            return fallback;
-        }
-    }
-
     @Override
     public @NonNull Collection<String> suggest(@NonNull CommandSourceStack source, String @NonNull [] args) {
         List<String> suggestions = new ArrayList<>();
@@ -595,6 +755,7 @@ public class CheckpointCommand implements Listener, BasicCommand {
             suggestions.add("list");
             suggestions.add("count");
             suggestions.add("create");
+            suggestions.add("view");
             suggestions.add("setFinish");
             suggestions.add("remove");
             suggestions.add("resetData");
@@ -619,7 +780,7 @@ public class CheckpointCommand implements Listener, BasicCommand {
                     suggestions.add("SECTOR");
                 }
             }
-            case "setfinish", "clearall", "getid" -> {
+            case "setfinish", "clearall", "getid", "view" -> {
                 if (args.length == 2) {
                     for (Race race : raceManager.races) suggestions.add(race.getName());
                 }

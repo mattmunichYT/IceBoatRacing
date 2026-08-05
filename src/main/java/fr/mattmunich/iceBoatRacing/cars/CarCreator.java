@@ -5,7 +5,6 @@ import fr.mattmunich.iceBoatRacing.race.Race;
 import fr.mattmunich.iceBoatRacing.race.RaceManager;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
@@ -24,6 +23,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static fr.mattmunich.iceBoatRacing.Main.c;
+import static fr.mattmunich.iceBoatRacing.Main.s;
 import static fr.mattmunich.iceBoatRacing.Messages.formatArguments;
 import static fr.mattmunich.iceBoatRacing.Messages.getMessage;
 import static fr.mattmunich.iceBoatRacing.Messages.getStringMessage;
@@ -78,7 +78,7 @@ public class CarCreator implements Listener {
         Integer step = creatingCar.get(p);
         if (step == null || step != 1) return;
         e.setCancelled(true);
-        String message = ((TextComponent) e.message()).content();
+        String message = s(e.message());
         Bukkit.getScheduler().runTask(main, () -> {
             if(!message.equalsIgnoreCase(getStringMessage("car.create.1.check"))) {
                 Title title = Title.title(
@@ -116,7 +116,7 @@ public class CarCreator implements Listener {
         if (step == null || step != 2) return;
 
         e.setCancelled(true);
-        String message = ((TextComponent) e.message()).content();
+        String message = s(e.message());
 
         Bukkit.getScheduler().runTask(main, () -> {
             OfflinePlayer owner = Bukkit.getOfflinePlayer(message);
@@ -151,7 +151,7 @@ public class CarCreator implements Listener {
         if (step == null || step != 3) return;
 
         e.setCancelled(true);
-        String message = ((TextComponent) e.message()).content();
+        String message = s(e.message());
 
         Bukkit.getScheduler().runTask(main, () -> {
             if (!message.equalsIgnoreCase(

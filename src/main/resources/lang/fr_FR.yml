@@ -60,6 +60,11 @@ checkpoint:
     planeTag: " §7[plan]"
     altTag: " §7[+%count% alt]"
 
+  #/checkpoint view
+  view:
+    on: "§bVisibilité des checkpoints pour la course §3%race%§b: §aactivée"
+    off: "§bVisibilité des checkpoints pour la course §3%race%§b: §cdésactivée"
+
   #Auto-trace (recording/generation) commands
   autotrace:
     help: "§eCommandes d'auto-traçage :\n§7- §f/checkpoint autotrace start <nomCourse> [espacement] [largeur] [hauteur] [loop|noloop]\n§7- §f/checkpoint autotrace stop\n§7- §f/checkpoint autotrace preview §7(bascule)\n§7- §f/checkpoint autotrace sector §7(clique 2 blocs avec la pelle d'abord)\n§7- §f/checkpoint autotrace resize §7(clique 2 blocs délimitant la bonne largeur)\n§7- §f/checkpoint autotrace delete §7(reste près du checkpoint à supprimer)\n§7- §f/checkpoint autotrace accept\n§7- §f/checkpoint autotrace cancel"
@@ -67,8 +72,8 @@ checkpoint:
     started: "§aEnregistrement démarré pour la course §f%race%§a. Fais le tour complet du circuit en bateau ou à pied.\n§8ℹ L'enregistrement s'arrête automatiquement une fois de retour près du point de départ, ou fais §f/checkpoint autotrace stop §8manuellement."
     noSession: "§cTu n'as pas de session d'auto-traçage active."
     notEnoughPoints: "§cPas assez de points enregistrés pour générer des checkpoints. Réessaie."
-    stopped: "§aEnregistrement arrêté. §f%count% §acheckpoints générés.\n§8ℹ Fais §f/checkpoint autotrace preview §8pour les voir, §f/checkpoint autotrace sector §8pour marquer des secteurs, ou §f/checkpoint autotrace accept §8pour sauvegarder."
-    loopClosed: "§aBoucle fermée — enregistrement arrêté automatiquement. §f%count% §acheckpoints générés.\n§8ℹ Fais §f/checkpoint autotrace preview §8pour les voir."
+    stopped: "§aEnregistrement arrêté. §f%count% §acheckpoints générés.\n§8ℹ Fais §f/checkpoint autotrace sector §8pour marquer des secteurs, /checkpoint autotrace resize/delete pour modifier les checkpoints ou §f/checkpoint autotrace accept §8pour sauvegarder."
+    loopClosed: "§aBoucle fermée — enregistrement arrêté automatiquement. §f%count% §acheckpoints générés."
     noPreview: "§cAucun checkpoint généré à prévisualiser.\n§8ℹ Fais start puis stop d'abord."
     previewOn: "§aAperçu activé §7— relance la commande pour le désactiver."
     previewOff: "§7Aperçu désactivé."
@@ -82,6 +87,23 @@ checkpoint:
     acceptFailed: "§cRien à sauvegarder.\n§8ℹ Génère d'abord un aperçu (start, puis stop)."
     accepted: "§aCheckpoints auto-tracés sauvegardés !"
     cancelled: "§7Session d'auto-traçage annulée."
+    #Auto-trace settings panel (shown by /checkpoint autotrace start, edited via configure)
+    config:
+      panel:
+        header: "§b§lParamètres d'auto-traçage §7— §3%race%"
+        spacing: "§7Espacement : §f%value% blocs"
+        width: "§7Largeur : §f%value% blocs"
+        height: "§7Hauteur : §f%value% blocs"
+        loopOn: "§7Boucle : §aactivée"
+        loopOff: "§7Boucle : §cdésactivée"
+        edit: "§b[Modifier]"
+        toggle: "§b[Basculer]"
+        start: "§a§l[Démarrer l'enregistrement]"
+      defined: "§aParamètre §f%param% §adéfini à §f%value%§a."
+      error:
+        noneDefined: "§cAucune configuration en cours.\n§8ℹ Fais §f/checkpoint autotrace start <nomCourse> §8d'abord."
+        invalidNumerical: "§cValeur numérique invalide."
+        invalidParam: "§cParamètre invalide. Utilise §fspacing§c, §fwidth§c, §fheight §cou §floop§c."
 
   #Alternate route (bypass gate) command
   addAlternate:
@@ -185,20 +207,23 @@ race:
       message: "§bEntrez le nombre de §3tours§b à §3compléter§b pour §3terminer§b la course (dans le chat)."
       completed: "§bLe §3nombre de tours§b de la course a été défini à §3%lapCount%"
 
-    #Define the checkpoints?
+    #Define the track?
     3:
-      title: "§3Checkpoints?"
-      subtitle: "§bDéfinir les checkpoints ?"
+      title: "§3Trajet?"
+      subtitle: "§bDéfinir les trajet ?"
       start: "commencer"
       later: "pas maintenant"
-      message: "§bDéfinissez les points par lesquels passe la course. \n-> Entrez §3%start%§b pour commencer ou §3%later%§b pour configurer cela plus tard.\n§8§oℹ Ceux-ci seront utilisés pour mettre a jour le score en direct des participants. Vous pouvez toujours faire cela plus tard!"
+      message: "§bDéfinissez les points par lesquels passe la course. 
+      \n-> Entrez §3%start%§b pour commencer ou §3%later%§b pour configurer cela plus tard.
+      \n§8§oℹ Celui-ci sera utilisé pour mettre a jour le score en direct des participants. Vous pouvez toujours faire cela plus tard!"
 
 
-    #Checkpoints definition process
+    #Track definition process
     4:
-      title: "§3Création checkpoints"
-      subtitle: "§bCommencez à définir les checkpoints"
-      message: "§bDéfinissez les checkpoints de la course en vous rendant à chaque emplacement.\n§b-> §3%define%§b pour poser un checkpoint\n§b-> §3%defineSector%§b pour poser un checkpoint de secteur\n§b-> §3%defineFinish%§b pour définir la ligne d'arrivée §8§o(si différente du départ)\n§b-> §3%help%§b pour afficher l'aide\n§b-> §3%done%§b pour terminer\n§8§oℹ︎ Un secteur fonctionne comme un checkpoint, mais annonce également le temps au secteur dans le chat.\n§8§oℹ︎ Pour définir un checkpoint, faites un clic gauche pour le point 1 et un clic droit pour le point 2 avec une §3§opelle en bois§8§o, comme avec WorldEdit."
+      title: "§3Définition du trajet"
+      subtitle: "§bPositionnez-vous au départ"
+      message: "§bPositionnez-vous sur la ligne de départ, puis entrez §3%start%§b dans le chat."
+      editorMessage: "§bDéfinissez les checkpoints de la course en vous rendant à chaque emplacement.\n§b-> §3%define%§b pour poser un checkpoint\n§b-> §3%defineSector%§b pour poser un checkpoint de secteur\n§b-> §3%defineFinish%§b pour définir la ligne d'arrivée §8§o(si différente du départ)\n§b-> §3%help%§b pour afficher l'aide\n§b-> §3%done%§b pour terminer\n§8§oℹ︎ Un secteur fonctionne comme un checkpoint, mais annonce également le temps au secteur dans le chat.\n§8§oℹ︎ Pour définir un checkpoint, faites un clic gauche pour le point 1 et un clic droit pour le point 2 avec une §3§opelle en bois§8§o, comme avec WorldEdit."
       checkpointCreation:
         define: "definir"
         defineSector: "definir secteur"

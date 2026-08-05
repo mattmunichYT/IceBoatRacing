@@ -1,11 +1,15 @@
-package fr.mattmunich.iceBoatRacing.checkpoint;
+package fr.mattmunich.iceBoatRacing.checkpoint.autotrace;
 
 import fr.mattmunich.iceBoatRacing.Main;
+import fr.mattmunich.iceBoatRacing.checkpoint.Checkpoint;
+import fr.mattmunich.iceBoatRacing.checkpoint.CheckpointGeometry;
+import fr.mattmunich.iceBoatRacing.checkpoint.CheckpointManager;
 import fr.mattmunich.iceBoatRacing.race.Race;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
@@ -25,6 +29,7 @@ public class AutoTraceManager {
 
     private final Main main;
     private final CheckpointManager checkpointManager;
+    private final Map<Player, PendingAutoTraceConfig> pendingAutoTraceConfigs = new HashMap<>();
     private final Map<Player, AutoTraceSession> sessions = new HashMap<>();
     private final Map<Player, org.bukkit.scheduler.BukkitTask> previewTasks = new HashMap<>();
 
@@ -38,13 +43,25 @@ public class AutoTraceManager {
         return session != null && session.samplingTask != null;
     }
 
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    public boolean hasSession(Player p) {
-        return sessions.containsKey(p);
+    public PendingAutoTraceConfig getPendingConfig(Player player) {
+        return pendingAutoTraceConfigs.get(player);
     }
 
-    public AutoTraceSession getSession(Player p) {
-        return sessions.get(p);
+    public void setPendingConfig(Player player, PendingAutoTraceConfig pendingConfig) {
+        pendingAutoTraceConfigs.put(player, pendingConfig);
+    }
+
+    public void clearPendingConfig(Player p) {
+        pendingAutoTraceConfigs.remove(p);
+    }
+
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    public boolean hasSession(Player player) {
+        return sessions.containsKey(player);
+    }
+
+    public AutoTraceSession getSession(Player player) {
+        return sessions.get(player);
     }
 
     /**
@@ -52,7 +69,7 @@ public class AutoTraceManager {
      * once the recorded path travels back within LOOP_CLOSE_THRESHOLD of its starting point, after
      * at least MIN_DISTANCE_BEFORE_LOOP_CHECK blocks have been recorded so it can't trigger instantly.
      */
-    public void start(Player p, Race race, double spacing, double halfWidth, double halfHeight, boolean loop) {
+    public void start(Player p, Race race, double spacing, double halfWidth, double halfHeight, boolean loop, boolean isCreating) {
         cancel(p);
 
         AutoTraceSession session = new AutoTraceSession(p, race);
@@ -60,6 +77,7 @@ public class AutoTraceManager {
         session.halfWidth = halfWidth;
         session.halfHeight = halfHeight;
         session.loop = loop;
+        session.isCreating = isCreating;
         sessions.put(p, session);
 
         session.samplingTask = Bukkit.getScheduler().runTaskTimer(main, () -> {
@@ -84,6 +102,7 @@ public class AutoTraceManager {
                     stop(p);
                     List<Checkpoint> generated = generatePreview(p);
                     p.sendMessage(getMessage("checkpoint.autotrace.loopClosed", formatArguments("count", "" + generated.size())));
+                    togglePreview(p);
                 }
             }
         }, 0L, 2L);
@@ -119,8 +138,7 @@ public class AutoTraceManager {
         List<Location> resampled = CheckpointGeometry.resample(simplified, session.spacing);
 
         double maxHalfWidth = session.halfWidth * MAX_HALF_WIDTH_MULTIPLIER;
-        List<CheckpointGeometry.RecenterResult> recentered =
-                CheckpointGeometry.recenterOnTrack(resampled, session.loop, session.halfWidth, maxHalfWidth);
+        List<CheckpointGeometry.RecenterResult> recentered = CheckpointGeometry.recenterOnTrack(resampled, session.loop, session.halfWidth, maxHalfWidth);
 
         List<Location> centerline = new ArrayList<>();
         List<Double> halfWidths = new ArrayList<>();
@@ -269,7 +287,7 @@ public class AutoTraceManager {
      * @return true if the preview is now ON, false if it's now OFF (or couldn't start)
      */
     public boolean togglePreview(Player p) {
-        org.bukkit.scheduler.BukkitTask existing = previewTasks.remove(p);
+        BukkitTask existing = previewTasks.remove(p);
         if (existing != null) {
             existing.cancel();
             return false;
@@ -278,10 +296,10 @@ public class AutoTraceManager {
         AutoTraceSession session = sessions.get(p);
         if (session == null || session.preview.isEmpty()) return false;
 
-        org.bukkit.scheduler.BukkitTask task = Bukkit.getScheduler().runTaskTimer(main, () -> {
+        BukkitTask task = Bukkit.getScheduler().runTaskTimer(main, () -> {
             AutoTraceSession s = sessions.get(p);
             if (s == null || s.preview.isEmpty()) {
-                org.bukkit.scheduler.BukkitTask t = previewTasks.remove(p);
+                BukkitTask t = previewTasks.remove(p);
                 if (t != null) t.cancel();
                 return;
             }

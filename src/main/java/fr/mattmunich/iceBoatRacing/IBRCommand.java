@@ -12,7 +12,6 @@ import java.util.List;
 
 import static fr.mattmunich.iceBoatRacing.Main.c;
 import static fr.mattmunich.iceBoatRacing.Messages.getMessage;
-import static fr.mattmunich.iceBoatRacing.Messages.getStringMessage;
 
 public class IBRCommand implements BasicCommand {
 

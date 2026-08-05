@@ -4,7 +4,7 @@ import fr.mattmunich.iceBoatRacing.cars.CarCommand;
 import fr.mattmunich.iceBoatRacing.cars.CarCreator;
 import fr.mattmunich.iceBoatRacing.cars.CarListener;
 import fr.mattmunich.iceBoatRacing.cars.CarManager;
-import fr.mattmunich.iceBoatRacing.checkpoint.AutoTraceManager;
+import fr.mattmunich.iceBoatRacing.checkpoint.autotrace.AutoTraceManager;
 import fr.mattmunich.iceBoatRacing.listeners.Connection;
 import fr.mattmunich.iceBoatRacing.race.*;
 import fr.mattmunich.iceBoatRacing.checkpoint.CheckpointCommand;
@@ -18,6 +18,7 @@ import org.bukkit.GameMode;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -72,9 +73,9 @@ public final class Main extends JavaPlugin {
         pm.registerEvents(new CarListener(raceManager),this);
         pm.registerEvents(new CarCreator(this, raceManager, carManager), this);
         pm.registerEvents(new Connection(this, raceManager, carManager),this);
-        pm.registerEvents(new CheckpointCommand(checkpointManager, raceManager, autoTraceManager, this),this);
+        pm.registerEvents(new CheckpointCommand(checkpointManager, raceManager, autoTraceManager, new RaceCreator(this, raceManager, carManager, carCreator), this),this);
         pm.registerEvents(new RaceListener(this, raceManager),this);
-        pm.registerEvents(new RaceCreator(this, raceManager,checkpointManager,carManager,carCreator), this);
+        pm.registerEvents(new RaceCreator(this, raceManager,carManager,carCreator), this);
     }
 
     public void updateConstants() {
@@ -136,7 +137,7 @@ public final class Main extends JavaPlugin {
     private void loadCreators() {
         log("Loading car and race creator...");
         carCreator = new CarCreator(this, raceManager, carManager);
-        raceCreator = new RaceCreator(this,raceManager,checkpointManager,carManager,carCreator);
+        raceCreator = new RaceCreator(this,raceManager,carManager,carCreator);
         log("Done loading car and race creator!");
     }
 
@@ -171,7 +172,7 @@ public final class Main extends JavaPlugin {
     private void registerCommands() {
         log("Registering commands...");
         registerCommand("iceboatracing", "Command to manage the plugin", List.of("ibr"), new IBRCommand(this));
-        registerCommand("checkpoint", "Command to manage checkpoints", new CheckpointCommand(checkpointManager, raceManager, autoTraceManager, this));
+        registerCommand("checkpoint", "Command to manage checkpoints", new CheckpointCommand(checkpointManager, raceManager, autoTraceManager, new RaceCreator(this, raceManager, carManager, carCreator), this));
         registerCommand("car", "Command to manage cars", new CarCommand(carManager,raceManager,carCreator));
         registerCommand("race", "Command to manage the race", new RaceCommand(this, raceManager,raceCreator));
         log("Done registering commands!");
@@ -201,11 +202,11 @@ public final class Main extends JavaPlugin {
         }
     }
 
-    public static String s(Component component) {
+    public static @NotNull String s(Component component) {
         try {
             return ((TextComponent) component).content();
         } catch (Exception e) {
-            return null;
+            return "";
         }
     }
 

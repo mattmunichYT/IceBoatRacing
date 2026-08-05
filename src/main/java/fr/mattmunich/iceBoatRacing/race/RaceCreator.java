@@ -3,10 +3,7 @@ package fr.mattmunich.iceBoatRacing.race;
 import fr.mattmunich.iceBoatRacing.Main;
 import fr.mattmunich.iceBoatRacing.cars.CarCreator;
 import fr.mattmunich.iceBoatRacing.cars.CarManager;
-import fr.mattmunich.iceBoatRacing.checkpoint.Checkpoint;
-import fr.mattmunich.iceBoatRacing.checkpoint.CheckpointManager;
 import io.papermc.paper.event.player.AsyncChatEvent;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -17,13 +14,14 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static fr.mattmunich.iceBoatRacing.Main.s;
 import static fr.mattmunich.iceBoatRacing.Messages.formatArguments;
 import static fr.mattmunich.iceBoatRacing.Messages.getMessage;
 import static fr.mattmunich.iceBoatRacing.Messages.getStringMessage;
@@ -31,15 +29,30 @@ import static fr.mattmunich.iceBoatRacing.Messages.getStringMessage;
 @SuppressWarnings("unused")
 public class RaceCreator implements Listener {
 
+    /*
+     * -----------------------
+     * |    Race creation    |
+     * -----------------------
+     * Stages/Steps:
+     * 1. Name the race
+     * 2. Define lap count
+     * 3. Ask if autotrace now (yes => 4. ; no => 5.)
+     * 4. Autotrace
+     * 5. Ask if define cars now (yes => 6. ; no => end )
+     * 6. Define cars
+     * 7. End (Save)
+     *
+     * The actual things to do:
+     * -> Define to 1 if define finish =/= start
+     */
+
     private final Main main;
     private final RaceManager raceManager;
-    private final CheckpointManager checkpointManager;
     private final CarCreator carCreator;
 
-    public RaceCreator(Main main, RaceManager raceManager, CheckpointManager checkpointManager, CarManager carManager, CarCreator carCreator) {
+    public RaceCreator(Main main, RaceManager raceManager, CarManager carManager, CarCreator carCreator) {
         this.main = main;
         this.raceManager = raceManager;
-        this.checkpointManager = checkpointManager;
         this.carCreator = carCreator;
     }
 
@@ -52,18 +65,7 @@ public class RaceCreator implements Listener {
     /**
      * Saves the name of the race during the creation process
      */
-    static final Map<Player,String> raceName =  new HashMap<>();
-
-    /**
-     * Saves the number of laps of the race during the creation process
-     */
-    static final Map<Player,Integer> lapCount = new HashMap<>();
-
-    /**
-     * Save wether the player has already created a checkpoint
-     * (-> should next checkpoint be start line?)
-     */
-    static final Map<Player,Boolean> firstCheckpointDefined =  new HashMap<>();
+    static final Map<Player, Race> tempRace =  new HashMap<>();
 
     /**
      * When player wants to cancel the creation process of a race, it will be put in this list.
@@ -89,58 +91,9 @@ public class RaceCreator implements Listener {
      */
     static final Map<Player, Location> pos2 = new HashMap<>();
 
-    /**
-     * Saves the pos1 and pos2 when using a wooden shovel AND in creator mode
-     */
-    @EventHandler
-    public void onSelect(PlayerInteractEvent event) {
-        if (event.getItem() == null) return;
-        if (event.getItem().getType() != Material.WOODEN_SHOVEL) return;
-
-        Player p = event.getPlayer();
-        //Only run when player is actually creating a race
-        if(!creatingRace.containsKey(p) || !creatingRace.get(p).equals(3)) return;
-
-        if(!p.hasPermission("iceboatracing.race.create")) return;
-
-        Block clicked = event.getClickedBlock();
-
-        if(clicked == null) return;
-
-        if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
-            pos1.put(p, clicked.getLocation());
-            p.sendMessage(getMessage("checkpoint.pos.1",formatArguments("x",""+clicked.getX(),"y",""+clicked.getY(),"z",""+clicked.getZ())));
-            event.setCancelled(true);
-        }
-
-        if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            pos2.put(p, clicked.getLocation());
-            p.sendMessage(getMessage("checkpoint.pos.2",formatArguments("x",""+clicked.getX(),"y",""+clicked.getY(),"z",""+clicked.getZ())));
-            event.setCancelled(true);
-        }
-    }
-
-
-    /* TODO Race creation:
-    * Plan:
-    * - Ask for name
-    * - [OPTIONAL] Define checkpoints AND sectors
-    * - [OPTIONAL] Define cars
-    * Stages/Steps:
-    * 1. Name the race
-    * 2. Define lap count
-    * 3. Ask if define checkpoints now (yes=>3. ; no=>4.)
-    * 4. Define checkpoints (Register race on 1st checkpoint then auto-save on each checkpoint)
-    * 5. Ask if define cars now (yes=>5. ; no=>end?)
-    * 6. Define cars
-    * 7. End (Save)
-    *
-    * The actual things to do:
-    * - Custom lap count for each race
-    * -> Define to 1 if define finish =/= start
-    * - After defining finish => end checkpoint creation process
-    * */
-
+    // --------------------------------
+    //              STEP 1
+    // --------------------------------
     /**
      * Start the race creation process
      * @param p the player who will be guided through the process
@@ -155,7 +108,6 @@ public class RaceCreator implements Listener {
         );
         p.showTitle(title);
         p.sendMessage(getMessage("race.create.1.message"));
-
     }
 
     @EventHandler
@@ -163,9 +115,10 @@ public class RaceCreator implements Listener {
         Player p = e.getPlayer();
         Integer step = creatingRace.get(p);
         if (step == null || step != 1) return;
+        if(confirmRaceCancel.contains(p)) return;
 
         e.setCancelled(true);
-        String message = ((TextComponent) e.message()).content();
+        String message = s(e.message());
 
         Bukkit.getScheduler().runTask(main, () -> {
             //Allow to cancel process
@@ -185,7 +138,9 @@ public class RaceCreator implements Listener {
             }
 
             // Save race name temporarily
-            raceName.put(p, message);
+            Race race = new Race(message, p.getWorld());
+            Race resultRace = raceManager.createRace(race);
+            tempRace.put(p, resultRace);
 
             p.sendMessage(getMessage(
                     "race.create.1.completed",
@@ -193,17 +148,22 @@ public class RaceCreator implements Listener {
             ));
 
             // STEP 2
-            Bukkit.getScheduler().runTaskLater(main, () -> {
-                creatingRace.replace(p, 2);
-
-                Title title = Title.title(
-                        getMessage("race.create.2.title"),
-                        getMessage("race.create.2.subtitle")
-                );
-                p.showTitle(title);
-                p.sendMessage(getMessage("race.create.2.message"));
-            },40L);
+            Bukkit.getScheduler().runTaskLater(main, () -> showStep2(p),40L);
         });
+    }
+
+    // --------------------------------
+    //              STEP 2
+    // --------------------------------
+    public void showStep2(Player p) {
+        creatingRace.replace(p, 2);
+
+        Title title = Title.title(
+                getMessage("race.create.2.title"),
+                getMessage("race.create.2.subtitle")
+        );
+        p.showTitle(title);
+        p.sendMessage(getMessage("race.create.2.message"));
     }
 
     @EventHandler
@@ -211,9 +171,10 @@ public class RaceCreator implements Listener {
         Player p = e.getPlayer();
         Integer step = creatingRace.get(p);
         if (step == null || step != 2) return;
-        e.setCancelled(true);
+        if(confirmRaceCancel.contains(p)) return;
 
-        String message = ((TextComponent) e.message()).content();
+        e.setCancelled(true);
+        String message = s(e.message());
         int count;
         try {
              count = Integer.parseInt(message);
@@ -223,54 +184,53 @@ public class RaceCreator implements Listener {
         }
 
         // Save race lapCount temporarily
-        lapCount.put(p, count);
+        Bukkit.getScheduler().runTask(main, () -> tempRace.get(p).setLapCount(count));
 
         p.sendMessage(getMessage(
                 "race.create.2.completed",
                 formatArguments("lapCount", count)
         ));
 
-        // STEP 2
-        Bukkit.getScheduler().runTaskLater(main, () -> {
-            creatingRace.replace(p, 3);
+        // STEP 3
+        Bukkit.getScheduler().runTaskLater(main, () -> showStep3(p),40L);
+    }
 
-            Title title = Title.title(
-                    getMessage("race.create.3.title"),
-                    getMessage("race.create.3.subtitle")
-            );
-            p.showTitle(title);
-            p.sendMessage(getMessage("race.create.3.message", formatArguments("start", getStringMessage("race.create.3.start"), "later", getStringMessage("race.create.3.later"))));
-        },40L);
+    // --------------------------------
+    //              STEP 3
+    // --------------------------------
+
+    public void showStep3(Player p) {
+        creatingRace.replace(p, 3);
+
+        Title title = Title.title(
+                getMessage("race.create.3.title"),
+                getMessage("race.create.3.subtitle")
+        );
+        p.showTitle(title);
+        p.sendMessage(getMessage("race.create.3.message", formatArguments("start", getStringMessage("race.create.3.start"), "later", getStringMessage("race.create.3.later"))));
     }
 
     @EventHandler
-    public void checkIfCheckpointCreation(AsyncChatEvent e) {
+    public void checkIfAutoTrace(AsyncChatEvent e) {
         Player p = e.getPlayer();
         Integer step = creatingRace.get(p);
         if (step == null || step != 3) return;
+        if(confirmRaceCancel.contains(p)) return;
 
-        firstCheckpointDefined.put(p, false);
         e.setCancelled(true);
-        String message = ((TextComponent) e.message()).content();
+        String message = s(e.message());
         Bukkit.getScheduler().runTask(main, () -> {
             String basePath = "race.create.3.";
             if (message.equalsIgnoreCase(getStringMessage(basePath + "start"))) {
                 //STEP 4
                 creatingRace.replace(p, 4);
-
-                showStep4Info(p);
-                p.give(new ItemStack(Material.WOODEN_SHOVEL));
-
+                step4(p);
             } else if (message.equalsIgnoreCase(getStringMessage(basePath + "later"))) {
                 //SKIP STEP 4 -> STEP 5
                 creatingRace.replace(p, 5);
-
                 showStep5(p);
             } else if (message.equalsIgnoreCase(getStringMessage("race.create.cancel"))) {
-                creatingRace.remove(p);
-                raceName.remove(p);
-
-                p.sendMessage(getMessage("race.create.cancelled"));
+                cancel(p);
             } else {
                 Title title = Title.title(
                         getMessage(basePath + "title"),
@@ -282,59 +242,55 @@ public class RaceCreator implements Listener {
         });
     }
 
-    private static void showStep4Info(Player p) {
+    // --------------------------------
+    //              STEP 4
+    // --------------------------------
+
+    public void step4(Player p) {
+        //Tells player to go to the start of the race
         String basePath = "race.create.4.";
         Title title = Title.title(
                 getMessage(basePath + "title"),
                 getMessage(basePath + "subtitle")
         );
         p.showTitle(title);
-
-        String commandsPath = basePath + "checkpointCreation.";
-        p.sendMessage(getMessage(basePath + "message", formatArguments(
-                "define", getStringMessage(commandsPath + "define"),
-                "defineSector", getStringMessage(commandsPath + "defineSector"),
-                "defineFinish", getStringMessage(commandsPath + "defineFinish"),
-                "help", getStringMessage(commandsPath + "help"),
-                "done", getStringMessage(commandsPath + "done")
-        )));
+        p.sendMessage(getMessage(basePath + "message"));
     }
 
     @EventHandler
-    public void checkpointCreation(AsyncChatEvent e) {
+    public void startAutoTrace(AsyncChatEvent e) {
         Player p = e.getPlayer();
         Integer step = creatingRace.get(p);
         if (step == null || step != 4) return;
+        if(confirmRaceCancel.contains(p)) return;
 
         e.setCancelled(true);
-        String message = ((TextComponent) e.message()).content();
-        String path = "race.create.4.checkpointCreation.";
-
-        Bukkit.getScheduler().runTask(main, () -> {
-            if(message.equalsIgnoreCase(getStringMessage(path + "define"))) {
-                defineCheckpoint(p);
-            } else if (message.equalsIgnoreCase(getStringMessage(path + "defineSector"))) {
-                defineSector(p);
-            }  else if (message.equalsIgnoreCase(getStringMessage(path + "defineFinish"))) {
-                defineFinish(p);
-            } else if (message.equalsIgnoreCase(getStringMessage(path + "done"))) {
-                String basePath = "race.create.4.feedback.";
-                Title title = Title.title(
-                        getMessage(basePath + "done.title"),
-                        getMessage(basePath + "done.subtitle")
-                );
-                p.showTitle(title);
-
-                Bukkit.getScheduler().runTaskLater(main, () -> {
-                    creatingRace.replace(p, 5);
-
-                    showStep5(p);
-                },100L);
-            } else {
-                showStep4Info(p);
-            }
-        });
+        String message = s(e.message());
+        if(message.equalsIgnoreCase(getStringMessage("race.create.cancel"))) {
+            cancel(p);
+            return;
+        }
+        Bukkit.getScheduler().runTask(main, () -> p.performCommand("checkpoint autotrace start --create"));
     }
+
+    public void goToStep5RaceCreation(Player p) {
+        String basePath = "race.create.4.feedback.";
+        Title title = Title.title(
+                getMessage(basePath + "done.title"),
+                getMessage(basePath + "done.subtitle")
+        );
+        p.showTitle(title);
+
+        Bukkit.getScheduler().runTaskLater(main, () -> {
+            creatingRace.replace(p, 5);
+
+            showStep5(p);
+        },100L);
+    }
+
+    // --------------------------------
+    //              STEP 5
+    // --------------------------------
 
     private static void showStep5(Player p) {
         String basePath = "race.create.5.";
@@ -350,7 +306,6 @@ public class RaceCreator implements Listener {
     }
 
 
-
     @EventHandler
     public void checkIfCarCreation(AsyncChatEvent e) {
         Player p = e.getPlayer();
@@ -359,41 +314,18 @@ public class RaceCreator implements Listener {
         if(confirmRaceCancel.contains(p)) return;
 
         e.setCancelled(true);
-        String message = ((TextComponent) e.message()).content();
+        String message = s(e.message());
         Bukkit.getScheduler().runTask(main, () -> {
 
             String basePath = "race.create.5";
             if (message.equalsIgnoreCase(getStringMessage(basePath + ".start"))) {
                 //STEP 6
-                creatingRace.replace(p, 6);
-
-                Title title = Title.title(
-                        getMessage("race.create.6.title"),
-                        getMessage("race.create.6.subtitle")
-                );
-                p.showTitle(title);
-                p.sendMessage(getMessage("race.create.6.message", formatArguments(
-                        "done", getStringMessage("race.create.6.carCreation.done")
-                )));
-
-                definingCars.put(p, raceName.get(p));
-                Bukkit.getScheduler().runTaskLater(main, () -> carCreator.createCar(p) ,40L);
-                Bukkit.getScheduler().runTaskTimer(main, task -> {
-                    if(!definingCars.containsKey(p)) task.cancel();
-
-                    p.sendActionBar(getMessage("race.create.6.feedback.endInstructions.actionBar", formatArguments(
-                            "done", getStringMessage("race.create.6.carCreation.done")
-                    )));
-                } ,100L, 40L);
+                step6(p);
             } else if (message.equalsIgnoreCase(getStringMessage(basePath + ".later"))) {
                 //SKIP STEP 6 -> END
                 endRaceCreation(p);
             } else if (message.equalsIgnoreCase(getStringMessage("race.create.cancel"))) {
-                confirmRaceCancel.add(p);
-                p.sendMessage(getMessage("race.create.confirmCancel", formatArguments(
-                        "confirm", getStringMessage("race.create.confirm"),
-                        "cancel", getStringMessage("race.create.cancel")
-                )));
+                cancel(p);
             } else {
                 Title title = Title.title(
                         getMessage(basePath + ".title"),
@@ -405,14 +337,42 @@ public class RaceCreator implements Listener {
         });
     }
 
+    // --------------------------------
+    //              STEP 6
+    // --------------------------------
+
+    public void step6(Player p) {
+        creatingRace.replace(p, 6);
+
+        Title title = Title.title(
+                getMessage("race.create.6.title"),
+                getMessage("race.create.6.subtitle")
+        );
+        p.showTitle(title);
+        p.sendMessage(getMessage("race.create.6.message", formatArguments(
+                "done", getStringMessage("race.create.6.carCreation.done")
+        )));
+
+        definingCars.put(p, tempRace.get(p).getName());
+        Bukkit.getScheduler().runTaskLater(main, () -> carCreator.createCar(p) ,40L);
+        Bukkit.getScheduler().runTaskTimer(main, task -> {
+            if(!definingCars.containsKey(p)) task.cancel();
+
+            p.sendActionBar(getMessage("race.create.6.feedback.endInstructions.actionBar", formatArguments(
+                    "done", getStringMessage("race.create.6.carCreation.done")
+            )));
+        } ,100L, 40L);
+    }
+
     @EventHandler
     public void onFinishDefiningCars(AsyncChatEvent e) {
         Player p = e.getPlayer();
         Integer step = creatingRace.get(p);
         if (step == null || step != 6) return;
+        if(confirmRaceCancel.contains(p)) return;
 
         e.setCancelled(true);
-        String message = ((TextComponent) e.message()).content();
+        String message = s(e.message());
         if(!message.equalsIgnoreCase(getStringMessage("race.create.6.carCreation.done"))) return;
 
         Bukkit.getScheduler().runTask(main, () -> {
@@ -429,18 +389,13 @@ public class RaceCreator implements Listener {
         });
     }
 
+    // --------------------------------
+    //               END
+    // --------------------------------
+
     private void endRaceCreation(Player p) {
-
-        //Register the race first
-        if(!firstCheckpointDefined.get(p)) {
-            Race race = new Race(raceName.get(p), p.getWorld());
-            race.setLapCount(lapCount.getOrDefault(p,10));
-            raceManager.createRace(race);
-        }
-
-        firstCheckpointDefined.remove(p);
         creatingRace.remove(p);
-        raceName.remove(p);
+        tempRace.remove(p);
         pos1.remove(p);
         pos2.remove(p);
 
@@ -453,7 +408,54 @@ public class RaceCreator implements Listener {
         p.sendMessage(getMessage(donePath + "message"));
     }
 
-    //Utilities
+    // --------------------------------
+    //            UTILITIES
+    // --------------------------------
+
+    /**
+     * Saves the pos1 and pos2 when using a wooden shovel AND in creator mode
+     */
+    @EventHandler
+    public void onSelect(PlayerInteractEvent event) {
+        if (event.getItem() == null) return;
+        if (event.getItem().getType() != Material.WOODEN_SHOVEL) return;
+
+        Player p = event.getPlayer();
+        //Only run when player is actually creating a race
+        if(!creatingRace.containsKey(p) || !creatingRace.get(p).equals(3)) return;
+
+        if(!p.hasPermission("iceboatracing.race.create")) return;
+
+        Block clicked = event.getClickedBlock();
+
+        if(clicked == null) return;
+
+        if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
+            Location previous = pos1.put(p, clicked.getLocation());
+            if(!clicked.getLocation().equals(previous)) p.sendMessage(getMessage("checkpoint.pos.1",formatArguments("x",""+clicked.getX(),"y",""+clicked.getY(),"z",""+clicked.getZ())));
+            event.setCancelled(true);
+        }
+
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            Location previous = pos2.put(p, clicked.getLocation());
+            if(!clicked.getLocation().equals(previous)) p.sendMessage(getMessage("checkpoint.pos.2",formatArguments("x",""+clicked.getX(),"y",""+clicked.getY(),"z",""+clicked.getZ())));
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent e) {
+        Player p = e.getPlayer();
+        cancelCleanUp(p);
+    }
+
+    public void cancel(Player p) {
+        confirmRaceCancel.add(p);
+        p.sendMessage(getMessage("race.create.confirmCancel", formatArguments(
+                "confirm", getStringMessage("race.create.confirm"),
+                "cancel", getStringMessage("race.create.cancel")
+        )));
+    }
 
     @EventHandler
     public void confirmRaceCancel(AsyncChatEvent e) {
@@ -461,128 +463,38 @@ public class RaceCreator implements Listener {
         if(!confirmRaceCancel.contains(p)) return;
         confirmRaceCancel.remove(p);
 
-        String message = ((TextComponent) e.message()).content();
+        String message = s(e.message());
         if(message.equalsIgnoreCase(getStringMessage("race.create.confirm"))) {
-            Race race = raceManager.getRace(raceName.get(p));
-
-            if (race == null) {
-                p.sendMessage(getMessage("error.unknown"));
-                main.severe("Couldn't delete race " + raceName.get(p) + " because it didn't exist (race creating process cancel)");
-                return;
-            }
-
-            raceManager.deleteRace(race);
-            creatingRace.remove(p);
-            raceName.remove(p);
+            if (cancelCleanUp(p)) return;
 
             p.sendMessage(getMessage("race.create.cancelled"));
         } else {
-            showStep5(p);
+            switch (creatingRace.get(p)) {
+                case 1 -> createRace(p);
+                case 2 -> showStep2(p);
+                case 3 -> showStep3(p);
+                case 4 -> step4(p);
+                case 5 -> showStep5(p);
+            }
         }
     }
 
+    private boolean cancelCleanUp(Player p) {
+        Race race = tempRace.get(p);
 
-
-    private void defineFinish(Player p) {
-        Location l1 = pos1.get(p);
-        Location l2 = pos2.get(p);
-
-        if (l1 == null || l2 == null) {
-            p.sendMessage(getMessage("checkpoint.pos.notSet"));
-            return;
-        }
-
-        String basePath = "race.create.4.feedback.";
-        if(!firstCheckpointDefined.get(p)) {
-            p.sendMessage(getMessage(basePath + "error.defineStartLineFirst"));
-            return;
-        }
-
-        Race race = raceManager.getRace(raceName.get(p));
-
-        checkpointManager.saveCheckpoint(race, l1, l2, Checkpoint.Type.START_FINISH);
-        Title title = Title.title(
-                getMessage(basePath + "finishDefined.title"),
-                getMessage(basePath + "finishDefined.subtitle")
-        );
-        p.showTitle(title);
-    }
-
-    private void defineSector(Player p) {
-        Location l1 = pos1.get(p);
-        Location l2 = pos2.get(p);
-
-        if (l1 == null || l2 == null) {
-            p.sendMessage(getMessage("checkpoint.pos.notSet"));
-            return;
-        }
-
-        //Be sure that the car is detected, even when you click the ground when defining checkpoints
-        if(l1.getY() == l2.getY()) l2.add(0, 1, 0);
-
-        String basePath = "race.create.4.feedback.";
-        if(!firstCheckpointDefined.get(p)) {
-            p.sendMessage(getMessage(basePath + "error.defineStartLineFirst"));
-            return;
-        }
-
-        Race race = raceManager.getRace(raceName.get(p));
-
-        Checkpoint checkpoint = checkpointManager.saveSectorCheckpoint(race, l1, l2);
-        Title title = Title.title(
-                getMessage(basePath + "sectorDefined.title"),
-                getMessage(basePath + "sectorDefined.subtitle",
-                        formatArguments("sectorID", "" + checkpoint.getSectorID())
-                )
-        );
-        p.showTitle(title);
-    }
-
-    private void defineCheckpoint(Player p) {
-        Location l1 = pos1.get(p);
-        Location l2 = pos2.get(p);
-
-        if (l1 == null || l2 == null) {
-            p.sendMessage(getMessage("checkpoint.pos.notSet"));
-            return;
-        }
-
-        //Be sure that the car is detected, even when you click the ground when defining checkpoints
-        if(l1.getY() == l2.getY()) l2.add(0, 1, 0);
-
-        Race race;
-
-        //Register the race first
-        if(!firstCheckpointDefined.get(p)) {
-            race = new Race(raceName.get(p), l1.getWorld());
-            race = raceManager.createRace(race);
-        } else {
-            race = raceManager.getRace(raceName.get(p));
-        }
-
-        if(race==null) {
+        if (race == null) {
             p.sendMessage(getMessage("error.unknown"));
-            return;
+            main.severe("Couldn't delete race for " + p.getName() + " because it didn't exist (race creating process - cancel clean up)");
+            return true;
         }
 
-        Checkpoint checkpoint = checkpointManager.saveCheckpoint(race, l1, l2);
-        String basePath = "race.create.4.feedback.";
-        Title title;
+        p.performCommand("checkpoint autotrace cancel --noRestart");
 
-        if(checkpoint.getType().equals(Checkpoint.Type.START_FINISH)) {
-            title = Title.title(
-                    getMessage(basePath + "startDefined.title"),
-                    getMessage(basePath + "startDefined.subtitle")
-            );
-            firstCheckpointDefined.put(p, true);
-        } else {
-            title = Title.title(
-                    getMessage(basePath + "checkpointDefined.title"),
-                    getMessage(basePath + "checkpointDefined.subtitle",
-                            formatArguments("checkpointID", "" + checkpoint.getId())
-                    )
-            );
-        }
-        p.showTitle(title);
+        raceManager.deleteRace(race);
+        creatingRace.remove(p);
+        tempRace.remove(p);
+        pos1.remove(p);
+        pos2.remove(p);
+        return false;
     }
 }

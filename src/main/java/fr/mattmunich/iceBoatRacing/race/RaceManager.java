@@ -23,6 +23,7 @@ import java.util.*;
 
 import static fr.mattmunich.iceBoatRacing.Main.c;
 
+@SuppressWarnings("ResultOfMethodCallIgnored")
 public class RaceManager {
 
     private final Main main;

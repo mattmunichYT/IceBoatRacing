@@ -1,5 +1,6 @@
-package fr.mattmunich.iceBoatRacing.checkpoint;
+package fr.mattmunich.iceBoatRacing.checkpoint.autotrace;
 
+import fr.mattmunich.iceBoatRacing.checkpoint.Checkpoint;
 import fr.mattmunich.iceBoatRacing.race.Race;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -36,6 +37,9 @@ public class AutoTraceSession {
 
     /** Whether the track is a closed loop (tangent wraps at the ends). */
     public boolean loop = true;
+
+    /** Whether the player is creating the race */
+    public boolean isCreating = false;
 
     public AutoTraceSession(Player player, Race race) {
         this.player = player;
