@@ -35,15 +35,23 @@ public class Car {
         return boat;
     }
 
+    public Location getLocation() {
+        return boat.getLocation();
+    }
+
     public Material getBoatMaterial() {
         return boatMaterial;
     }
 
-    public void destroy() {
+    public boolean destroy() {
         if (boat != null && !boat.isDead()) {
             boat.remove();
+            boat = null;
+            return true;
+        } else {
+            boat = null;
+            return false;
         }
-        boat = null;
     }
 
     public int getId() {

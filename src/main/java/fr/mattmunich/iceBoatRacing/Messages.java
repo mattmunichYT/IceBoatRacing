@@ -1,6 +1,7 @@
 package fr.mattmunich.iceBoatRacing;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextReplacementConfig;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -100,19 +101,34 @@ public class Messages {
 
     /**
      * Formats placeholders like %player%
+     * @param args Format: "key1", "value1", "key2", "value2"
      */
-    public static Map<String, String> formatArguments(String... args) {
-
-        Map<String, String> map = new HashMap<>();
+    public static Map<String, Object> formatArguments(Object... args) {
+        Map<String, Object> map = new HashMap<>();
 
         for (int i = 0; i < args.length; i += 2) {
-            map.put(args[i], args[i + 1]);
+            map.put(args[i].toString(), args[i + 1]);
         }
 
         return map;
     }
 
-    public static Component getMessage(String identifier, Map<String, String> arguments) {
+    public static Map<String, Component> formatComponentArguments(Object... args) {
+
+        Map<String, Component> map = new HashMap<>();
+
+        try {
+            for (int i = 0; i < args.length; i += 2) {
+                map.put((String) args[i], (Component) args[i + 1]);
+            }
+        } catch (Exception e) {
+            return null;
+        }
+
+        return map;
+    }
+
+    public static Component getMessage(String identifier, Map<String, Object> arguments) {
 
         if (!langConfig.contains(identifier)) {
             main.getLogger().severe("Missing message: " + identifier);
@@ -124,11 +140,11 @@ public class Messages {
         if (message == null) return c("§cMESSAGE NOT FOUND");
 
         // Replace placeholders
-        for (Map.Entry<String, String> entry : arguments.entrySet()) {
+        for (Map.Entry<String, Object> entry : arguments.entrySet()) {
             //Ignore unset arguments
             if(!message.contains("%" + entry.getKey() + "%")) continue;
             //Actually replace
-            message = message.replace("%" + entry.getKey() + "%", entry.getValue());
+            message = message.replace("%" + entry.getKey() + "%", entry.getValue().toString());
         }
 
         //Convert to component for PaperMC
@@ -142,8 +158,52 @@ public class Messages {
         return component;
     }
 
+    public static Component getMessage(String identifier, Map<String, Object> arguments, Map<String,Component> componentArguments) {
+
+        if (!langConfig.contains(identifier)) {
+            main.getLogger().severe("Missing message: " + identifier);
+            return c("§cMESSAGE NOT FOUND");
+        }
+
+        String message = langConfig.getString(identifier);
+
+        if (message == null) return c("§cMESSAGE NOT FOUND");
+
+        // Replace placeholders
+        for (Map.Entry<String, Object> entry : arguments.entrySet()) {
+            //Ignore unset arguments
+            if(!message.contains("%" + entry.getKey() + "%")) continue;
+            //Actually replace
+            message = message.replace("%" + entry.getKey() + "%", entry.getValue().toString());
+        }
+
+
+        //Convert to component for PaperMC
+        Component component = c(message);
+        for (Map.Entry<String, Component> entry : componentArguments.entrySet()) {
+            //Ignore unset arguments
+            if(!message.contains("%" + entry.getKey() + "%")) continue;
+
+            //Actually replace
+            TextReplacementConfig replacementConfig = TextReplacementConfig.builder()
+                    .match("%" + entry.getKey() + "%")
+                    .replacement(entry.getValue())
+                    .build();
+
+            component = component.replaceText(replacementConfig);
+        }
+        //Add the prefix if required
+        if (addPrefix(identifier)) {
+            component = getMessage("prefix").append(c("§r ")).append(component);
+        }
+
+        return component;
+    }
+
     private static boolean addPrefix(String identifier) {
-        return !identifier.contains("noPrefix") //Currently used for join/quit and liveSidebarTitle
+        return
+        (
+                !identifier.contains("noPrefix") //Currently used for join/quit and liveSidebarTitle
                 && !identifier.equals("prefix") //Don't add prefix after prefix
                 && !identifier.contains("title") //=> titles and subtitles
                 && !identifier.contains("actionBar") //actionBar messages
@@ -156,6 +216,9 @@ public class Messages {
                 //For race.onEnd messages
                 && !identifier.contains("playerFormat")
                 && !identifier.contains("highlights")
-                && !identifier.contains("bottom");
+                && !identifier.contains("bottom")
+                && !identifier.contains("sectorFormat")
+        )
+                || identifier.contains("checkpoint.");
     }
 }

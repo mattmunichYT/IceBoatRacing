@@ -4,24 +4,29 @@ import fr.mattmunich.iceBoatRacing.cars.CarCommand;
 import fr.mattmunich.iceBoatRacing.cars.CarCreator;
 import fr.mattmunich.iceBoatRacing.cars.CarListener;
 import fr.mattmunich.iceBoatRacing.cars.CarManager;
+import fr.mattmunich.iceBoatRacing.checkpoint.autotrace.AutoTraceManager;
 import fr.mattmunich.iceBoatRacing.listeners.Connection;
+import fr.mattmunich.iceBoatRacing.listeners.WorldLoad;
 import fr.mattmunich.iceBoatRacing.race.*;
-import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.CheckpointCommand;
-import fr.mattmunich.iceBoatRacing.livescoreboard.checkpoint.CheckpointManager;
+import fr.mattmunich.iceBoatRacing.checkpoint.CheckpointCommand;
+import fr.mattmunich.iceBoatRacing.checkpoint.CheckpointManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
+import org.bukkit.GameMode;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
 import static fr.mattmunich.iceBoatRacing.Messages.getMessage;
 
 public final class Main extends JavaPlugin {
+    public static String version;
 
     CheckpointManager checkpointManager;
     CarManager carManager;
@@ -29,16 +34,22 @@ public final class Main extends JavaPlugin {
     Messages messages;
     RaceManager raceManager;
     RaceCreator raceCreator;
+    AutoTraceManager autoTraceManager;
 
-    public final Map<UUID, RaceData> racers = new HashMap<>();
     public Objective liveSidebar;
-    public int raceLapCount = 0;
 
-    public final ArrayList<Player> testers = new ArrayList<>();
+    //Config
+    public static GameMode RACING_GAMEMODE;
+    public static Boolean ENFORCE_RACING_GAMEMODE;
+    public static Boolean SPECTATE_ON_FINISH;
+    public static Boolean REMOVE_CAR_ON_LOGOUT;
 
     @Override
     public void onEnable() {
-        log("Enabling plugin...");
+        version = getPluginMeta().getVersion();
+        Component name = MiniMessage.miniMessage().deserialize("<b><gradient:#8DABF3:#10CA9A>Ice Boat Racing</gradient></b>");
+        String stringName = l(name);
+        log("§bEnabling " + stringName + " §3v" + version + "§b...");
 
         loadConfigs();
 
@@ -54,7 +65,7 @@ public final class Main extends JavaPlugin {
 
         registerListeners();
 
-        log("Done enabling plugin!");
+        log("Done enabling!");
 
     }
 
@@ -62,12 +73,31 @@ public final class Main extends JavaPlugin {
         PluginManager pm = Bukkit.getPluginManager();
         pm.registerEvents(new CarListener(raceManager),this);
         pm.registerEvents(new CarCreator(this, raceManager, carManager), this);
-        pm.registerEvents(new Connection(this,raceManager),this);
-        pm.registerEvents(new CheckpointCommand(checkpointManager,raceManager, this),this);
-        pm.registerEvents(new RaceListener(this,raceManager),this);
-        pm.registerEvents(new RaceCreator(this,raceManager,checkpointManager,carManager,carCreator), this);
+        pm.registerEvents(new Connection(this, raceManager, carManager),this);
+        pm.registerEvents(new CheckpointCommand(checkpointManager, raceManager, autoTraceManager, new RaceCreator(this, raceManager, carManager, carCreator), this),this);
+        pm.registerEvents(new RaceListener(this, raceManager),this);
+        pm.registerEvents(new RaceCreator(this, raceManager,carManager,carCreator), this);
+//        pm.registerEvents(new WorldLoad(this), this);
     }
 
+    public void updateConstants() {
+        //Racing game mode
+        try {
+            RACING_GAMEMODE = GameMode.valueOf(getConfig().getString("race.racingGameMode"));
+        } catch (IllegalArgumentException e) {
+            warn("Could not parse racingGameMode from config file, set to default ADVENTURE");
+            RACING_GAMEMODE = GameMode.ADVENTURE;
+        }
+
+        //Enforce racing game mode
+        ENFORCE_RACING_GAMEMODE = getConfig().getBoolean("race.enforceRacingGameMode");
+
+        //Spectate on finish
+        SPECTATE_ON_FINISH = getConfig().getBoolean("race.spectateOnFinish");
+
+        //Remove car on logout
+        REMOVE_CAR_ON_LOGOUT = getConfig().getBoolean("race.removeCarWhenLoggingOut");
+    }
 
     public void loadConfigs() {
         log("Configuring config files");
@@ -75,9 +105,10 @@ public final class Main extends JavaPlugin {
         reloadConfig();
         saveResource("lang/en_US.yml", true);
         saveResource("lang/fr_FR.yml", true);
-        raceLapCount = getConfig().getInt("race.lapCount");
+        updateConstants();
         log("Done configuring config files!");
     }
+
 
     void loadMessages() {
         log("Loading messages...");
@@ -90,6 +121,7 @@ public final class Main extends JavaPlugin {
         //Preload car and checkpoint manager for racemanager
         carManager = new CarManager(this);
         checkpointManager = new CheckpointManager(this);
+        autoTraceManager = new AutoTraceManager(this, checkpointManager);
 
         //Load race manager
         raceManager = new RaceManager(this,carManager, checkpointManager);
@@ -107,7 +139,7 @@ public final class Main extends JavaPlugin {
     private void loadCreators() {
         log("Loading car and race creator...");
         carCreator = new CarCreator(this, raceManager, carManager);
-        raceCreator = new RaceCreator(this,raceManager,checkpointManager,carManager,carCreator);
+        raceCreator = new RaceCreator(this,raceManager,carManager,carCreator);
         log("Done loading car and race creator!");
     }
 
@@ -142,7 +174,7 @@ public final class Main extends JavaPlugin {
     private void registerCommands() {
         log("Registering commands...");
         registerCommand("iceboatracing", "Command to manage the plugin", List.of("ibr"), new IBRCommand(this));
-        registerCommand("checkpoint", "Command to manage checkpoints", new CheckpointCommand(checkpointManager,raceManager, this));
+        registerCommand("checkpoint", "Command to manage checkpoints", new CheckpointCommand(checkpointManager, raceManager, autoTraceManager, new RaceCreator(this, raceManager, carManager, carCreator), this));
         registerCommand("car", "Command to manage cars", new CarCommand(carManager,raceManager,carCreator));
         registerCommand("race", "Command to manage the race", new RaceCommand(this, raceManager,raceCreator));
         log("Done registering commands!");
@@ -172,19 +204,23 @@ public final class Main extends JavaPlugin {
         }
     }
 
-    public static String s(Component component) {
+    public static @NotNull String s(Component component) {
         try {
             return ((TextComponent) component).content();
         } catch (Exception e) {
-            return null;
+            return "";
         }
+    }
 
+    public static String l(Component component) {
+        return LegacyComponentSerializer.legacySection().serialize(component);
     }
 
     public static String formatTime(long durationMs) {
         long minutes = durationMs / 60000;
         long seconds = (durationMs / 1000) % 60;
-        long milliseconds = durationMs % 1000;
-        return minutes + "m" + seconds + "," + milliseconds;
+//        long milliseconds = durationMs % 1000;
+        long centiseconds = (durationMs % 1000) / 10;
+        return minutes + "m" + String.format("%02d", seconds) + "," + String.format("%02d", centiseconds);
     }
 }

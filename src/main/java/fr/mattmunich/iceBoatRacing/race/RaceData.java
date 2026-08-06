@@ -1,22 +1,30 @@
 package fr.mattmunich.iceBoatRacing.race;
 
 import fr.mattmunich.iceBoatRacing.cars.Car;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import java.util.*;
 
 public class RaceData {
     public Player player;
+
     public int ranking = -1;
     public int checkpointIndex = 0;
     public int lapCount = -1;
+    public Location from;
+
     public Car car;
+
     public long startTime = 0;
     public long lapTime = 0;
     public long endTime = 0;
+    public long gapToNextTime = 0;
     public final List<Long> lapTimes = new ArrayList<>();
-    public final Map<Integer,Long> sectorTimes = new HashMap<>();
+    public final Map<Integer,List<Long>> sectorsTimes = new HashMap<>();
+
     public Race race;
+    public Location logoutLocation;
 
     public RaceData(Player player) {
         this.player = player;
@@ -28,6 +36,15 @@ public class RaceData {
 
     public long worstLapTime() {
         return Collections.max(lapTimes);
+    }
+
+    public Map<Integer,Long> bestSectorsTimes() {
+        Map<Integer,Long> bestSectorsTimes = new HashMap<>();
+        for (Integer s : sectorsTimes.keySet()) {
+            List<Long> sTimes = sectorsTimes.get(s);
+            bestSectorsTimes.put(s, Collections.min(sTimes));
+        }
+        return bestSectorsTimes;
     }
 
     public long meanLapTime() {
@@ -45,7 +62,21 @@ public class RaceData {
         return lapTimes;
     }
 
-    public Map<Integer,Long> getSectorTimes() {
-        return sectorTimes;
+    public Map<Integer,List<Long>> getSectorsTimes() {
+        return sectorsTimes;
+    }
+
+    public void addSectorTime(int sectorID, long now, long lapTime) {
+        List<Long> sectorTimes = sectorsTimes.getOrDefault(sectorID, new ArrayList<>());
+        sectorTimes.add(now-lapTime);
+        sectorsTimes.put(sectorID, sectorTimes);
+    }
+
+    public Location getLogoutLocation() {
+        return logoutLocation;
+    }
+
+    public void setLogoutLocation(Location logoutLocation) {
+        this.logoutLocation = logoutLocation;
     }
 }

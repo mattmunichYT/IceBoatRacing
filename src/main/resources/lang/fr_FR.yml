@@ -20,9 +20,9 @@
 # ----------------------------------------------------------------
 
 
-#The prefix used in the beggining of every message
+#The prefix used in the beginning of every message
 #(except titles and messages under the "noPrefix" section)
-prefix: "<b><gradient:#8DABF3:#10CA9A>[Ice Boat Racing]</gradient></b>"
+prefix: "<b><gradient:#8DABF3:#10CA9A>[Ice Boat Racing]</gradient></b><reset>"
 
 noPrefix:
   #The title of the scoreboard during a race
@@ -45,68 +45,164 @@ checkpoint:
   removed: "§aCheckpoint §6%id%§a supprimé"
   count: "§aIl y a %count% checkpoints"
   resetPlayerScore: "§aScore de §6%player%§a réinitialisé"
-  normalized: "§aCheckpoints normalisés"
+  nearestCheckpointID: "§bLe checkpoint de la course §3%race%§b le plus proche a pour ID §3%id%"
+
   #Errors
   notInCheckpoint: "§cTu n'es pas dans un checkpoint\n§8ℹ Tu peux aussi faire /checkpoint list"
   invalid: "§cNuméro de checkpoint invalide"
   noCheckpoint: "§cAucun checkpoint défini"
 
+  #Main /checkpoint help fallback
+  help: "§eSous-commandes de /checkpoint :
+  \n§7- §f/checkpoint list
+  \n§7- §f/checkpoint count
+  \n§7- §f/checkpoint autotrace start|stop|preview|sector|resize|delete|accept|cancel
+  \n§7- §f/checkpoint addAlternate <nomCourse> <idCheckpoint>
+  \n§7- §f/checkpoint view <nomCourse>
+  \n§7- §f/checkpoint remove [nomCourse] [idCheckpoint]
+  \n§7- §f/checkpoint clearAll <nomCourse>
+  \n§7- §f/checkpoint resetData <joueur> <nomCourse>
+  \n§7 --- Obsolète ---
+  \n§7- §f/checkpoint create <nomCourse> [\"SECTOR\"]
+  \n§7- §f/checkpoint setFinish <nomCourse>"
+
+
+  #Tags shown in /checkpoint list
+  list:
+    planeTag: " §7[plan]"
+    altTag: " §7[+%count% alt]"
+
+  #/checkpoint view
+  view:
+    on: "§bVisibilité des checkpoints pour la course §3%race%§b: §aactivée"
+    off: "§bVisibilité des checkpoints pour la course §3%race%§b: §cdésactivée"
+
+  #Auto-trace (recording/generation) commands
+  autotrace:
+    help: "§eCommandes d'auto-traçage :\n§7- §f/checkpoint autotrace start <nomCourse> [espacement] [largeur] [hauteur] [loop|noloop]\n§7- §f/checkpoint autotrace stop\n§7- §f/checkpoint autotrace preview §7(bascule)\n§7- §f/checkpoint autotrace sector §7(clique 2 blocs avec la pelle d'abord)\n§7- §f/checkpoint autotrace resize §7(clique 2 blocs délimitant la bonne largeur)\n§7- §f/checkpoint autotrace delete §7(reste près du checkpoint à supprimer)\n§7- §f/checkpoint autotrace accept\n§7- §f/checkpoint autotrace cancel"
+    usageStart: "§cUtilisation : /checkpoint autotrace start <nomCourse> [espacement] [largeur] [hauteur] [loop|noloop]"
+    started: "§aEnregistrement démarré pour la course §f%race%§a. Fais le tour complet du circuit en bateau ou à pied.\n§8ℹ L'enregistrement s'arrête automatiquement une fois de retour près du point de départ, ou fais §f/checkpoint autotrace stop §8manuellement."
+    noSession: "§cTu n'as pas de session d'auto-traçage active."
+    notEnoughPoints: "§cPas assez de points enregistrés pour générer des checkpoints. Réessaie."
+    stopped: "§aEnregistrement arrêté. §f%count% §acheckpoints générés.\n§8ℹ Fais §f/checkpoint autotrace sector §8pour marquer des secteurs, /checkpoint autotrace resize/delete pour modifier les checkpoints ou §f/checkpoint autotrace accept §8pour sauvegarder."
+    loopClosed: "§aBoucle fermée — enregistrement arrêté automatiquement. §f%count% §acheckpoints générés."
+    noPreview: "§cAucun checkpoint généré à prévisualiser.\n§8ℹ Fais start puis stop d'abord."
+    previewOn: "§aAperçu activé §7— relance la commande pour le désactiver."
+    previewOff: "§7Aperçu désactivé."
+    noPreviewForSector: "§cAucun aperçu actif pour y ajouter un secteur.\n§8ℹ Fais start puis stop d'abord."
+    sectorMarked: "§aSecteur marqué.\n§8ℹ Fais §f/checkpoint autotrace preview §8pour le voir, ou marque d'autres secteurs."
+    sectorFailed: "§cImpossible de placer le secteur ici.\n§8ℹ Essaie de cliquer plus près du tracé enregistré."
+    resizeFailed: "§cAucun checkpoint trouvé près de ces clics.\n§8ℹ Essaie de cliquer plus près de celui à redimensionner."
+    resized: "§aCheckpoint §f#%position% §a(§f%type%§a) redimensionné selon tes clics §7(à %distance% blocs)."
+    deleteFailed: "§cAucun checkpoint trouvé près de toi à supprimer."
+    deleted: "§7Checkpoint §f#%position% §7(§f%type%§7) retiré de l'aperçu §7(à %distance% blocs)."
+    acceptFailed: "§cRien à sauvegarder.\n§8ℹ Génère d'abord un aperçu (start, puis stop)."
+    accepted: "§aCheckpoints auto-tracés sauvegardés !"
+    cancelled: "§7Session d'auto-traçage annulée."
+    #Auto-trace settings panel (shown by /checkpoint autotrace start, edited via configure)
+    config:
+      panel:
+        header: "§b§lParamètres d'auto-traçage §7— §3%race%"
+        spacing: "§7Espacement : §f%value% blocs"
+        width: "§7Largeur : §f%value% blocs"
+        height: "§7Hauteur : §f%value% blocs"
+        loopOn: "§7Boucle : §aactivée"
+        loopOff: "§7Boucle : §cdésactivée"
+        edit: "§b[Modifier]"
+        toggle: "§b[Basculer]"
+        start: "§a§l[Démarrer l'enregistrement]"
+      defined: "§aParamètre §f%param% §adéfini à §f%value%§a."
+      error:
+        noneDefined: "§cAucune configuration en cours.\n§8ℹ Fais §f/checkpoint autotrace start <nomCourse> §8d'abord."
+        invalidNumerical: "§cValeur numérique invalide."
+        invalidParam: "§cParamètre invalide. Utilise §fspacing§c, §fwidth§c, §fheight §cou §floop§c."
+
+  #Alternate route (bypass gate) command
+  addAlternate:
+    added: "§aRoute alternative ajoutée pour le checkpoint §f#%id%§a."
+
+  #Bulk checkpoint clearing
+  clearAll:
+    warning: "§c⚠ Ceci supprimera définitivement les §f%count% §ccheckpoint(s) de la course §f%race%§c."
+    confirmHint: "§cRelance §f/checkpoint clearAll %race% §cdans les 10 secondes pour confirmer."
+    cleared: "§aTous les checkpoints de la course §f%race% §aont été supprimés."
+
 race:
   #Will be displayed to every player
-  start: "§aCourse %name% démarre..." #Displayed when '/race start <name>' is used
+  start: "§aCourse %race% démarre..." #Displayed when '/race start <name>' is used
   notFound: "§cCourse non trouvée." #Displayed when the inputted race is invalid
   end: "§cLa course est terminée !" #Displayed when '/race end' is used
 
   #Only displayed to the command executor
   prepare: "§aLes joueurs seront placés automatiquement." #Displayed when '/race prepare' is used (and prepare toggled OFF)
   cancelPrepare: "§aMode préparation désactivé." #Displayed when '/race prepare' is used (and prepare toggled ON)
-  deleted: "§aLa course %name% a été supprimée."#Displayed when '/race delete' is used and is successful
+  deleted: "§aLa course %race% a été supprimée."#Displayed when '/race delete' is used and is successful
+  currentLapCount: "§bLe nombre de tours de la course %race% est défini à §3%lapCount%§b. \n§8ℹ Utilisez /race setLapCount <nom> <nombre>"
+  updatedLapCount: "§bLe nombre de tours de la course §3%race%§b a été à §3%lapCount%§b."
+  invalidLapCount: "§cLe nombre de tours entré est invalide."
+
+  #Help message
+  help: "§3--------- §b§l/race§r §3---------
+  \n§3->§a start [nom] §8-§7 Lancer la course
+  \n§3->§a prepare [nom] §8-§7 Préparer les joueurs
+  \n§7§oℹ Placement automatique des joueurs dans leurs voitures
+  \n§3->§a end [nom] §8-§7 Finir la course
+  \n§3->§a delete [nom] §8-§7 Supprimer la course
+  \n§3->§a setLapCount [nom] <nombre> §8-§7 Définir le nombre de tours"
 
   #In race events
   onCompleteLap:
     title: "§6%currentLapCount%/%raceLapCount%"
     subtitle: "§atours complétés"
-    message: "§3%player%§b a terminé le tour n°§3%ID%§b en §3%time%§b !"
-    messageBestLapTimeYet: "§3%player%§b a terminé le tour n°§3%ID%§b avec un temps record de §3%time%§b (meilleurs temps jusqu'à maintenant) !"
-  onCrossSector: "§bTemps de §3%player%§b au secteur §3%ID%§b : §3%time%§b"
+    message: "§3%player%§b §8§l>>§r§b tour n°§3%ID%§b terminé en §3%time%§b"
+    messageBestLapTimeYet: "§3%player% §8§l>>§b tour §3%ID%§b terminé en §3%time%§b §7-§f nouveau temps record !"
+  onCrossSector: "§r§3%player%§b §8§l>>§r§b secteur §3%ID%§b: §3%time%§b"
   onFinish:
     message: "§2%player%§b a terminé la course en §2%time%§a et est classé §2#%ranking%§a !"
     title: "§2Course terminée!"
     subtitle: "§aVous êtes #%ranking%"
-    statsMessage: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lRésultats de la course §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n
+    statsMessage: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lRésultats de la course §x§0§0§A§D§F§F§l▬▬▬▬▬▬§r\n
     §bClassement : §3#%ranking%§b/%players%\n
     §bTemps total : §x§4§0§C§4§F§F%raceTime%\n
     §bTour moyen : §3%meanLapTime%\n
     §bMeilleur tour : §a%bestLapTime%\n
     §bTour le plus lent : §c%worstLapTime%\n
+    §bMeilleurs temps par secteur:\n
+    %bestSectorsTimes%
     \n
     §bÉcart avec le vainqueur : §c%gapToWinner%\n
     §bÉcart avec le joueur devant : §x§F§F§D§7§0§0%gapToNext%\n
     §x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n
     "
-    statsMessageWinner: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lRésultats de la course §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n
+    statsMessageWinner: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lRésultats de la course §x§0§0§A§D§F§F§l▬▬▬▬▬▬§r\n
     §bClassement : §3§l#%ranking%§b/%players%\n
     §bTemps total : §x§4§0§C§4§F§F%raceTime%\n
     §bTour moyen : §3%meanLapTime%\n
     §bMeilleur tour : §a%bestLapTime%\n
     §bTour le plus lent : §c%worstLapTime%\n
+    §bMeilleurs temps par secteur:\n
+    %bestSectorsTimes%
     §x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n
     "
+    sectorFormat: "§b- Secteur §3#%sectorID% §8» §a%time%\n"
   onEnd:
-    top: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lClassement final §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n"
-    playerFormat: "§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%\n"
-    highlights: "\n§b🏆 Meilleur tour : §a%bestLapPlayer% §8(§a%bestLapTime%§8)\n
+    top: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lClassement final §x§0§0§A§D§F§F§l▬▬▬▬▬▬§r\n"
+    winnerFormat: "§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%§b\n"
+    playerFormat: "§r§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%§b (écart: §x§4§0§C§4§F§F%gapToNext%§b)\n"
+    highlights: "\n§r§b🏆 Meilleur tour : §a%bestLapPlayer% §8(§a%bestLapTime%§8)\n
     §b🐢 Tour le plus lent : §c%worstLapPlayer% §8(§c%worstLapTime%§8)\n
     §b⚡ Écart victoire : §3%winnerGap%\n"
-    bestSectorTimesTop: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬ §x§5§5§D§D§F§F§lMeilleurs Secteurs §x§0§0§A§D§F§F§l▬▬▬▬▬\n"
-    sectorFormat: "§bSecteur §3#%sectorID% §8» §a%player% §8(§e%time%§8)\n"
+    bestSectorTimesTop: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬ §x§5§5§D§D§F§F§lMeilleurs Secteurs §x§0§0§A§D§F§F§l▬▬▬▬▬§r\n"
+    sectorFormat: "§r§bSecteur §3#%sectorID% §8» §a%player% §8(§e%time%§8)\n"
     bottom: "§x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
-
-  #Help message
-  help: "§3--------- §b§l/race§r §3---------\n§3->§a start §8-§7 Lancer la course\n§3->§a prepare §8-§7 Préparer les joueurs\n§7§oℹ Placement automatique des joueurs dans leurs voitures\n§3->§a end §8-§7 Finir la course"
+    error:
+      noRacers: "§4Impossible d'envoyer le classement de la course:§c aucun joueur trouvé."
+      noRanking: "§4Impossible d'envoyer le classement de la course:§c pas de classement."
 
   select: "§bSélectionnez une course:"
   create:
+    start: "oui"
+    later: "non"
     confirm: "confirmer" #Confirm race deletion
     cancel: "annuler" #The message to send to cancel the race creation process
     confirmCancel: "§eVoulez-vous vraiment annuler la création de la course?\nUtilisez §c%confirm%§e pour confirmer et §a%cancel%§e pour annuler la suppression."
@@ -118,54 +214,33 @@ race:
       message: "§bCommencez par entrer le nom de la course ci-dessous (dans le chat)."
       completed: "§bLe nom de la course a été défini à §3%name%"
       alreadyExists: "§cUne course avec le même nom existe déjà, veuillez choisir un autre nom."
-
-    #Define the checkpoints?
     2:
-      title: "§3Checkpoints?"
-      subtitle: "§bDéfinir les checkpoints ?"
-      start: "commencer"
-      later: "pas maintenant"
-      message: "§bDéfinissez les points par lesquels passe la course. \n-> Entrez §3%start%§b pour commencer ou §3%later%§b pour configurer cela plus tard.\n§8§oℹ Ceux-ci seront utilisés pour mettre a jour le score en direct des participants. Vous pouvez toujours faire cela plus tard!"
+      title: "§3Nombre de tours"
+      subtitle: "§bEntrez le §3nombre§b dans le chat"
+      message: "§bEntrez le nombre de §3tours§b à §3compléter§b pour §3terminer§b la course (dans le chat)."
+      completed: "§bLe §3nombre de tours§b de la course a été défini à §3%lapCount%"
 
-
-    #Checkpoints definition process
+    #Define the track?
     3:
-      title: "§3Création checkpoints"
-      subtitle: "§bCommencez à définir les checkpoints"
-      message: "§bDéfinissez les checkpoints de la course en vous rendant à chaque emplacement.\n§b-> §3%define%§b pour poser un checkpoint\n§b-> §3%defineSector%§b pour poser un checkpoint de secteur\n§b-> §3%defineFinish%§b pour définir la ligne d'arrivée §8§o(si différente du départ)\n§b-> §3%help%§b pour afficher l'aide\n§b-> §3%done%§b pour terminer\n§8§oℹ︎ Un secteur fonctionne comme un checkpoint, mais annonce également le temps au secteur dans le chat.\n§8§oℹ︎ Pour définir un checkpoint, faites un clic gauche pour le point 1 et un clic droit pour le point 2 avec une §3§opelle en bois§8§o, comme avec WorldEdit."
-      checkpointCreation:
-        define: "definir"
-        defineSector: "definir secteur"
-        defineFinish: "definir fin"
-        help: "aide"
-        done: "sauvegarder"
-      feedback:
-        startDefined:
-          title: "§3Départ défini"
-          subtitle: "§bLa ligne de §3départ§b a été définie"
-        finishDefined:
-          title: "§3Arrivée définie"
-          subtitle: "§bLa ligne d'§3arrivée§b a été définie"
-        checkpointDefined:
-          title: "§3Checkpoint défini"
-          subtitle: "§bLe checkpoint §3%checkpointID%§b a été défini"
-        sectorDefined:
-          title: "§3Secteur défini"
-          subtitle: "§bLe secteur §3%sectorID%§b a été défini"
-        done:
-          title: "§2Terminé"
-          subtitle: "§aCheckpoints sauvegardés!"
-        error:
-          #Will be shown if the player tries to define a sector first (before defining start line)
-          defineStartLineFirst: "§cCommencez par définir la ligne de départ avant de faire cela."
+      title: "§3Circuit?"
+      subtitle: "§bDéfinir le circuit ?"
+      message: "§bVoulez-vous définir le circuit de la course ? 
+      \n-> Entrez §3%start%§b pour commencer ou §3%later%§b pour configurer cela plus tard.
+      \n§8§oℹ Celui-ci sera utilisé pour mettre a jour le score en direct des participants. Vous pouvez toujours faire cela plus tard!"
 
+    #Track definition process
     4:
+      title: "§3Définition du circuit"
+      subtitle: "§bPositionnez-vous au départ"
+      message: "§bPositionnez-vous sur la ligne de départ, puis entrez §3quelque chose§b dans le chat."
+      done:
+        title: "§2Terminé"
+        subtitle: "§aCircuit sauvegardé!"
+    5:
       title: "§3Voitures?"
       subtitle: "§bDéfinir les voitures ?"
-      message: "§bDéfinissez les points par lesquels voitures des participant de la course. \n-> Entrez §3%start%§b pour commencer ou §3%later%§b pour configurer cela plus tard.\n§8§oℹ︎ Celles-ci seront automatiquement placées lorsque la course commencera, et leurs passagers téléportés dedans. Vous pouvez toujours faire cela plus tard!"
-      start: "commencer"
-      later: "pas maintenant"
-    5:
+      message: "§bSouhaitez-vous définir les voitures des participants? \n-> Entrez §3%start%§b pour commencer ou §3%later%§b pour configurer cela plus tard.\n§8§oℹ︎ Celles-ci seront automatiquement placées lorsque la course commencera, et leurs passagers téléportés dedans. Vous pouvez toujours faire cela plus tard!"
+    6:
       title: "§3Création voitures"
       subtitle: "§bLa création va commencer..."
       message: "§bLe processus de création des voitures va commencer...\n§8§oℹEnvoyez %done% pour sauvergarder lorsque vous avez terminé."
@@ -181,7 +256,7 @@ race:
     done:
       title: "§3Course sauvegardée !"
       subtitle: "§bLa course a été créée avec succès"
-      message: "§aLa course a été sauvegardée avec succès !\n§b-> §3/checkpoint create§b pour ajouter des checkpoints à la course\n§b-> §3/car create§b pour enregistrer des voitures\n§b-> §3/race info <nomCourse>§b pour consulter les informations de la course"
+      message: "§aLa course a été sauvegardée avec succès !\n§b-> §3/checkpoint autotrace§b pour définir/modifer le circuit\n§b-> §3/car create§b pour enregistrer des voitures\n§b-> §3/race info <nomCourse>§b pour consulter les informations de la course"
 
 car:
   #Errors
@@ -220,6 +295,9 @@ car:
       message: "§bLa voiture a été sauvegardée!"
       title: "§2§lTerminé !"
       subtitle: "§aVoiture sauvegardée"
+
+    error:
+      ownerAlreadyHasCar: "§cLe propriétaire de cette voiture a déjà une voiture, supprimez-la d'abord."
 
 #Some basic error messages
 error:

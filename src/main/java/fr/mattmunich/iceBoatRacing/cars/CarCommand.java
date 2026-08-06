@@ -194,7 +194,7 @@ public class CarCommand implements BasicCommand, Listener {
                     "§e  #" + car.getId()
                             + " §7Owner: §f" + ownerName
                             + " §7Type: §f" + car.getBoatMaterial().name().replace("_BOAT", "").replace("_RAFT", "").toLowerCase()
-                            + " §7[" + loc.getWorld().getName() + "]"
+                            + " §7[" + (loc.getWorld() == null ? "§7§oUnknown" : loc.getWorld().getName()) + "]"
                             + " §fX:" + loc.getBlockX()
                             + " Y:" + loc.getBlockY()
                             + " Z:" + loc.getBlockZ()
@@ -226,14 +226,14 @@ public class CarCommand implements BasicCommand, Listener {
     public @NonNull Collection<String> suggest(@NonNull CommandSourceStack source, String @NonNull [] args) {
         ArrayList<String> suggestions = new ArrayList<>();
 
-        if(args.length == 1) {
+        if(args.length <= 1) {
             suggestions.add("create");
             suggestions.add("list");
             suggestions.add("changeOwner");
             suggestions.add("remove");
         }
-        if(!suggestions.isEmpty() && !args[args.length - 1].isEmpty()) {
-            suggestions.removeIf(s -> !s.startsWith(args[args.length - 1]));
+        if(args.length != 0 && args[0] != null && !suggestions.isEmpty() && !args[0].isEmpty()) {
+            suggestions.removeIf(s -> !s.startsWith(args[0]));
         }
         return suggestions;
     }

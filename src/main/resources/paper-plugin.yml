@@ -1,7 +1,7 @@
 name: IceBoatRacing
-version: '1.4-SNAPSHOT'
+version: '${version}'
 main: fr.mattmunich.iceBoatRacing.Main
-api-version: '1.21'
+api-version: '26.1.2'
 author:  mattmunich
 website: https://modrinth.com/plugin/ibr
 description: A plugin for Minecraft ice boat racing

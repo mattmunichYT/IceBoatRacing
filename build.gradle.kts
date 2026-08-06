@@ -3,8 +3,7 @@ plugins {
 }
 
 group = "fr.mattmunich"
-// Dynamic versioning template matching your pom comment logic
-version = "1.4-SNAPSHOT"
+version = "2.0-BETA"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(25))
@@ -21,4 +20,13 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:26.1.2.build.+")
     // Add any libraries you want to shade here using 'implementation'
     // implementation("com.zaxxer:HikariCP:x.x.x")
+}
+
+tasks.processResources {
+    val props = mapOf("version" to project.version)
+    inputs.properties(props)
+    filteringCharset = "UTF-8"
+    filesMatching("paper-plugin.yml") {
+        expand(props)
+    }
 }

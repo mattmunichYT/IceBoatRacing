@@ -28,11 +28,12 @@ public class RaceCommand implements BasicCommand {
 
     @Override
     public void execute(@NonNull CommandSourceStack source, String @NonNull [] args) {
+        CommandSender sender = source.getSender();
         if(args.length >= 1 && args[0].equalsIgnoreCase("start")) {
             Race race;
             if(raceManager.races.size() != 1) {
                 if(args.length!=2) {
-                    source.getSender().sendMessage(Messages.getMessage("race.help"));
+                    sender.sendMessage(Messages.getMessage("race.help"));
                     return;
                 }
                 String raceName = args[1];
@@ -41,16 +42,16 @@ public class RaceCommand implements BasicCommand {
                 race = raceManager.races.getFirst();
             }
             if(race == null) {
-                source.getSender().sendMessage(Messages.getMessage("race.notFound"));
+                sender.sendMessage(Messages.getMessage("race.notFound"));
                 return;
             }
-            source.getSender().sendMessage(Messages.getMessage("race.start", Messages.formatArguments("name", race.getName())));
+            sender.sendMessage(Messages.getMessage("race.start", Messages.formatArguments("race", race.getName())));
             race.start();
         } else if(args.length >= 1 && args[0].equalsIgnoreCase("end")) {
             Race race;
             if(raceManager.activeRaces.size() != 1) {
                 if(args.length!=2) {
-                    source.getSender().sendMessage(Messages.getMessage("race.help"));
+                    sender.sendMessage(Messages.getMessage("race.help"));
                     return;
                 }
                 String raceName = args[1];
@@ -59,16 +60,27 @@ public class RaceCommand implements BasicCommand {
                 race = raceManager.activeRaces.getFirst();
             }
             if(race == null) {
-                source.getSender().sendMessage(Messages.getMessage("race.notFound"));
+                sender.sendMessage(Messages.getMessage("race.notFound"));
                 return;
             }
 
-            race.end();
+            try {
+                race.end(true);
+            } catch (Exception e) {
+                switch (e.getMessage()) {
+                    case "NO_RANKING" -> sender.sendMessage(Messages.getMessage("race.onEnd.error.noRanking"));
+                    case "NO_RACERS" -> sender.sendMessage(Messages.getMessage("race.onEnd.error.noRacers"));
+                    default -> {
+                        sender.sendMessage(Messages.getMessage("error.unknown"));
+                        main.err("Could not send ranking on /race end", e);
+                    }
+                }
+            }
         } else if (args.length >=1 && args[0].equalsIgnoreCase("prepare")) {
             Race race;
             if(raceManager.races.size() != 1) {
                 if(args.length!=2) {
-                    source.getSender().sendMessage(Messages.getMessage("race.help"));
+                    sender.sendMessage(Messages.getMessage("race.help"));
                     return;
                 }
                 String raceName = args[1];
@@ -77,13 +89,13 @@ public class RaceCommand implements BasicCommand {
                 race = raceManager.races.getFirst();
             }
             if(race == null) {
-                source.getSender().sendMessage(Messages.getMessage("race.notFound"));
+                sender.sendMessage(Messages.getMessage("race.notFound"));
                 return;
             }
-            race.togglePrepare(source.getSender());
+            race.togglePrepare(sender);
         } else if (args.length == 1 && args[0].equalsIgnoreCase("create")) {
-            if(!(source.getSender() instanceof Player p)) {
-                source.getSender().sendMessage(Messages.getMessage("error.playerToExecuteCommand"));
+            if(!(sender instanceof Player p)) {
+                sender.sendMessage(Messages.getMessage("error.playerToExecuteCommand"));
                 return;
             }
             raceCreator.createRace(p);
@@ -91,7 +103,7 @@ public class RaceCommand implements BasicCommand {
             Race race;
             if(raceManager.races.size() != 1) {
                 if(args.length!=2) {
-                    source.getSender().sendMessage(Messages.getMessage("race.help"));
+                    sender.sendMessage(Messages.getMessage("race.help"));
                     return;
                 }
                 String raceName = args[1];
@@ -100,20 +112,82 @@ public class RaceCommand implements BasicCommand {
                 race = raceManager.races.getFirst();
             }
             if(race == null) {
-                source.getSender().sendMessage(Messages.getMessage("race.notFound"));
+                sender.sendMessage(Messages.getMessage("race.notFound"));
                 return;
             }
 
             String raceName = race.getName();
             Bukkit.getScheduler().runTask(main, () -> {
                 boolean success = raceManager.deleteRace(race);
-                if (success) source.getSender().sendMessage(Messages.getMessage("race.deleted", Messages.formatArguments("name", raceName)));
-                else source.getSender().sendMessage(Messages.getMessage("error.unknown"));
+                if (success) sender.sendMessage(Messages.getMessage("race.deleted", Messages.formatArguments("race", raceName)));
+                else sender.sendMessage(Messages.getMessage("error.unknown"));
             });
+        } else if (args.length >= 1 && args[0].equalsIgnoreCase("setLapCount")) {
+            Race race;
+            boolean definedRaceName = false;
+            if(raceManager.races.size() != 1) {
+                if(args.length < 2 || args.length > 3) {
+                    sender.sendMessage(Messages.getMessage("race.help"));
+                    return;
+                }
+                String raceName = args[1];
+                race = raceManager.getRace(raceName);
+                definedRaceName = true;
+            } else {
+                race = raceManager.races.getFirst();
+            }
+            if(race == null) {
+                sender.sendMessage(Messages.getMessage("race.notFound"));
+                return;
+            }
+
+            if (definedRaceName) {
+                if(args.length == 2) {
+                    sender.sendMessage(Messages.getMessage("race.currentLapCount", Messages.formatArguments(
+                            "race", race.getName(),
+                            "lapCount", race.getLapCount()
+                    )));
+                    return;
+                }
+
+                int lapCount;
+                try {
+                    lapCount = Integer.parseInt(args[2]);
+                } catch (NumberFormatException e) {
+                    sender.sendMessage(Messages.getMessage("race.invalidLapCount"));
+                    return;
+                }
+
+                race.setLapCount(lapCount);
+                sender.sendMessage(Messages.getMessage("race.updatedLapCount", Messages.formatArguments(
+                        "race", race.getName(),
+                        "lapCount", race.getLapCount()
+                )));
+            } else {
+                if(args.length == 1) {
+                    sender.sendMessage(Messages.getMessage("race.currentLapCount", Messages.formatArguments(
+                            "race", race.getName(),
+                            "lapCount", race.getLapCount()
+                    )));
+                    return;
+                }
+
+                int lapCount;
+                try {
+                    lapCount = Integer.parseInt(args[1]);
+                } catch (NumberFormatException e) {
+                    sender.sendMessage(Messages.getMessage("race.invalidLapCount"));
+                    return;
+                }
+
+                race.setLapCount(lapCount);
+                sender.sendMessage(Messages.getMessage("race.updatedLapCount", Messages.formatArguments(
+                        "race", race.getName(),
+                        "lapCount", race.getLapCount()
+                )));
+            }
         } else {
-            //TODO TESTING
-            if (source.getSender() instanceof Player p) main.testers.add(p);
-            source.getSender().sendMessage(Messages.getMessage("race.help"));
+            sender.sendMessage(Messages.getMessage("race.help"));
         }
     }
 
@@ -126,7 +200,7 @@ public class RaceCommand implements BasicCommand {
             races.forEach((race) -> raceList.add(race.getName()));
         } else raceList = List.of("§oNo races defined");
 
-        List<String> baseList = List.of("start","prepare","end","create","delete");
+        List<String> baseList = List.of("start","prepare","end","create","delete", "setLapCount");
         if(args.length==0) {
             return baseList;
         } else if(args.length==1) {
@@ -143,10 +217,16 @@ public class RaceCommand implements BasicCommand {
                     || args[0].equalsIgnoreCase("prepare")
                     || args[0].equalsIgnoreCase("end")
                     || args[0].equalsIgnoreCase("delete")
+                    || args[0].equalsIgnoreCase("setLapCount")
             )
         ) {
-
             return raceList;
+        } else if (args.length==3) {
+            if(args[0].equalsIgnoreCase("setLapCount")) {
+                return List.of("§7<lapCount>");
+            } else {
+                return Collections.emptyList();
+            }
         } else {
             return Collections.emptyList();
         }
