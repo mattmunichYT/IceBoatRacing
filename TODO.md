@@ -25,12 +25,15 @@
   * <s> `spectateOnFinish` </s><br/>
     * <s> True = players get put to spectator when they finish the race</s><br/>
     * <s> False = players can continue racing but won't count the laps (until `/race end`) </s>
+  * Per race startRotation
 * Allow to convert legacy `config.yml` races to  new `races/[race].yml`
 * <s> Update RaceCreator to support auto-checkpoints </s>
 * Encourage people to use the new `PLANE` checkpoints
   * Easier to define
   * Work more reliably
 * Checkpoint autotrace resize not working
-* Prevent from creating 2 cars with same owner
+* <s>Prevent from creating 2 cars with same owner</s>
+* Remove prefix for best sector times in per-player ranking
+* Test all the new features
 * Make checkpoint alternate adding easier
 * Add pit boxes

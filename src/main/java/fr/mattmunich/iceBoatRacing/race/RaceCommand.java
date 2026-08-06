@@ -68,9 +68,12 @@ public class RaceCommand implements BasicCommand {
                 race.end(true);
             } catch (Exception e) {
                 switch (e.getMessage()) {
-                    case "NO_RANKING" -> sender.sendMessage(Messages.getMessage("race.onEnd.errornoRanking"));
-                    case "NO_RACERS" -> sender.sendMessage(Messages.getMessage("race.onEnd.errornoRacers"));
-                    default -> sender.sendMessage(Messages.getMessage("error.unknown"));
+                    case "NO_RANKING" -> sender.sendMessage(Messages.getMessage("race.onEnd.error.noRanking"));
+                    case "NO_RACERS" -> sender.sendMessage(Messages.getMessage("race.onEnd.error.noRacers"));
+                    default -> {
+                        sender.sendMessage(Messages.getMessage("error.unknown"));
+                        main.err("Could not send ranking on /race end", e);
+                    }
                 }
             }
         } else if (args.length >=1 && args[0].equalsIgnoreCase("prepare")) {

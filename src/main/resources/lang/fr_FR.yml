@@ -22,7 +22,7 @@
 
 #The prefix used in the beginning of every message
 #(except titles and messages under the "noPrefix" section)
-prefix: "<b><gradient:#8DABF3:#10CA9A>[Ice Boat Racing]</gradient></b>"
+prefix: "<b><gradient:#8DABF3:#10CA9A>[Ice Boat Racing]</gradient></b><reset>"
 
 noPrefix:
   #The title of the scoreboard during a race
@@ -154,14 +154,14 @@ race:
   onCompleteLap:
     title: "§6%currentLapCount%/%raceLapCount%"
     subtitle: "§atours complétés"
-    message: "§3%player%§b a terminé le tour n°§3%ID%§b en §3%time%§b !"
-    messageBestLapTimeYet: "§3%player%§b a terminé le tour n°§3%ID%§b avec un temps record de §3%time%§b (meilleurs temps jusqu'à maintenant) !"
-  onCrossSector: "§bTemps de §3%player%§b au secteur §3%ID%§b : §3%time%§b"
+    message: "§3%player%§b §8§l>>§r§b tour n°§3%ID%§b terminé en §3%time%§b"
+    messageBestLapTimeYet: "§3%player% §8§l>>§b tour §3%ID%§b terminé en §3%time%§b §7-§f nouveau temps record !"
+  onCrossSector: "§r§3%player%§b §8§l>>§r§b secteur §3%ID%§b: §3%time%§b"
   onFinish:
     message: "§2%player%§b a terminé la course en §2%time%§a et est classé §2#%ranking%§a !"
     title: "§2Course terminée!"
     subtitle: "§aVous êtes #%ranking%"
-    statsMessage: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lRésultats de la course §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n
+    statsMessage: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lRésultats de la course §x§0§0§A§D§F§F§l▬▬▬▬▬▬§r\n
     §bClassement : §3#%ranking%§b/%players%\n
     §bTemps total : §x§4§0§C§4§F§F%raceTime%\n
     §bTour moyen : §3%meanLapTime%\n
@@ -174,7 +174,7 @@ race:
     §bÉcart avec le joueur devant : §x§F§F§D§7§0§0%gapToNext%\n
     §x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n
     "
-    statsMessageWinner: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lRésultats de la course §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n
+    statsMessageWinner: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lRésultats de la course §x§0§0§A§D§F§F§l▬▬▬▬▬▬§r\n
     §bClassement : §3§l#%ranking%§b/%players%\n
     §bTemps total : §x§4§0§C§4§F§F%raceTime%\n
     §bTour moyen : §3%meanLapTime%\n
@@ -186,14 +186,14 @@ race:
     "
     sectorFormat: "§b- Secteur §3#%sectorID% §8» §a%time%\n"
   onEnd:
-    top: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lClassement final §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n"
+    top: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lClassement final §x§0§0§A§D§F§F§l▬▬▬▬▬▬§r\n"
     winnerFormat: "§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%§b\n"
-    playerFormat: "§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%§b (écart: §x§4§0§C§4§F§F%gapToNext%§b)\n"
-    highlights: "\n§b🏆 Meilleur tour : §a%bestLapPlayer% §8(§a%bestLapTime%§8)\n
+    playerFormat: "§r§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%§b (écart: §x§4§0§C§4§F§F%gapToNext%§b)\n"
+    highlights: "\n§r§b🏆 Meilleur tour : §a%bestLapPlayer% §8(§a%bestLapTime%§8)\n
     §b🐢 Tour le plus lent : §c%worstLapPlayer% §8(§c%worstLapTime%§8)\n
     §b⚡ Écart victoire : §3%winnerGap%\n"
-    bestSectorTimesTop: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬ §x§5§5§D§D§F§F§lMeilleurs Secteurs §x§0§0§A§D§F§F§l▬▬▬▬▬\n"
-    sectorFormat: "§bSecteur §3#%sectorID% §8» §a%player% §8(§e%time%§8)\n"
+    bestSectorTimesTop: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬ §x§5§5§D§D§F§F§lMeilleurs Secteurs §x§0§0§A§D§F§F§l▬▬▬▬▬§r\n"
+    sectorFormat: "§r§bSecteur §3#%sectorID% §8» §a%player% §8(§e%time%§8)\n"
     bottom: "§x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
     error:
       noRacers: "§4Impossible d'envoyer le classement de la course:§c aucun joueur trouvé."
@@ -295,6 +295,9 @@ car:
       message: "§bLa voiture a été sauvegardée!"
       title: "§2§lTerminé !"
       subtitle: "§aVoiture sauvegardée"
+
+    error:
+      ownerAlreadyHasCar: "§cLe propriétaire de cette voiture a déjà une voiture, supprimez-la d'abord."
 
 #Some basic error messages
 error:

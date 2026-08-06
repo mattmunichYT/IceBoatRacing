@@ -115,8 +115,8 @@ public class Connection implements Listener {
                     race.end(true);
                 } catch (Exception err) {
                     switch (err.getMessage()) {
-                        case "NO_RANKING" -> Bukkit.getConsoleSender().sendMessage(Messages.getMessage("race.onEnd.errornoRanking"));
-                        case "NO_RACERS" -> Bukkit.getConsoleSender().sendMessage(Messages.getMessage("race.onEnd.errornoRacers"));
+                        case "NO_RANKING" -> Bukkit.getConsoleSender().sendMessage(Messages.getMessage("race.onEnd.error.noRanking"));
+                        case "NO_RACERS" -> Bukkit.getConsoleSender().sendMessage(Messages.getMessage("race.onEnd.error.noRacers"));
                         default -> Bukkit.getConsoleSender().sendMessage(Messages.getMessage("error.unknown"));
                     }
                 }

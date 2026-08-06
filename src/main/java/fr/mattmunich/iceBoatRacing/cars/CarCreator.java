@@ -204,6 +204,19 @@ public class CarCreator implements Listener {
             return;
         }
 
+        boolean alreadyHasCar = false;
+        for (Car car : race.getCars()) {
+            if(car.getOwner().equals(tempOwner.get(p))) {
+                alreadyHasCar = true;
+            }
+        }
+
+        if(alreadyHasCar) {
+            p.sendMessage(getMessage("car.create.error.ownerAlreadyHasCar"));
+            cleanup(p);
+            return;
+        }
+
         // FINAL SAVE
         carManager.saveCar(
                 race,

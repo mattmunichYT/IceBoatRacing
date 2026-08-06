@@ -22,7 +22,7 @@
 
 #The prefix used in the beginning of every message
 #(except titles and messages under the "noPrefix" section)
-prefix: "<b><gradient:#8DABF3:#10CA9A>[Ice Boat Racing]</gradient></b>"
+prefix: "<b><gradient:#8DABF3:#10CA9A>[Ice Boat Racing]</gradient></b><reset>"
 
 noPrefix:
   #The title of the scoreboard during a race
@@ -153,14 +153,14 @@ race:
   onCompleteLap:
     title: "§6%currentLapCount%/%raceLapCount%"
     subtitle: "§alaps completed"
-    message: "§3%player%§b finished lap #§3%ID%§b in §3%time%§b!"
-    messageBestLapTimeYet: "§3%player%§b finished lap #§3%ID%§b with a record time of §3%time%§b (best lap time so far)!"
-  onCrossSector: "§b§3%player%§b's time for sector §3%ID%§b: §3%time%§b"
+    message: "§r§3%player%§b §8§l>>§r§b lap #§3%ID%§b finished in §3%time%§b"
+    messageBestLapTimeYet: "§r§3%player%§b §8§l>>§r§b lap #§3%ID%§b finished in §3%time%§b §7-§f new best lap time!"
+  onCrossSector: "§b§3%player%§b §8§l>>§r§b sector §3%ID%§b: §3%time%§b"
   onFinish:
     message: "§2%player%§b finished the race in §2%time%§a and is placed §2#%ranking%§a!"
     title: "§2Race finished!"
     subtitle: "§aYou placed #%ranking%"
-    statsMessage: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lRace Results §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n
+    statsMessage: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lRace Results §x§0§0§A§D§F§F§l▬▬▬▬▬▬§r\n
     §bRanking: §3#%ranking%§b/%players%\n
     §bTotal time: §x§4§0§C§4§F§F%raceTime%\n
     §bAverage lap: §3%meanLapTime%\n
@@ -173,7 +173,7 @@ race:
     §bGap to next player: §x§F§F§D§7§0§0%gapToNext%\n
     §x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n
     "
-    statsMessageWinner: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lRace Results §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n
+    statsMessageWinner: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lRace Results §x§0§0§A§D§F§F§l▬▬▬▬▬▬§r\n
     §bRanking: §3§l#%ranking%§b/%players%\n
     §bTotal time: §x§4§0§C§4§F§F%raceTime%\n
     §bAverage lap: §3%meanLapTime%\n
@@ -185,14 +185,14 @@ race:
     "
     sectorFormat: "§b- Sector §3#%sectorID% §8» §a%time%\n"
   onEnd:
-    top: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lFinal Standings §x§0§0§A§D§F§F§l▬▬▬▬▬▬\n"
+    top: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lFinal Standings §x§0§0§A§D§F§F§l▬▬▬▬▬▬§r\n"
     winnerFormat: "§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%§b\n"
-    playerFormat: "§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%§b (gap: §x§4§0§C§4§F§F%gapToNext%§b)\n"
-    highlights: "\n§b🏆 Best lap: §a%bestLapPlayer% §8(§a%bestLapTime%§8)\n
+    playerFormat: "§r§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%§b (gap: §x§4§0§C§4§F§F%gapToNext%§b)\n"
+    highlights: "\n§r§b🏆 Best lap: §a%bestLapPlayer% §8(§a%bestLapTime%§8)\n
     §b🐢 Slowest lap: §c%worstLapPlayer% §8(§c%worstLapTime%§8)\n
     §b⚡ Winner gap: §3%winnerGap%\n"
-    bestSectorTimesTop: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬ §x§5§5§D§D§F§F§lBest Sectors §x§0§0§A§D§F§F§l▬▬▬▬▬\n"
-    sectorFormat: "§bSector §3#%sectorID% §8» §a%player% §8(§e%time%§8)\n"
+    bestSectorTimesTop: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬ §x§5§5§D§D§F§F§lBest Sectors §x§0§0§A§D§F§F§l▬▬▬▬▬§r\n"
+    sectorFormat: "§r§bSector §3#%sectorID% §8» §a%player% §8(§e%time%§8)\n"
     bottom: "§x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
     error:
       noRacers: "§4Unable to send race standings:§c no players found."
@@ -295,6 +295,9 @@ car:
       message: "§bThe car has been saved!"
       title: "§2§lDone!"
       subtitle: "§aCar saved"
+
+    error:
+      ownerAlreadyHasCar: "§cThe owner of this car already has one! Delete it before redefining it."
 
 #Some basic error messages
 error:

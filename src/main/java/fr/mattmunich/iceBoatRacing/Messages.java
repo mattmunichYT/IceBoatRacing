@@ -217,6 +217,7 @@ public class Messages {
                 && !identifier.contains("playerFormat")
                 && !identifier.contains("highlights")
                 && !identifier.contains("bottom")
+                && !identifier.contains("sectorFormat")
         )
                 || identifier.contains("checkpoint.");
     }

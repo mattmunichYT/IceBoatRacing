@@ -170,7 +170,7 @@ public class Race {
         }
 
         long winnerTime = rankings.get(0).getRaceTime();
-        long lastTime = rankings.get(rankings.size()).getRaceTime();
+        long lastTime = rankings.get(rankings.size()-1).getRaceTime();
         long winnerGap = lastTime - winnerTime;
 
         Bukkit.broadcast(getMessage("race.onEnd.highlights", formatArguments(
@@ -212,6 +212,7 @@ public class Race {
     }
     public void setLapCount(int lapCount) {
         this.lapCount = Math.max(lapCount, 1);
+        raceManager.updateRace(this);
     }
 
     //Checkpoints

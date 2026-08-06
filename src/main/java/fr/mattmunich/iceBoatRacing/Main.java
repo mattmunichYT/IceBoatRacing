@@ -6,6 +6,7 @@ import fr.mattmunich.iceBoatRacing.cars.CarListener;
 import fr.mattmunich.iceBoatRacing.cars.CarManager;
 import fr.mattmunich.iceBoatRacing.checkpoint.autotrace.AutoTraceManager;
 import fr.mattmunich.iceBoatRacing.listeners.Connection;
+import fr.mattmunich.iceBoatRacing.listeners.WorldLoad;
 import fr.mattmunich.iceBoatRacing.race.*;
 import fr.mattmunich.iceBoatRacing.checkpoint.CheckpointCommand;
 import fr.mattmunich.iceBoatRacing.checkpoint.CheckpointManager;
@@ -76,6 +77,7 @@ public final class Main extends JavaPlugin {
         pm.registerEvents(new CheckpointCommand(checkpointManager, raceManager, autoTraceManager, new RaceCreator(this, raceManager, carManager, carCreator), this),this);
         pm.registerEvents(new RaceListener(this, raceManager),this);
         pm.registerEvents(new RaceCreator(this, raceManager,carManager,carCreator), this);
+//        pm.registerEvents(new WorldLoad(this), this);
     }
 
     public void updateConstants() {
