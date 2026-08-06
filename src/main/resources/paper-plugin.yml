@@ -6,7 +6,7 @@ author:  mattmunich
 website: https://modrinth.com/plugin/ibr
 description: A plugin for Minecraft ice boat racing
 load: POSTWORLD
-prefix: "[IceBoatRacing] "
+prefix: "IceBoatRacing"
 provides:
   - iceboatracing
   - ibr
