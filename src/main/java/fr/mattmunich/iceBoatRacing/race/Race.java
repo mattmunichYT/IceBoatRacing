@@ -69,6 +69,10 @@ public class Race {
         raceManager.saveRaceConfig(this, config);
     }
 
+    public void update() {
+        raceManager.updateRace(this);
+    }
+
     public void start() {
         raceManager.startRace(this);
     }
@@ -212,7 +216,6 @@ public class Race {
     }
     public void setLapCount(int lapCount) {
         this.lapCount = Math.max(lapCount, 1);
-        raceManager.updateRace(this);
     }
 
     //Checkpoints

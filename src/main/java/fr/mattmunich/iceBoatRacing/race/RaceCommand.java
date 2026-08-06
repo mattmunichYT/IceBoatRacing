@@ -10,10 +10,13 @@ import org.bukkit.entity.Player;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+
+import static fr.mattmunich.iceBoatRacing.Messages.getMessage;
 
 public class RaceCommand implements BasicCommand {
     private final Main main;
@@ -33,7 +36,7 @@ public class RaceCommand implements BasicCommand {
             Race race;
             if(raceManager.races.size() != 1) {
                 if(args.length!=2) {
-                    sender.sendMessage(Messages.getMessage("race.help"));
+                    sender.sendMessage(getMessage("race.help"));
                     return;
                 }
                 String raceName = args[1];
@@ -42,16 +45,16 @@ public class RaceCommand implements BasicCommand {
                 race = raceManager.races.getFirst();
             }
             if(race == null) {
-                sender.sendMessage(Messages.getMessage("race.notFound"));
+                sender.sendMessage(getMessage("race.notFound"));
                 return;
             }
-            sender.sendMessage(Messages.getMessage("race.start", Messages.formatArguments("race", race.getName())));
+            sender.sendMessage(getMessage("race.start", Messages.formatArguments("race", race.getName())));
             race.start();
         } else if(args.length >= 1 && args[0].equalsIgnoreCase("end")) {
             Race race;
             if(raceManager.activeRaces.size() != 1) {
                 if(args.length!=2) {
-                    sender.sendMessage(Messages.getMessage("race.help"));
+                    sender.sendMessage(getMessage("race.help"));
                     return;
                 }
                 String raceName = args[1];
@@ -60,7 +63,7 @@ public class RaceCommand implements BasicCommand {
                 race = raceManager.activeRaces.getFirst();
             }
             if(race == null) {
-                sender.sendMessage(Messages.getMessage("race.notFound"));
+                sender.sendMessage(getMessage("race.notFound"));
                 return;
             }
 
@@ -68,10 +71,10 @@ public class RaceCommand implements BasicCommand {
                 race.end(true);
             } catch (Exception e) {
                 switch (e.getMessage()) {
-                    case "NO_RANKING" -> sender.sendMessage(Messages.getMessage("race.onEnd.error.noRanking"));
-                    case "NO_RACERS" -> sender.sendMessage(Messages.getMessage("race.onEnd.error.noRacers"));
+                    case "NO_RANKING" -> sender.sendMessage(getMessage("race.onEnd.error.noRanking"));
+                    case "NO_RACERS" -> sender.sendMessage(getMessage("race.onEnd.error.noRacers"));
                     default -> {
-                        sender.sendMessage(Messages.getMessage("error.unknown"));
+                        sender.sendMessage(getMessage("error.unknown"));
                         main.err("Could not send ranking on /race end", e);
                     }
                 }
@@ -80,7 +83,7 @@ public class RaceCommand implements BasicCommand {
             Race race;
             if(raceManager.races.size() != 1) {
                 if(args.length!=2) {
-                    sender.sendMessage(Messages.getMessage("race.help"));
+                    sender.sendMessage(getMessage("race.help"));
                     return;
                 }
                 String raceName = args[1];
@@ -89,13 +92,13 @@ public class RaceCommand implements BasicCommand {
                 race = raceManager.races.getFirst();
             }
             if(race == null) {
-                sender.sendMessage(Messages.getMessage("race.notFound"));
+                sender.sendMessage(getMessage("race.notFound"));
                 return;
             }
             race.togglePrepare(sender);
         } else if (args.length == 1 && args[0].equalsIgnoreCase("create")) {
             if(!(sender instanceof Player p)) {
-                sender.sendMessage(Messages.getMessage("error.playerToExecuteCommand"));
+                sender.sendMessage(getMessage("error.playerToExecuteCommand"));
                 return;
             }
             raceCreator.createRace(p);
@@ -103,7 +106,7 @@ public class RaceCommand implements BasicCommand {
             Race race;
             if(raceManager.races.size() != 1) {
                 if(args.length!=2) {
-                    sender.sendMessage(Messages.getMessage("race.help"));
+                    sender.sendMessage(getMessage("race.help"));
                     return;
                 }
                 String raceName = args[1];
@@ -112,22 +115,22 @@ public class RaceCommand implements BasicCommand {
                 race = raceManager.races.getFirst();
             }
             if(race == null) {
-                sender.sendMessage(Messages.getMessage("race.notFound"));
+                sender.sendMessage(getMessage("race.notFound"));
                 return;
             }
 
             String raceName = race.getName();
             Bukkit.getScheduler().runTask(main, () -> {
                 boolean success = raceManager.deleteRace(race);
-                if (success) sender.sendMessage(Messages.getMessage("race.deleted", Messages.formatArguments("race", raceName)));
-                else sender.sendMessage(Messages.getMessage("error.unknown"));
+                if (success) sender.sendMessage(getMessage("race.deleted", Messages.formatArguments("race", raceName)));
+                else sender.sendMessage(getMessage("error.unknown"));
             });
         } else if (args.length >= 1 && args[0].equalsIgnoreCase("setLapCount")) {
             Race race;
             boolean definedRaceName = false;
-            if(raceManager.races.size() != 1) {
+            if(raceManager.races.size() != 1 || args.length == 3) {
                 if(args.length < 2 || args.length > 3) {
-                    sender.sendMessage(Messages.getMessage("race.help"));
+                    sender.sendMessage(getMessage("race.help"));
                     return;
                 }
                 String raceName = args[1];
@@ -137,13 +140,13 @@ public class RaceCommand implements BasicCommand {
                 race = raceManager.races.getFirst();
             }
             if(race == null) {
-                sender.sendMessage(Messages.getMessage("race.notFound"));
+                sender.sendMessage(getMessage("race.notFound"));
                 return;
             }
 
             if (definedRaceName) {
                 if(args.length == 2) {
-                    sender.sendMessage(Messages.getMessage("race.currentLapCount", Messages.formatArguments(
+                    sender.sendMessage(getMessage("race.currentLapCount", Messages.formatArguments(
                             "race", race.getName(),
                             "lapCount", race.getLapCount()
                     )));
@@ -154,18 +157,26 @@ public class RaceCommand implements BasicCommand {
                 try {
                     lapCount = Integer.parseInt(args[2]);
                 } catch (NumberFormatException e) {
-                    sender.sendMessage(Messages.getMessage("race.invalidLapCount"));
+                    sender.sendMessage(getMessage("race.invalidLapCount"));
                     return;
                 }
 
-                race.setLapCount(lapCount);
-                sender.sendMessage(Messages.getMessage("race.updatedLapCount", Messages.formatArguments(
-                        "race", race.getName(),
-                        "lapCount", race.getLapCount()
-                )));
+                Bukkit.getScheduler().runTask(main, () -> {
+                    race.setLapCount(lapCount);
+                    try {
+                        race.saveConfig();
+                    } catch (IOException e) {
+                        sender.sendMessage(getMessage("error.unkown"));
+                        return;
+                    }
+                    sender.sendMessage(getMessage("race.updatedLapCount", Messages.formatArguments(
+                            "race", race.getName(),
+                            "lapCount", race.getLapCount()
+                    )));
+                });
             } else {
                 if(args.length == 1) {
-                    sender.sendMessage(Messages.getMessage("race.currentLapCount", Messages.formatArguments(
+                    sender.sendMessage(getMessage("race.currentLapCount", Messages.formatArguments(
                             "race", race.getName(),
                             "lapCount", race.getLapCount()
                     )));
@@ -176,18 +187,26 @@ public class RaceCommand implements BasicCommand {
                 try {
                     lapCount = Integer.parseInt(args[1]);
                 } catch (NumberFormatException e) {
-                    sender.sendMessage(Messages.getMessage("race.invalidLapCount"));
+                    sender.sendMessage(getMessage("race.invalidLapCount"));
                     return;
                 }
 
-                race.setLapCount(lapCount);
-                sender.sendMessage(Messages.getMessage("race.updatedLapCount", Messages.formatArguments(
-                        "race", race.getName(),
-                        "lapCount", race.getLapCount()
-                )));
+                Bukkit.getScheduler().runTask(main, () -> {
+                    race.setLapCount(lapCount);
+                    try {
+                        race.saveConfig();
+                    } catch (IOException e) {
+                        sender.sendMessage(getMessage("error.unkown"));
+                        return;
+                    }
+                    sender.sendMessage(getMessage("race.updatedLapCount", Messages.formatArguments(
+                            "race", race.getName(),
+                            "lapCount", race.getLapCount()
+                    )));
+                });
             }
         } else {
-            sender.sendMessage(Messages.getMessage("race.help"));
+            sender.sendMessage(getMessage("race.help"));
         }
     }
 
