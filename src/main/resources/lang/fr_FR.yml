@@ -138,7 +138,7 @@ race:
   cancelPrepare: "§aMode préparation désactivé." #Displayed when '/race prepare' is used (and prepare toggled ON)
   deleted: "§aLa course %race% a été supprimée."#Displayed when '/race delete' is used and is successful
   currentLapCount: "§bLe nombre de tours de la course %race% est défini à §3%lapCount%§b. \n§8ℹ Utilisez /race setLapCount <nom> <nombre>"
-  updatedLapCount: "§bLe nombre de tours de la course §3%race%§b a été à §3%lapCount%§b."
+  updatedLapCount: "§bLe nombre de tours de la course §3%race%§b a été défini à §3%lapCount%§b."
   invalidLapCount: "§cLe nombre de tours entré est invalide."
 
   #Help message
