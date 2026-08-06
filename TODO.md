@@ -36,4 +36,4 @@
 * Remove prefix for best sector times in per-player ranking
 * Test all the new features
 * Make checkpoint alternate adding easier
-* Add pit boxes
+* Add pit boxes (for v2.1 or v3)
