@@ -469,6 +469,7 @@ public class RaceCreator implements Listener {
         Player p = e.getPlayer();
         if(!confirmRaceCancel.contains(p)) return;
         confirmRaceCancel.remove(p);
+        e.setCancelled(true);
 
         String message = s(e.message());
         if(message.equalsIgnoreCase(getStringMessage("race.create.confirm"))) {
@@ -489,18 +490,21 @@ public class RaceCreator implements Listener {
     private boolean cancelCleanUp(Player p) {
         Race race = tempRace.get(p);
 
-        if (race == null) {
-            p.sendMessage(getMessage("error.unknown"));
-            main.warn("Couldn't delete race for " + p.getName() + " because it didn't exist (race creating process - cancel clean up)");
-        } else {
-            p.performCommand("checkpoint autotrace cancel " + race.getName() + " --noRestart");
-            raceManager.deleteRace(race);
-        }
 
-        creatingRace.remove(p);
-        tempRace.remove(p);
-        pos1.remove(p);
-        pos2.remove(p);
+        Bukkit.getScheduler().runTask(main, () -> {
+            if (race == null) {
+                p.sendMessage(getMessage("error.unknown"));
+                main.warn("Couldn't delete race for " + p.getName() + " because it didn't exist (race creating process - cancel clean up)");
+            } else {
+                p.performCommand("checkpoint autotrace cancel " + race.getName() + " --noRestart");
+                raceManager.deleteRace(race);
+            }
+
+            creatingRace.remove(p);
+            tempRace.remove(p);
+            pos1.remove(p);
+            pos2.remove(p);
+        });
         return false;
     }
 }
