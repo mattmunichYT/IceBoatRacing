@@ -19,44 +19,43 @@ import static fr.mattmunich.iceBoatRacing.Messages.getMessage;
 public class Race {
 
     private RaceManager raceManager;
-
-    public void setRaceManager(RaceManager raceManager) {
-        this.raceManager = raceManager;
-    }
-    YamlConfiguration config = null;
     final String name;
     final World world;
+    YamlConfiguration config = null;
     int lapCount = 10;
     final List<Checkpoint> checkpoints = new ArrayList<>();
     final List<Car> cars = new ArrayList<>();
     public final Map<UUID, RaceData> racers = new HashMap<>();
-
-    /**
-     * List of the racers who hae finished the race.
-     * rankings.get(0) is first, rankings.get(1) is second and so on
-     */
-    public Map<Integer, RaceData> rankings = new HashMap<>();
-
-    public long currentBestLapTime = Long.MAX_VALUE;
-
     /**
      * List of the racers that are actively racing
      * (-> those who have finished the race are not included)
      */
     public List<RaceData> racing = new ArrayList<>();
-
     boolean startingRace = false;
     boolean preparingRace = false;
     boolean hasRaceStarted = false;
+    /**
+     * List of the racers who hae finished the race.
+     * rankings.get(0) is first, rankings.get(1) is second and so on
+     */
+    public Map<Integer, RaceData> rankings = new HashMap<>();
+    public long currentBestLapTime = Long.MAX_VALUE;
 
-    public Race(
-            String name,
-            World world
-            ) {
+
+    public Race(String name, World world) {
         this.name = name;
         this.world = world;
     }
 
+    /**
+     * Required when initializing the race, as it relies on it for a bunch of methods below.
+     * @param raceManager {@link RaceManager}
+     */
+    public void setRaceManager(RaceManager raceManager) {
+        this.raceManager = raceManager;
+    }
+
+    //All the config things
     public void setConfig(YamlConfiguration config) {
         this.config = config;
     }
@@ -69,10 +68,12 @@ public class Race {
         raceManager.saveRaceConfig(this, config);
     }
 
-    public void update() {
-        raceManager.updateRace(this);
+    public boolean update() {
+        return raceManager.updateRace(this);
     }
 
+
+    //All the start/end and so on things
     public void start() {
         raceManager.startRace(this);
     }
@@ -94,7 +95,74 @@ public class Race {
     public void togglePrepare(CommandSender sender) {
         raceManager.togglePrepareRace(sender, this);
     }
+    public boolean isNotStarting() {
+        return !startingRace;
+    }
+    public boolean isPreparing() {
+        return preparingRace;
+    }
+    public boolean hasStarted() {
+        return hasRaceStarted;
+    }
 
+    //Basic values' getters
+    public String getName() {
+        return name;
+    }
+    public World getWorld() {
+        return world;
+    }
+
+    //Lap count
+    public int getLapCount() {
+        return lapCount;
+    }
+    public void setLapCount(int lapCount) {
+        this.lapCount = Math.max(lapCount, 1);
+    }
+
+    //Checkpoints
+    public List<Checkpoint> getCheckpoints() {
+        return checkpoints;
+    }
+
+    public @Nullable Checkpoint getCheckpoint(int ID) {
+        final Checkpoint[] result = new Checkpoint[1];
+        result[0] = null;
+        getCheckpoints().forEach(checkpoint -> {if(checkpoint.getId()==ID) result[0]=checkpoint;});
+        return result[0];
+    }
+
+    public void addCheckpoint(Checkpoint checkpoint) {
+        checkpoints.add(checkpoint);
+    }
+
+    public void clearCheckpoints() {
+        checkpoints.clear();
+    }
+
+    public boolean removeCheckpoint(Checkpoint checkpoint) {
+        return checkpoints.remove(checkpoint);
+    }
+
+    //Cars
+    public List<Car> getCars() {
+        return cars;
+    }
+
+    public void addCar(Car car) {
+        cars.add(car);
+    }
+
+    public void clearCars() {
+        cars.clear();
+    }
+
+    public boolean removeCar(Car car) {
+        return cars.remove(car);
+    }
+
+    //In race ranking
     /**
      * @param time The time of the player who finished a lap (to check if it is the best lap time yet)
      * @return -1 if the inputted time is longer than the current best lap time. Otherwise, it returns the lastBestLapTime.
@@ -202,72 +270,5 @@ public class Race {
         }
 
         Bukkit.broadcast(getMessage("race.onEnd.bottom"));
-    }
-
-
-    public String getName() {
-        return name;
-    }
-    public World getWorld() {
-        return world;
-    }
-    public int getLapCount() {
-        return lapCount;
-    }
-    public void setLapCount(int lapCount) {
-        this.lapCount = Math.max(lapCount, 1);
-    }
-
-    //Checkpoints
-    public List<Checkpoint> getCheckpoints() {
-        return checkpoints;
-    }
-
-    public @Nullable Checkpoint getCheckpoint(int ID) {
-        final Checkpoint[] result = new Checkpoint[1];
-        result[0] = null;
-        getCheckpoints().forEach(checkpoint -> {if(checkpoint.getId()==ID) result[0]=checkpoint;});
-        return result[0];
-    }
-
-    public void addCheckpoint(Checkpoint checkpoint) {
-        checkpoints.add(checkpoint);
-    }
-
-    public void clearCheckpoints() {
-        checkpoints.clear();
-    }
-
-    public boolean removeCheckpoint(Checkpoint checkpoint) {
-        return checkpoints.remove(checkpoint);
-    }
-
-    //Cars
-    public List<Car> getCars() {
-        return cars;
-    }
-
-    public void addCar(Car car) {
-        cars.add(car);
-    }
-
-    public void clearCars() {
-        cars.clear();
-    }
-
-    public boolean removeCar(Car car) {
-        return cars.remove(car);
-    }
-
-    public boolean isNotStarting() {
-        return !startingRace;
-    }
-
-    public boolean isPreparing() {
-        return preparingRace;
-    }
-
-    public boolean hasStarted() {
-        return hasRaceStarted;
     }
 }

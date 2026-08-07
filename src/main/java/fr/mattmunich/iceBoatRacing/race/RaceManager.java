@@ -38,6 +38,10 @@ public class RaceManager {
         this.checkpointManager = checkpointManager;
     }
 
+    /**
+     * @param raceName The name of the race
+     * @return The {@link Race} with the matching name
+     */
     public Race getRace(String raceName) {
         for (Race race : races) {
             if (race.getName().equalsIgnoreCase(raceName)) {
@@ -47,6 +51,9 @@ public class RaceManager {
         return null;
     }
 
+    /**
+     * Saves all the races
+     */
     public void saveAllRaces() {
         if (races.isEmpty()) {
             main.warn("No races found, therefore none were saved.");
@@ -61,10 +68,16 @@ public class RaceManager {
         }
     }
 
+    /**
+     * @return A list of all the loaded races
+     */
     public List<Race> getRaces() {
         return races;
     }
 
+    /**
+     * Loads and initializes all the races from file
+     */
     public void loadAllRaces() {
         main.log("Loading all races...");
         int loadedRaces = 0;
@@ -110,6 +123,9 @@ public class RaceManager {
         main.log("Loaded " + loadedRaces + " race(s)!");
     }
 
+    /**
+     * Updates all the races from file. (Called on reload)
+     */
     public void updateAllRaces() {
         main.log("Updating all races...");
         int loadedRaces = 0;
@@ -117,7 +133,7 @@ public class RaceManager {
         if(!races.isEmpty()) {
             List<Race> raceListCopy = new ArrayList<>(races);
             for (Race race : raceListCopy) {
-                boolean success = updateRace(race);
+                boolean success = race.update();
                 if(success) main.log("Race " + race.getName() + " has been updated");
                 else main.warn("Could not update race " + race.getName() + ", see error above.");
                 loadedRaces++;
@@ -129,6 +145,14 @@ public class RaceManager {
         }
     }
 
+    /**
+     * Creates and loads the inputted {@code race}: <br/>
+     * - Creates the config file <br/>
+     * - Saves it to {@link RaceManager#races} <br/>
+     * - Initializes {@link RaceManager} and the config for the {@link Race}
+     * @param race The race to create
+     * @return The created race
+     */
     public Race createRace(Race race) {
         main.log("Creating race " + race.getName());
         File raceFile = new File(main.getDataFolder(), "races/" + race.getName().replace(" ","_") + ".yml");
@@ -209,6 +233,11 @@ public class RaceManager {
         }
     }
 
+    /**
+     * Deletes the inputted {@code race}
+     * @param race The race to delete
+     * @return Whether the operation succeeded
+     */
     public boolean deleteRace(Race race) {
         main.log("Deleting race " + race.getName());
         try { race.end(false); } catch (Exception ignored) {}
@@ -222,6 +251,11 @@ public class RaceManager {
         return deleted;
     }
 
+    /**
+     * Gets the {@code race}'s config from file
+     * @param race The race to get the config for
+     * @return The {@code race}'s config
+     */
     public YamlConfiguration getRaceConfig(Race race) {
         File racesFolder = new File(main.getDataFolder(), "races");
 
@@ -240,6 +274,12 @@ public class RaceManager {
         return config;
     }
 
+    /**
+     * Saves the {@code config} for the {@code race}
+     * @param race The race that the config belongs to
+     * @param config The {@link YamlConfiguration} to save
+     * @throws IOException When the saving fails, caused by {@code config.save(file)}
+     */
     public void saveRaceConfig(Race race, YamlConfiguration config) throws IOException {
         File racesFolder = new File(main.getDataFolder(), "races");
 
@@ -252,6 +292,10 @@ public class RaceManager {
         config.save(file);
     }
 
+    /**
+     * Starts the inputted {@code race}.
+     * @param race The race to start
+     */
     public void startRace(Race race) {
         YamlConfiguration config = getRaceConfig(race);
         if(config == null) {
@@ -333,6 +377,11 @@ public class RaceManager {
         },0L,20L);
     }
 
+    /**
+     * Prepares a racer for the inputted {@code race}
+     * @param race The race to prepare the racer for
+     * @param car The racer's car
+     */
     public void prepareRacer(Race race, Car car) {
         Map<UUID, RaceData> racers = race.racers;
         Player owner = Bukkit.getPlayer(car.getOwner());
@@ -353,6 +402,11 @@ public class RaceManager {
         race.racing.add(racers.get(owner.getUniqueId()));
     }
 
+    /**
+     * Toggles the preparation mode for the {@code race}
+     * @param sender Who the feedback will be sent to
+     * @param race The race to toggle the preparation for
+     */
     public void togglePrepareRace(CommandSender sender, Race race) {
         if(race.preparingRace) cancelPrepareRace(sender, race);
         else prepareRace(sender, race);
@@ -385,6 +439,10 @@ public class RaceManager {
         }
     }
 
+    /**
+     * Ends the inputted {@code race}
+     * @param race The race to end
+     */
     public void endRace(Race race) {
         if(!race.hasStarted()) return;
         activeRaces.remove(race);
@@ -416,7 +474,7 @@ public class RaceManager {
         race.hasRaceStarted=false;
     }
 
-    public void fillRegion(World world,
+    private void fillRegion(World world,
                            int x1, int y1, int z1,
                            int x2, int y2, int z2,
                            Material material) {

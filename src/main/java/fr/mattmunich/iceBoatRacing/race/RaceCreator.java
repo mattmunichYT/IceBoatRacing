@@ -468,14 +468,11 @@ public class RaceCreator implements Listener {
     public void confirmRaceCancel(AsyncChatEvent e) {
         Player p = e.getPlayer();
         if(!confirmRaceCancel.contains(p)) return;
-        confirmRaceCancel.remove(p);
         e.setCancelled(true);
 
         String message = s(e.message());
         if(message.equalsIgnoreCase(getStringMessage("race.create.confirm"))) {
-            if (cancelCleanUp(p)) return;
-
-            p.sendMessage(getMessage("race.create.cancelled"));
+            cancelCleanUp(p);
         } else {
             switch (creatingRace.get(p)) {
                 case 1 -> createRace(p);
@@ -485,12 +482,11 @@ public class RaceCreator implements Listener {
                 case 5 -> showStep5(p);
             }
         }
+        confirmRaceCancel.remove(p);
     }
 
-    private boolean cancelCleanUp(Player p) {
+    private void cancelCleanUp(Player p) {
         Race race = tempRace.get(p);
-
-
         Bukkit.getScheduler().runTask(main, () -> {
             if (race == null) {
                 p.sendMessage(getMessage("error.unknown"));
@@ -504,7 +500,7 @@ public class RaceCreator implements Listener {
             tempRace.remove(p);
             pos1.remove(p);
             pos2.remove(p);
+            p.sendMessage(getMessage("race.create.cancelled"));
         });
-        return false;
     }
 }
