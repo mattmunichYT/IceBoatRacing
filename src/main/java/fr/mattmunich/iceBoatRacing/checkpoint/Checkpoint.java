@@ -26,6 +26,7 @@ public class Checkpoint {
      * primary checkpoint plane (e.g. a pit/stands lane that runs past the start/finish line).
      */
     public static class AlternateRoute {
+        public final Checkpoint parent;
         public final Location center;
         public final Vector normal;
         public final Vector right;
@@ -33,7 +34,8 @@ public class Checkpoint {
         public final double halfWidth;
         public final double halfHeight;
 
-        public AlternateRoute(Location center, Vector normal, double halfWidth, double halfHeight) {
+        public AlternateRoute(Checkpoint parent, Location center, Vector normal, double halfWidth, double halfHeight) {
+            this.parent = parent;
             this.center = center;
             this.normal = normal.clone().normalize();
 
@@ -45,6 +47,10 @@ public class Checkpoint {
 
             this.halfWidth = halfWidth;
             this.halfHeight = halfHeight;
+        }
+
+        public Checkpoint getParent() {
+            return parent;
         }
 
         public double getHalfHeight() {
@@ -71,6 +77,10 @@ public class Checkpoint {
 
         public Vector getUp() {
             return up;
+        }
+
+        public void remove() {
+            parent.removeAlternate(this);
         }
     }
 
@@ -168,31 +178,15 @@ public class Checkpoint {
     }
 
     public void addAlternate(Location center, Vector normal, double halfWidth, double halfHeight) {
-        alternates.add(new AlternateRoute(center, normal, halfWidth, halfHeight));
+        alternates.add(new AlternateRoute(this, center, normal, halfWidth, halfHeight));
     }
 
     public List<AlternateRoute> getAlternates() {
         return alternates;
     }
 
-    /**
-     * Point-in-checkpoint test. Kept for callers that only have a single location
-     * (e.g. /checkpoint remove at your feet). For actual race crossing detection, use crosses() instead.
-     * Does not check alternate routes.
-     */
-    public boolean contains(Location loc) {
-        if (shape == Shape.PLANE) {
-            if (loc.getWorld() == null || !loc.getWorld().equals(center.getWorld())) return false;
-            Vector rel = loc.toVector().subtract(center.toVector());
-            double d = rel.dot(normal);
-            double w = rel.dot(right);
-            double h = rel.dot(up);
-            return Math.abs(d) <= 1.0 && Math.abs(w) <= halfWidth && Math.abs(h) <= halfHeight;
-        }
-        return loc.getWorld().equals(min.getWorld()) &&
-                loc.getX() >= min.getX() && loc.getX() <= max.getX() &&
-                loc.getY() >= min.getY() && loc.getY() <= max.getY() &&
-                loc.getZ() >= min.getZ() && loc.getZ() <= max.getZ();
+    public void removeAlternate(AlternateRoute alternateRoute) {
+        alternates.remove(alternateRoute);
     }
 
     /**
@@ -287,4 +281,26 @@ public class Checkpoint {
     public Vector getUp() { return up; }
     public double getHalfWidth() { return halfWidth; }
     public double getHalfHeight() { return halfHeight; }
+
+    @Override
+    public String toString() {
+        return """
+                Checkpoint %s:
+                - Type: %s (sector %s)
+                - Shape: %s
+                - Min: %s ; Max : %s
+                - Center: %s ; Normal: %s
+                - Right: %s ; Up: %s
+                - HalfWidth: %s ; HalfHeight: %s
+                """
+                .formatted(
+                        getId(),
+                        getType(), getSectorID(),
+                        getShape(),
+                        getMin(), getMax(),
+                        getCenter(), getNormal(),
+                        getRight(), getUp(),
+                        getHalfWidth(), getHalfHeight()
+                );
+    }
 }

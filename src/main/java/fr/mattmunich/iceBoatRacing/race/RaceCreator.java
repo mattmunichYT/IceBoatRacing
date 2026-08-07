@@ -7,13 +7,9 @@ import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.ArrayList;
@@ -101,6 +97,7 @@ public class RaceCreator implements Listener {
     public void createRace(Player p) {
         //Stage 1
         creatingRace.put(p, 1);
+        if(!p.hasPermission("iceboatracing.race.create")) return;
 
         Title title = Title.title(
                 getMessage("race.create.1.title"),
@@ -234,6 +231,7 @@ public class RaceCreator implements Listener {
                 creatingRace.replace(p, 5);
                 showStep5(p);
             } else if (message.equalsIgnoreCase(getStringMessage("race.create.cancel"))) {
+                confirmRaceCancel.add(p);
                 cancel(p);
             } else {
                 Title title = Title.title(
@@ -259,10 +257,11 @@ public class RaceCreator implements Listener {
         );
         p.showTitle(title);
         p.sendMessage(getMessage(basePath + "message"));
+        Bukkit.getScheduler().runTask(main, () -> p.performCommand("checkpoint autotrace start " + tempRace.get(p).getName() + " --create"));
     }
 
     @EventHandler
-    public void startAutoTrace(AsyncChatEvent e) {
+    public void step4Chat(AsyncChatEvent e) {
         Player p = e.getPlayer();
         Integer step = creatingRace.get(p);
         if (step == null || step != 4) return;
@@ -270,11 +269,11 @@ public class RaceCreator implements Listener {
 
         e.setCancelled(true);
         String message = s(e.message());
-        if(message.equalsIgnoreCase(getStringMessage("race.create.cancel"))) {
+        if (message.equalsIgnoreCase(getStringMessage("race.create.cancel"))) {
             cancel(p);
             return;
         }
-        Bukkit.getScheduler().runTask(main, () -> p.performCommand("checkpoint autotrace start " + tempRace.get(p).getName() + " --create"));
+        step4(p);
     }
 
     public void goToStep5RaceCreation(Player p) {
@@ -419,36 +418,7 @@ public class RaceCreator implements Listener {
     //            UTILITIES
     // --------------------------------
 
-    /**
-     * Saves the pos1 and pos2 when using a wooden shovel AND in creator mode
-     */
-    @EventHandler
-    public void onSelect(PlayerInteractEvent event) {
-        if (event.getItem() == null) return;
-        if (event.getItem().getType() != Material.WOODEN_SHOVEL) return;
 
-        Player p = event.getPlayer();
-        //Only run when player is actually creating a race
-        if(!creatingRace.containsKey(p) || !creatingRace.get(p).equals(3)) return;
-
-        if(!p.hasPermission("iceboatracing.race.create")) return;
-
-        Block clicked = event.getClickedBlock();
-
-        if(clicked == null) return;
-
-        if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
-            Location previous = pos1.put(p, clicked.getLocation());
-            if(!clicked.getLocation().equals(previous)) p.sendMessage(getMessage("checkpoint.pos.1",formatArguments("x",""+clicked.getX(),"y",""+clicked.getY(),"z",""+clicked.getZ())));
-            event.setCancelled(true);
-        }
-
-        if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            Location previous = pos2.put(p, clicked.getLocation());
-            if(!clicked.getLocation().equals(previous)) p.sendMessage(getMessage("checkpoint.pos.2",formatArguments("x",""+clicked.getX(),"y",""+clicked.getY(),"z",""+clicked.getZ())));
-            event.setCancelled(true);
-        }
-    }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
@@ -474,6 +444,7 @@ public class RaceCreator implements Listener {
         if(message.equalsIgnoreCase(getStringMessage("race.create.confirm"))) {
             cancelCleanUp(p);
         } else {
+            confirmRaceCancel.remove(p);
             switch (creatingRace.get(p)) {
                 case 1 -> createRace(p);
                 case 2 -> showStep2(p);
@@ -482,11 +453,14 @@ public class RaceCreator implements Listener {
                 case 5 -> showStep5(p);
             }
         }
-        confirmRaceCancel.remove(p);
     }
 
     private void cancelCleanUp(Player p) {
         Race race = tempRace.get(p);
+        creatingRace.remove(p);
+        tempRace.remove(p);
+        pos1.remove(p);
+        pos2.remove(p);
         Bukkit.getScheduler().runTask(main, () -> {
             if (race == null) {
                 p.sendMessage(getMessage("error.unknown"));
@@ -496,11 +470,8 @@ public class RaceCreator implements Listener {
                 raceManager.deleteRace(race);
             }
 
-            creatingRace.remove(p);
-            tempRace.remove(p);
-            pos1.remove(p);
-            pos2.remove(p);
             p.sendMessage(getMessage("race.create.cancelled"));
+            confirmRaceCancel.remove(p);
         });
     }
 }

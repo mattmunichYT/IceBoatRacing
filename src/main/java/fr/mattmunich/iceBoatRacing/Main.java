@@ -77,7 +77,7 @@ public final class Main extends JavaPlugin {
         pm.registerEvents(new CheckpointCommand(checkpointManager, raceManager, autoTraceManager, new RaceCreator(this, raceManager, carManager, carCreator), this),this);
         pm.registerEvents(new RaceListener(this, raceManager),this);
         pm.registerEvents(new RaceCreator(this, raceManager,carManager,carCreator), this);
-        pm.registerEvents(new WorldLoad(this), this);
+        pm.registerEvents(new WorldLoad(this, raceManager), this);
     }
 
     public void updateConstants() {

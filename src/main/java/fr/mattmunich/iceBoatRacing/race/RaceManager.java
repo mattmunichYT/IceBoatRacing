@@ -31,6 +31,11 @@ public class RaceManager {
     private final CheckpointManager checkpointManager;
     public final List<Race> races = new ArrayList<>();
     public final List<Race> activeRaces = new ArrayList<>();
+    /**
+     * A map that contains the races that failed to load on startup. <br/>
+     * Format: {@code Map<worldName, raceName>}
+     */
+    public final Map<String, String> unloadedRaces = new HashMap<>();
 
     public RaceManager(Main main, CarManager carManager, CheckpointManager checkpointManager) {
         this.main = main;
@@ -105,9 +110,11 @@ public class RaceManager {
             }
 
             main.log("Loading race " + name);
-            World world = Bukkit.getWorld(Objects.requireNonNull(config.getString("world")));
+            String worldName = Objects.requireNonNull(config.getString("world"));
+            World world = Bukkit.getWorld(worldName);
             if(world == null) {
                 main.severe("Couldn't load race " + name + " because it's world wasn't found.");
+                unloadedRaces.put(worldName, name);
                 continue;
             }
             Race race = new Race(name, world);
@@ -121,6 +128,51 @@ public class RaceManager {
             loadedRaces++;
         }
         main.log("Loaded " + loadedRaces + " race(s)!");
+    }
+
+    /**
+     * Loads and initializes all the races from file
+     */
+    public boolean loadRace(String raceName) {
+        main.log("Loading race " + raceName + "...");
+
+        File racesFolder = new File(main.getDataFolder(), "races");
+        if (!racesFolder.exists()) {
+            main.severe("The race folder wasn't found, therefore " + raceName + " could not be loaded.");
+            return false;
+        }
+
+        File file = new File(racesFolder, raceName + ".yml");
+        if (!file.exists()) {
+            main.severe("The race " + raceName + "'s file wasn't found and therefore could not be loaded.");
+            return false;
+        }
+
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+        String name = config.getString("name");
+
+        if(name == null) {
+            main.severe("Race " + file.getName() + " wasn't loaded because it didn't contain any name.");
+            return false;
+        }
+
+        String worldName = Objects.requireNonNull(config.getString("world"));
+        World world = Bukkit.getWorld(worldName);
+        if(world == null) {
+            main.severe("Couldn't load race " + name + " because it's world wasn't found.");
+            unloadedRaces.put(worldName, name);
+            return false;
+        }
+        Race race = new Race(name, world);
+        race.setRaceManager(this);
+        race.setConfig(config);
+        checkpointManager.loadRaceCheckpoints(race);
+        carManager.loadCars(race);
+
+        races.add(race);
+
+        main.log("Loaded race " + raceName + " successfully!");
+        return true;
     }
 
     /**

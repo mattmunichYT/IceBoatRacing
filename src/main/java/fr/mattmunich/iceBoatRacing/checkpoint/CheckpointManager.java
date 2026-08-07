@@ -69,20 +69,31 @@ public class CheckpointManager {
      * @return Returns in the form of a map of the race and the checkpoint found
      *
      */
-    public Map<Race, Checkpoint> getAt(Location loc) {
+    public NearestCheckpointOutput getNearest(Location loc) {
+        double bestDistance = Double.MAX_VALUE;
+        Race bestRace = null;
+        Checkpoint nearest = null;
+        Checkpoint.AlternateRoute nearestAlt = null;
         for(Map.Entry<Race, List<Checkpoint>> entry : getAll().entrySet()) {
             for (Checkpoint checkpoint : entry.getValue()) {
-                if (checkpoint.contains(loc)) {
-                    Map<Race,Checkpoint> result = new  HashMap<>();
-                    result.put(entry.getKey(), checkpoint);
-                    return result;
+                if (loc.distance(checkpoint.getCenter()) < bestDistance) {
+                    bestRace = entry.getKey();
+                    nearest = checkpoint;
+                    nearestAlt = null;
+                }
+                for (Checkpoint.AlternateRoute alt : checkpoint.getAlternates()) {
+                    if (loc.distance(alt.getCenter()) < bestDistance) {
+                        bestRace = entry.getKey();
+                        nearestAlt = alt;
+                        nearest = null;
+                    }
                 }
             }
         }
-
-
-        return null;
+        return new NearestCheckpointOutput(bestRace, nearest, nearestAlt, bestDistance);
     }
+
+    public record NearestCheckpointOutput(Race bestRace, Checkpoint checkpoint, Checkpoint.AlternateRoute alt, Double distance) {}
 
     public boolean remove(Race race, Checkpoint checkpoint) {
         if (checkpoint == null) return false;

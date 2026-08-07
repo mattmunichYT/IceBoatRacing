@@ -234,20 +234,19 @@ public class AutoTraceManager {
         if (nearest.index() < 0) return null;
 
         Checkpoint original = session.preview.get(nearest.index());
-        Vector right = original.getRight();
-        Vector normal = original.getNormal();
+//        Vector right = original.getRight();
 
-        double proj1 = l1.toVector().subtract(original.getCenter().toVector()).dot(right);
-        double proj2 = l2.toVector().subtract(original.getCenter().toVector()).dot(right);
+        Vector normal = CheckpointGeometry.tangentAt(session.centerline, nearest.index(), session.loop);
+        if(normal == null) normal = original.getNormal();
 
-        double newHalfWidth = Math.max(Math.abs(proj1 - proj2) / 2.0, 0.5);
-        double centerOffset = (proj1 + proj2) / 2.0;
-        Location newCenter = original.getCenter().clone().add(right.clone().multiply(centerOffset));
+        Location center = CheckpointGeometry.midpoint(l1, l2);
 
-        Checkpoint replacement = new Checkpoint(original.getId(), newCenter, normal, newHalfWidth, original.getHalfHeight(), original.getType());
+        double newHalfWidth = l1.distance(l2)/2;
+
+        Checkpoint replacement = new Checkpoint(original.getId(), center, normal, newHalfWidth, original.getHalfHeight(), original.getType());
         if (original.getType() == Checkpoint.Type.SECTOR) replacement.setSectorID(original.getSectorID());
-
-        session.preview.set(nearest.index(), replacement);
+        session.preview.remove(original);
+        session.preview.add(nearest.index(), replacement);
         return new EditInfo(nearest.index() + 1, replacement.getType(), nearest.distance());
     }
 

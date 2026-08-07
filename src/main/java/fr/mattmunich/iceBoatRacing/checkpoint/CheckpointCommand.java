@@ -168,17 +168,20 @@ public class CheckpointCommand implements Listener, BasicCommand {
 
         } else if (args.length == 1 && args[0].equalsIgnoreCase("remove")) {
 
-            Map<Race,Checkpoint> check = checkpointManager.getAt(p.getLocation());
-            Race race = check.keySet().iterator().next();
-            Checkpoint checkpoint = check.values().iterator().next();
+            CheckpointManager.NearestCheckpointOutput output = checkpointManager.getNearest(p.getLocation());
+            Race race = output.bestRace();
+            Checkpoint checkpoint = output.checkpoint();
+            Checkpoint.AlternateRoute alt = output.alt();
+            double dist = output.distance();
 
-            if (checkpoint == null) {
-                p.sendMessage(getMessage("checkpoint.notInCheckpoint"));
+            if ((checkpoint == null && alt == null) || dist > 20) {
+                p.sendMessage(getMessage("checkpoint.noCheckpointFound"));
                 return;
             }
 
-            checkpointManager.remove(race, checkpoint);
-            p.sendMessage(Messages.getMessage("checkpoint.removed",formatArguments("ID","" + checkpoint.getId())));
+            if (checkpoint != null) checkpointManager.remove(race, checkpoint);
+            else alt.remove();
+            p.sendMessage(Messages.getMessage("checkpoint.removed",formatArguments("ID",checkpoint == null ? alt.getParent().getId() + " - ALT" : "" + checkpoint.getId())));
         } else if (args.length == 3 && args[0].equalsIgnoreCase("remove")) {
 
             int checkpointNum;
@@ -693,14 +696,14 @@ public class CheckpointCommand implements Listener, BasicCommand {
         Vector span = l2.toVector().subtract(l1.toVector());
         Vector rawNormal = new Vector(-span.getZ(), 0, span.getX());
         if (rawNormal.lengthSquared() < 1e-6) rawNormal = new Vector(1, 0, 0);
-        Vector normal = CheckpointGeometry.snapToCardinal(rawNormal);
+//        Vector normal = CheckpointGeometry.snapToCardinal(rawNormal);
 
         Location center = CheckpointGeometry.midpoint(l1, l2);
         double halfWidth = Math.max(l1.distance(l2) / 2.0 + CheckpointGeometry.WIDTH_PADDING, 0.5);
         double heightDiff = Math.abs(l1.getY() - l2.getY());
         double halfHeight = heightDiff > 0.5 ? heightDiff / 2.0 : 2.5;
 
-        boolean success = checkpointManager.saveAlternateRoute(race, target, center, normal, halfWidth, halfHeight);
+        boolean success = checkpointManager.saveAlternateRoute(race, target, center, rawNormal, halfWidth, halfHeight);
         if (!success) {
             player.sendMessage(getMessage("error.unknown"));
             return;

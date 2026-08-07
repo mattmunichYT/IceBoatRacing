@@ -48,7 +48,7 @@ checkpoint:
   nearestCheckpointID: "§bLe checkpoint de la course §3%race%§b le plus proche a pour ID §3%id%"
 
   #Errors
-  notInCheckpoint: "§cTu n'es pas dans un checkpoint\n§8ℹ Tu peux aussi faire /checkpoint list"
+  noCheckpointFound: "§cAucun checkpoint trouvé à proximité!\n§8ℹ Tu peux aussi faire /checkpoint list"
   invalid: "§cNuméro de checkpoint invalide"
   noCheckpoint: "§cAucun checkpoint défini"
 
@@ -232,7 +232,7 @@ race:
     4:
       title: "§3Définition du circuit"
       subtitle: "§bPositionnez-vous au départ"
-      message: "§bPositionnez-vous sur la ligne de départ, puis entrez §3quelque chose§b dans le chat."
+      message: "§bPositionnez-vous sur la ligne de départ et ajustez les paramètres ci-dessous si besoin, puis entrez cliquez sur §3Démarrer l'enregistrement§b."
       done:
         title: "§2Terminé"
         subtitle: "§aCircuit sauvegardé!"

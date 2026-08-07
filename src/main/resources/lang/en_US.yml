@@ -48,7 +48,7 @@ checkpoint:
   nearestCheckpointID: "§bThe nearest checkpoint for race §3%race%§b has ID §3%id%"
 
   #Errors
-  notInCheckpoint: "§cYou are not in a checkpoint\n§8ℹ You can also run /checkpoint list"
+  noCheckpointFound: "§cCould not find a checkpoint near enough to you\n§8ℹ You can also run /checkpoint list"
   invalid: "§cInvalid checkpoint number"
   noCheckpoint: "§cNo checkpoint set"
 
@@ -232,7 +232,7 @@ race:
     4:
       title: "§3Track Definition"
       subtitle: "§bPosition yourself at the start"
-      message: "§bPosition yourself on the start line, then type §3anything§b in chat."
+      message: "§bPosition yourself on the start line and adjust the parameters below if needed, then click §3Start Recording§b."
       done:
         title: "§2Done"
         subtitle: "§aTrack saved!"
