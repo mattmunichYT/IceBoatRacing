@@ -7,7 +7,7 @@
 [![Paper](https://img.shields.io/badge/Paper-1.21.9%2B-FF4444?logo=paper)](https://papermc.io)
 [![Java](https://img.shields.io/badge/Java-21-007396?logo=openjdk)](https://openjdk.org)
 [![License](https://img.shields.io/github/license/mattmunichYT/IceBoatRacing?color=blue)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-v2.0--BETA--2-orange)](https://github.com/mattmunich/IceBoatRacing/releases)
+[![Version](https://img.shields.io/badge/Version-v2.0--BETA--2-orange)](https://github.com/mattmunichYT/IceBoatRacing/releases)
 
 ---
 
@@ -35,7 +35,7 @@
 
 ## 🎯 Overview
 
-**IceBoatRacing** transforms your Minecraft server into a competitive ice boat racing platform. Built for **Paper 1.21.5+** with **Java 25**, the plugin provides everything needed to create, manage, and run professional ice boat races:
+**IceBoatRacing** transforms your Minecraft server into a competitive ice boat racing platform. Built for **Paper 1.21.9+** with **Java 21**, the plugin provides everything needed to create, manage, and run professional ice boat races:
 
 - **Interactive race creation wizard** — step-by-step guided setup
 - **Precision checkpoint system** — two geometry modes (BOX legacy / PLANE modern) with alternate routes
@@ -179,9 +179,9 @@ Messages use **MiniMessage** (gradients, hex, formatting) + `%placeholder%` subs
 
 | Requirement   | Version                   |
 |---------------|---------------------------|
-| **Minecraft** | 1.21.5+                   |
-| **Paper**     | 1.21.5-R0.1+ (API 26.1.2) |
-| **Java**      | 25 (toolchain enforced)   |
+| **Minecraft** | 1.21.9+                   |
+| **Paper**     | 1.21.9-R0.1+ (API)        |
+| **Java**      | 21 (toolchain enforced)   |
 
 > The plugin uses Paper's Brigadier command API, Adventure text components, and modern NMS mappings — **Paper is required**; Spigot/CraftBukkit/Purpur/Folia untested.
 
@@ -550,7 +550,7 @@ Yes — `RaceManager.activeRaces` supports multiple concurrent races. Each has i
 
 <details>
 <summary><strong>Does the plugin support chest boats / bamboo rafts?</strong></summary>
-Yes — all vanilla boat types including chest variants (`*_CHEST_BOAT`, `BAMBOO_CHEST_RAFT`) and `PALE_OAK_BOAT` (1.21.5). Just hold the item during `/car create` step 3.
+Yes — all vanilla boat types including chest variants (`*_CHEST_BOAT`, `BAMBOO_CHEST_RAFT`) and `PALE_OAK_BOAT` (1.21.9+). Just hold the item during `/car create` step 3.
 </details>
 
 ---
@@ -580,11 +580,11 @@ All standard Bukkit events work. The plugin fires no custom events currently.
 
 ## 🏗 Building from Source
 
-**Requirements:** JDK 25, Gradle (wrapper included)
+**Requirements:** JDK 21, Gradle (wrapper included)
 
 ```bash
 # Clone
-git clone https://github.com/mattmunich/IceBoatRacing.git
+git clone https://github.com/mattmunichYT/IceBoatRacing.git
 cd IceBoatRacing
 
 # Build (outputs to build/libs/)
@@ -683,7 +683,7 @@ in the Software without restriction...
 
 ## 🙏 Credits
 
-- **Author:** [mattmunich](https://github.com/mattmunich)
+- **Author:** [mattmunichYT](https://github.com/mattmunichYT)
 - **Built for:** **Grands Prix** by **Mini Jeux Entre Potes**
 - **Dependencies:** [Paper API](https://papermc.io) (compile-only), [Adventure](https://github.com/KyoriPowered/Adventure) (shaded via Paper), [MiniMessage](https://github.com/KyoriPowered/Adventure/tree/master/text/minimessage)
 - **Inspiration:** Mario Kart-style lap/timing system (original implementation)
