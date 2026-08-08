@@ -275,7 +275,10 @@ public class Checkpoint {
     public Location getMax() { return max; }
     public Type getType() { return type; }
     public Shape getShape() { return shape; }
-    public Location getCenter() { return center; }
+    public Location getCenter() {
+        if (shape == Shape.PLANE) return center;
+        return min.clone().add(max).multiply(0.5);
+    }
     public Vector getNormal() { return normal; }
     public Vector getRight() { return right; }
     public Vector getUp() { return up; }

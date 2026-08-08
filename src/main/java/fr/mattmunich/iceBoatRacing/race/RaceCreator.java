@@ -249,6 +249,7 @@ public class RaceCreator implements Listener {
     // --------------------------------
 
     public void step4(Player p) {
+        if(confirmRaceCancel.contains(p)) return;
         //Tells player to go to the start of the race
         String basePath = "race.create.4.";
         Title title = Title.title(

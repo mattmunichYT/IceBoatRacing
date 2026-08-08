@@ -78,12 +78,14 @@ public class CheckpointManager {
             for (Checkpoint checkpoint : entry.getValue()) {
                 if (loc.distance(checkpoint.getCenter()) < bestDistance) {
                     bestRace = entry.getKey();
+                    bestDistance = loc.distance(checkpoint.getCenter());
                     nearest = checkpoint;
                     nearestAlt = null;
                 }
                 for (Checkpoint.AlternateRoute alt : checkpoint.getAlternates()) {
                     if (loc.distance(alt.getCenter()) < bestDistance) {
                         bestRace = entry.getKey();
+                        bestDistance = loc.distance(alt.getCenter());
                         nearestAlt = alt;
                         nearest = null;
                     }

@@ -32,7 +32,7 @@ public class CheckpointGeometry {
      * alternate routes, where a missed crossing means a stranded lap rather than just a
      * slightly-off timing split.
      */
-    static final double WIDTH_PADDING = 0.75;
+    public static final double WIDTH_PADDING = 0.75;
 
     // ---------------------------------------------------------------
     // Simplification / resampling
@@ -176,6 +176,78 @@ public class CheckpointGeometry {
         Vector t = next.toVector().subtract(prev.toVector());
         if (t.lengthSquared() < 1e-9) return null;
         return t.normalize();
+    }
+
+    /**
+     * Tangent estimated from points further out (±windowSize) rather than immediate neighbors,
+     * so a single resized/deleted point doesn't dominate its own tangent direction — the points
+     * bordering an edit are the least reliable ones to estimate that edit's direction from.
+     */
+    public static Vector smoothTangentAt(List<Location> centerline, int i, boolean loop, int windowSize) {
+        int n = centerline.size();
+        if (n < 2) return null;
+
+        int backIdx, fwdIdx;
+        if (loop) {
+            backIdx = ((i - windowSize) % n + n) % n;
+            fwdIdx  = (i + windowSize) % n;
+        } else {
+            backIdx = Math.max(0, i - windowSize);
+            fwdIdx  = Math.min(n - 1, i + windowSize);
+        }
+
+        if (backIdx == fwdIdx) return tangentAt(centerline, i, loop); // fallback for tiny centerlines
+
+        Vector t = centerline.get(fwdIdx).toVector().subtract(centerline.get(backIdx).toVector());
+        if (t.lengthSquared() < 1e-9) return null;
+        return t.normalize();
+    }
+
+    /**
+     * Catmull-Rom interpolation through a polyline, purely for smooth rendering — does not
+     * change the actual centerline data used for tangent/normal calculations.
+     * @param points the raw centerline points
+     * @param loop whether the track wraps around
+     * @param stepsPerSegment how many interpolated points to insert between each pair of real points
+     */
+    public static List<Location> catmullRomSpline(List<Location> points, boolean loop, int stepsPerSegment) {
+        List<Location> result = new ArrayList<>();
+        int n = points.size();
+        if (n < 3) return new ArrayList<>(points);
+
+        int segments = loop ? n : n - 1;
+
+        for (int i = 0; i < segments; i++) {
+            Location p0 = points.get(loop ? ((i - 1 + n) % n) : Math.max(i - 1, 0));
+            Location p1 = points.get(i);
+            Location p2 = points.get(loop ? ((i + 1) % n) : Math.min(i + 1, n - 1));
+            Location p3 = points.get(loop ? ((i + 2) % n) : Math.min(i + 2, n - 1));
+
+            for (int s = 0; s < stepsPerSegment; s++) {
+                double t = (double) s / stepsPerSegment;
+                result.add(catmullRomPoint(p0, p1, p2, p3, t));
+            }
+        }
+
+        if (!loop) result.add(points.getLast());
+        return result;
+    }
+
+    private static Location catmullRomPoint(Location p0, Location p1, Location p2, Location p3, double t) {
+        double t2 = t * t;
+        double t3 = t2 * t;
+
+        double x = 0.5 * ((2 * p1.getX()) + (-p0.getX() + p2.getX()) * t
+                + (2 * p0.getX() - 5 * p1.getX() + 4 * p2.getX() - p3.getX()) * t2
+                + (-p0.getX() + 3 * p1.getX() - 3 * p2.getX() + p3.getX()) * t3);
+        double y = 0.5 * ((2 * p1.getY()) + (-p0.getY() + p2.getY()) * t
+                + (2 * p0.getY() - 5 * p1.getY() + 4 * p2.getY() - p3.getY()) * t2
+                + (-p0.getY() + 3 * p1.getY() - 3 * p2.getY() + p3.getY()) * t3);
+        double z = 0.5 * ((2 * p1.getZ()) + (-p0.getZ() + p2.getZ()) * t
+                + (2 * p0.getZ() - 5 * p1.getZ() + 4 * p2.getZ() - p3.getZ()) * t2
+                + (-p0.getZ() + 3 * p1.getZ() - 3 * p2.getZ() + p3.getZ()) * t3);
+
+        return new Location(p1.getWorld(), x, y, z);
     }
 
     /**

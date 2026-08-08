@@ -8,6 +8,7 @@ import fr.mattmunich.iceBoatRacing.race.Race;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
@@ -17,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static fr.mattmunich.iceBoatRacing.Main.c;
 import static fr.mattmunich.iceBoatRacing.Messages.formatArguments;
 import static fr.mattmunich.iceBoatRacing.Messages.getMessage;
 
@@ -218,6 +220,51 @@ public class AutoTraceManager {
     private record NearestResult(int index, double distance) {}
 
     /**
+     * Manually inserts a NORMAL checkpoint from two clicked points, using the exact clicked span
+     * for orientation/width (not track-surface detection) — same derivation as saveAlternateRoute's
+     * normal, but as a real sequential checkpoint rather than a bypass gate. Also inserts a matching
+     * point into the centerline so later tangent calculations near this marker take it into account.
+     * Requires a generated preview to exist (run start then stop first).
+     * @return true if the marker was added
+     */
+    public boolean addManualMarker(Player p, Location l1, Location l2) {
+        AutoTraceSession session = sessions.get(p);
+        if (session == null || session.centerline.isEmpty()) return false;
+
+        Vector span = l2.toVector().subtract(l1.toVector());
+        Vector rawNormal = new Vector(-span.getZ(), 0, span.getX());
+        if (rawNormal.lengthSquared() < 1e-6) rawNormal = new Vector(1, 0, 0);
+
+        Location center = CheckpointGeometry.midpoint(l1, l2);
+        double halfWidth = Math.max(l1.distance(l2) / 2.0 + CheckpointGeometry.WIDTH_PADDING, 0.5);
+        double heightDiff = Math.abs(l1.getY() - l2.getY());
+        double halfHeight = heightDiff > 0.5 ? heightDiff / 2.0 : session.halfHeight;
+
+        int nearestIndex = CheckpointGeometry.nearestIndex(session.centerline, center);
+
+        // Decide whether the new point belongs just before or just after nearestIndex along the
+        // track direction, so the centerline stays in travel order rather than just distance order.
+        int insertIndex = nearestIndex + 1;
+        Vector tangent = CheckpointGeometry.tangentAt(session.centerline, nearestIndex, session.loop);
+        if (tangent != null) {
+            Vector toNew = center.toVector().subtract(session.centerline.get(nearestIndex).toVector());
+            if (toNew.dot(tangent) < 0) insertIndex = nearestIndex; // new point is behind, not ahead
+        }
+        insertIndex = Math.min(insertIndex, session.centerline.size());
+
+        session.centerline.add(insertIndex, center);
+        session.centerlineArcLengths = CheckpointGeometry.cumulativeArcLengths(session.centerline);
+
+        // ID is a placeholder — saveTracedCheckpoints() reassigns IDs sequentially by list order at commit time.
+        Checkpoint marker = new Checkpoint(-1, center, rawNormal, halfWidth, halfHeight, Checkpoint.Type.NORMAL);
+
+        double arcLength = session.centerlineArcLengths[insertIndex];
+        insertByArcLength(session, marker, arcLength);
+
+        return true;
+    }
+
+    /**
      * Replaces the geometry of the nearest preview checkpoint to the given click points, using
      * their exact projected span for the new width (and center, if the click wasn't centered on
      * the original checkpoint). Keeps the checkpoint's original orientation, type, and ID slot —
@@ -229,17 +276,16 @@ public class AutoTraceManager {
         AutoTraceSession session = sessions.get(p);
         if (session == null || session.preview.isEmpty()) return null;
 
-        Location clickMid = CheckpointGeometry.midpoint(l1, l2);
-        NearestResult nearest = findNearestPreviewCheckpoint(session, clickMid);
+        Location center = CheckpointGeometry.midpoint(l1, l2);
+        NearestResult nearest = findNearestPreviewCheckpoint(session, center);
         if (nearest.index() < 0) return null;
 
         Checkpoint original = session.preview.get(nearest.index());
-//        Vector right = original.getRight();
-
-        Vector normal = CheckpointGeometry.tangentAt(session.centerline, nearest.index(), session.loop);
+//        Vector right = original.getRight();́
+        //Old checkpoint doesn't influence new checkpoint
+        session.centerline.remove(nearest.index());
+        Vector normal = CheckpointGeometry.smoothTangentAt(session.centerline, nearest.index(), session.loop, 2);
         if(normal == null) normal = original.getNormal();
-
-        Location center = CheckpointGeometry.midpoint(l1, l2);
 
         double newHalfWidth = l1.distance(l2)/2;
 
@@ -247,6 +293,8 @@ public class AutoTraceManager {
         if (original.getType() == Checkpoint.Type.SECTOR) replacement.setSectorID(original.getSectorID());
         session.preview.remove(original);
         session.preview.add(nearest.index(), replacement);
+        //Update centerline
+        session.centerline.add(nearest.index(), center);
         return new EditInfo(nearest.index() + 1, replacement.getType(), nearest.distance());
     }
 
@@ -263,6 +311,7 @@ public class AutoTraceManager {
         NearestResult nearest = findNearestPreviewCheckpoint(session, point);
         if (nearest.index() < 0) return null;
 
+        session.centerline.remove(nearest.index());
         Checkpoint removed = session.preview.remove(nearest.index());
         return new EditInfo(nearest.index() + 1, removed.getType(), nearest.distance());
     }
@@ -303,6 +352,17 @@ public class AutoTraceManager {
                 return;
             }
             for (Checkpoint cp : s.preview) drawCheckpointOutline(cp);
+
+            //Draw center line (smooth)
+            ArrayList<Location> cl = new ArrayList<>(s.centerline);
+            World world = cl.getFirst().getWorld();
+            List<Location> smoothed = CheckpointGeometry.catmullRomSpline(cl, s.loop, 6); // 6 substeps ≈ smooth at typical spacing
+            for (int i = 0; i < smoothed.size() - 1; i++) {
+                drawLine(world, Particle.TOTEM_OF_UNDYING, smoothed.get(i).clone().add(0, 1, 0).toVector(), smoothed.get(i+1).clone().add(0, 1, 0).toVector());
+            }
+            if (s.loop && smoothed.size() > 1) {
+                drawLine(world, Particle.TOTEM_OF_UNDYING, smoothed.getLast().clone().add(0, 1, 0).toVector(), smoothed.getFirst().clone().add(0, 1, 0).toVector());
+            }
         }, 0L, 20L);
 
         previewTasks.put(p, task);
