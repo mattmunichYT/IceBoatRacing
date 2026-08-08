@@ -4,10 +4,10 @@
 
 [![Modrinth](https://img.shields.io/modrinth/dt/ibr?label=Modrinth%20Downloads&color=00AF5C&logo=modrinth)](https://modrinth.com/plugin/ibr)
 [![CurseForge](https://img.shields.io/curseforge/dt/1474021?label=CurseForge%20Downloads&color=F16436&logo=curseforg-)](https://www.curseforge.com/minecraft/bukkit-plugins/ice-boat-racing)
-[![Paper](https://img.shields.io/badge/Paper-1.21.5%2B-FF4444?logo=paper)](https://papermc.io)
-[![Java](https://img.shields.io/badge/Java-25-007396?logo=openjdk)](https://openjdk.org)
+[![Paper](https://img.shields.io/badge/Paper-1.21.9%2B-FF4444?logo=paper)](https://papermc.io)
+[![Java](https://img.shields.io/badge/Java-21-007396?logo=openjdk)](https://openjdk.org)
 [![License](https://img.shields.io/github/license/mattmunichYT/IceBoatRacing?color=blue)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-v2.0--BETA--1-orange)](https://github.com/mattmunich/IceBoatRacing/releases)
+[![Version](https://img.shields.io/badge/Version-v2.0--BETA--2-orange)](https://github.com/mattmunich/IceBoatRacing/releases)
 
 ---
 

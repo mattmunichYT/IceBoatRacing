@@ -55,7 +55,7 @@ public class WorldLoad implements Listener {
             } catch (IOException e) {
                 main.warn("Could not save race " + race.getName() + " on world unload, see error above.");
                 continue;
-            } catch (Exception _) {}
+            } catch (Exception ignored) {}
 
             raceManager.races.remove(race);
             main.log("Successfully saved " + race.getName() + " on world unload.");
