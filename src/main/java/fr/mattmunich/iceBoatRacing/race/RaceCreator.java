@@ -467,7 +467,7 @@ public class RaceCreator implements Listener {
                 p.sendMessage(getMessage("error.unknown"));
                 main.warn("Couldn't delete race for " + p.getName() + " because it didn't exist (race creating process - cancel clean up)");
             } else {
-                p.performCommand("checkpoint autotrace cancel " + race.getName() + " --noRestart");
+                p.performCommand("checkpoint autotrace cancel --noRestart");
                 raceManager.deleteRace(race);
             }
 
