@@ -267,6 +267,10 @@ race:
       subtitle: "§bThe race was created successfully"
       message: "§aThe race was saved successfully!\n§b-> §3/checkpoint autotrace§b to define/edit the track\n§b-> §3/car create§b to register cars\n§b-> §3/race info <raceName>§b to view race information"
 
+pitbox:
+  boxBox: "§b§lBOX BOX §f%player%§c"
+  completed: "§aPit box done, you can now proceed!"
+
 car:
   #Errors
   invalidID: "§cNo car with ID §4%id%"

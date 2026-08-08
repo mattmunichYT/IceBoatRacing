@@ -3,6 +3,8 @@ package fr.mattmunich.iceBoatRacing.race;
 import fr.mattmunich.iceBoatRacing.Main;
 import fr.mattmunich.iceBoatRacing.Messages;
 import fr.mattmunich.iceBoatRacing.checkpoint.Checkpoint;
+import fr.mattmunich.iceBoatRacing.pitbox.PitBox;
+import fr.mattmunich.iceBoatRacing.pitbox.PitBoxManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
@@ -24,10 +26,12 @@ public class RaceListener implements Listener {
 
     private final Main main;
     private final RaceManager raceManager;
+    private final PitBoxManager pitBoxManager;
 
-    public RaceListener(Main main, RaceManager raceManager) {
+    public RaceListener(Main main, RaceManager raceManager, PitBoxManager pitBoxManager) {
         this.main = main;
         this.raceManager = raceManager;
+        this.pitBoxManager = pitBoxManager;
     }
 
     @EventHandler
@@ -118,6 +122,8 @@ public class RaceListener implements Listener {
             data.checkpointIndex++;
             main.liveSidebar.getScore(player).setScore(((data.lapCount-1) * race.getCheckpoints().size()) + data.checkpointIndex);
         }
+
+        handlePitBox(player, data, race, to);
     }
 
     /// # Cross start finish
@@ -241,6 +247,7 @@ public class RaceListener implements Listener {
 
         int ranking = finished.size();
         data.ranking = ranking; //Used for the final ranking later on
+        data.disqualified = data.pitStopsCompleted < race.getRequiredPitStops();
         boolean isWinner = ranking==1;
 
         long raceTime = now - data.startTime;
@@ -260,6 +267,14 @@ public class RaceListener implements Listener {
                 ),
                 formatComponentArguments("player", player.displayName())
         ));
+
+        if (data.disqualified) {
+            Bukkit.broadcast(getMessage("race.onFinish.disqualifiedNotice", formatArguments(
+                    "player", player.getName(),
+                    "completed", data.pitStopsCompleted,
+                    "required", race.getRequiredPitStops()
+            )));
+        }
 
         Title title = Title.title(
                 getMessage("race.onFinish.title"),
@@ -320,6 +335,22 @@ public class RaceListener implements Listener {
             if (!success && player.getVehicle() != null) player.getVehicle().remove();
         } else {
             race.racing.remove(data);
+        }
+    }
+
+    private void handlePitBox(Player player, RaceData data, Race race, Location to) {
+        if (data.pitStopsCompleted >= race.getRequiredPitStops()) return; // done for this race
+        if (data.pittingBox != null) return; // already serving a stop
+        long sinceLastPitBox = System.currentTimeMillis() - data.lastPitBox;
+        if(sinceLastPitBox < 10000) return; //10 secs delay before pitting again -> prevent double pitting
+
+        for (PitBox box : race.getPitBoxes()) {
+            if (!box.contains(to)) continue;
+            if (box.isOccupied()) continue;
+            if (!box.isAllowed(player.getName())) continue;
+
+            pitBoxManager.startSession(player, data, box);
+            return;
         }
     }
 }

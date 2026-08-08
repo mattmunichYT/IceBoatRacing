@@ -7,6 +7,9 @@ import fr.mattmunich.iceBoatRacing.cars.CarManager;
 import fr.mattmunich.iceBoatRacing.checkpoint.autotrace.AutoTraceManager;
 import fr.mattmunich.iceBoatRacing.listeners.Connection;
 import fr.mattmunich.iceBoatRacing.listeners.WorldLoad;
+import fr.mattmunich.iceBoatRacing.pitbox.PitBoxCommand;
+import fr.mattmunich.iceBoatRacing.pitbox.PitBoxCreator;
+import fr.mattmunich.iceBoatRacing.pitbox.PitBoxManager;
 import fr.mattmunich.iceBoatRacing.race.*;
 import fr.mattmunich.iceBoatRacing.checkpoint.CheckpointCommand;
 import fr.mattmunich.iceBoatRacing.checkpoint.CheckpointManager;
@@ -35,6 +38,8 @@ public final class Main extends JavaPlugin {
     RaceManager raceManager;
     RaceCreator raceCreator;
     AutoTraceManager autoTraceManager;
+    PitBoxManager pitBoxManager;
+    PitBoxCreator pitBoxCreator;
 
     public Objective liveSidebar;
 
@@ -75,9 +80,10 @@ public final class Main extends JavaPlugin {
         pm.registerEvents(new CarCreator(this, raceManager, carManager), this);
         pm.registerEvents(new Connection(this, raceManager, carManager),this);
         pm.registerEvents(new CheckpointCommand(checkpointManager, raceManager, autoTraceManager, new RaceCreator(this, raceManager, carManager, carCreator), this),this);
-        pm.registerEvents(new RaceListener(this, raceManager),this);
+        pm.registerEvents(new RaceListener(this, raceManager, pitBoxManager),this);
         pm.registerEvents(new RaceCreator(this, raceManager,carManager,carCreator), this);
         pm.registerEvents(new WorldLoad(this, raceManager), this);
+        pm.registerEvents(new PitBoxCreator(this, pitBoxManager), this);
     }
 
     public void updateConstants() {
@@ -122,14 +128,16 @@ public final class Main extends JavaPlugin {
         carManager = new CarManager(this);
         checkpointManager = new CheckpointManager(this);
         autoTraceManager = new AutoTraceManager(this, checkpointManager);
+        pitBoxManager = new PitBoxManager(this);
 
         //Load race manager
-        raceManager = new RaceManager(this,carManager, checkpointManager);
+        raceManager = new RaceManager(this,carManager, checkpointManager, pitBoxManager);
         log("Done loading managers!");
 
         //Initalise race manager in car and checkpoint manager
         carManager.setRaceManager(raceManager);
         checkpointManager.setRaceManager(raceManager);
+        pitBoxManager.setRaceManager(raceManager);
         log("Initiazed RaceManager for Car and Checkpoint managers");
 
         //Load races after CarManager and CheckpointManager have RaceManager set and after server startup, so that all worlds are loaded.
@@ -140,6 +148,7 @@ public final class Main extends JavaPlugin {
         log("Loading car and race creator...");
         carCreator = new CarCreator(this, raceManager, carManager);
         raceCreator = new RaceCreator(this,raceManager,carManager,carCreator);
+        pitBoxCreator = new PitBoxCreator(this, pitBoxManager);
         log("Done loading car and race creator!");
     }
 
@@ -174,9 +183,10 @@ public final class Main extends JavaPlugin {
     private void registerCommands() {
         log("Registering commands...");
         registerCommand("iceboatracing", "Command to manage the plugin", List.of("ibr"), new IBRCommand(this));
+        registerCommand("race", "Command to manage the race", new RaceCommand(this, raceManager,raceCreator));
         registerCommand("checkpoint", "Command to manage checkpoints", new CheckpointCommand(checkpointManager, raceManager, autoTraceManager, new RaceCreator(this, raceManager, carManager, carCreator), this));
         registerCommand("car", "Command to manage cars", new CarCommand(carManager,raceManager,carCreator));
-        registerCommand("race", "Command to manage the race", new RaceCommand(this, raceManager,raceCreator));
+        registerCommand("pitbox", "Command to manage pit boxes", new PitBoxCommand(this, raceManager, pitBoxManager, pitBoxCreator));
         log("Done registering commands!");
     }
 

@@ -179,10 +179,8 @@ public class CarCreator implements Listener {
             p.sendMessage(getMessage("race.select"));
             for (Race race : raceManager.races) {
                 Component raceLine = c("§3▌ §e" + race.getName())
-                        .clickEvent(ClickEvent.clickEvent(
-                                ClickEvent.Action.RUN_COMMAND,
-                                ClickEvent.Payload.string("/car selectRace " + race.getName())
-                        ))
+                        .clickEvent(ClickEvent.runCommand("/car selectRace " + race.getName())
+                        )
                         .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(
                                 c("§7Click to select §b" + race.getName())
                         ));

@@ -2,6 +2,7 @@ package fr.mattmunich.iceBoatRacing.race;
 
 import fr.mattmunich.iceBoatRacing.cars.Car;
 import fr.mattmunich.iceBoatRacing.checkpoint.Checkpoint;
+import fr.mattmunich.iceBoatRacing.pitbox.PitBox;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -23,6 +24,7 @@ public class Race {
     final World world;
     YamlConfiguration config = null;
     int lapCount = 10;
+    int requiredPitStops = 1;
     final List<Checkpoint> checkpoints = new ArrayList<>();
     final List<Car> cars = new ArrayList<>();
     public final Map<UUID, RaceData> racers = new HashMap<>();
@@ -121,6 +123,15 @@ public class Race {
         this.lapCount = Math.max(lapCount, 1);
     }
 
+    //Pit stops
+    public int getRequiredPitStops() {
+        return requiredPitStops;
+    }
+
+    public void setRequiredPitStops(int requiredPitStops) {
+        this.requiredPitStops = Math.max(requiredPitStops, 0);
+    }
+
     //Checkpoints
     public List<Checkpoint> getCheckpoints() {
         return checkpoints;
@@ -143,6 +154,34 @@ public class Race {
 
     public boolean removeCheckpoint(Checkpoint checkpoint) {
         return checkpoints.remove(checkpoint);
+    }
+
+    //Pit Boxes
+    // field, next to `checkpoints`
+    final List<PitBox> pitBoxes = new ArrayList<>();
+
+    // methods, next to getCheckpoint/addCheckpoint/clearCheckpoints/removeCheckpoint
+    public List<PitBox> getPitBoxes() {
+        return pitBoxes;
+    }
+
+    public @Nullable PitBox getPitBox(int id) {
+        for (PitBox box : pitBoxes) {
+            if (box.getId() == id) return box;
+        }
+        return null;
+    }
+
+    public void addPitBox(PitBox box) {
+        pitBoxes.add(box);
+    }
+
+    public void clearPitBoxes() {
+        pitBoxes.clear();
+    }
+
+    public boolean removePitBox(PitBox box) {
+        return pitBoxes.remove(box);
     }
 
     //Cars
@@ -186,6 +225,49 @@ public class Race {
 
         Bukkit.broadcast(getMessage("race.onEnd.top"));
 
+        // Split by DSQ status while preserving original finish-crossing order within each group.
+        // rankings' keys are sequential ints assigned in crossing order (see onFinishRace), so
+        // walking 0..size-1 reconstructs that order reliably (racers.values() below does not).
+        List<RaceData> qualified = new ArrayList<>();
+        List<RaceData> disqualified = new ArrayList<>();
+        for (int i = 0; i < rankings.size(); i++) {
+            RaceData data = rankings.get(i);
+            if (data == null) continue;
+            if (data.disqualified) disqualified.add(data);
+            else qualified.add(data);
+        }
+
+        long previousTime = -1;
+        int displayRank = 1;
+        for (RaceData data : qualified) {
+            long raceTime = data.getRaceTime();
+            if (displayRank == 1) {
+                Bukkit.broadcast(getMessage("race.onEnd.winnerFormat", formatArguments(
+                        "ranking", displayRank + "",
+                        "player", data.player == null ? "OFFLINE" : data.player.getName(),
+                        "raceTime", formatTime(raceTime)
+                )));
+            } else {
+                long gap = raceTime - previousTime;
+                Bukkit.broadcast(getMessage("race.onEnd.playerFormat", formatArguments(
+                        "ranking", displayRank + "",
+                        "player", data.player == null ? "OFFLINE" : data.player.getName(),
+                        "raceTime", formatTime(raceTime),
+                        "gapToNext", formatTime(gap)
+                )));
+            }
+            previousTime = raceTime;
+            displayRank++;
+        }
+
+        for (RaceData data : disqualified) {
+            Bukkit.broadcast(getMessage("race.onEnd.disqualifiedFormat", formatArguments(
+                    "player", data.player == null ? "OFFLINE" : data.player.getName(),
+                    "raceTime", formatTime(data.getRaceTime())
+            )));
+        }
+
+        // Lap/sector highlights are order-independent (best/worst across everyone), unaffected by DSQ placement
         long bestLapTime = Long.MAX_VALUE;
         long worstLapTime = Long.MIN_VALUE;
 
@@ -196,22 +278,6 @@ public class Race {
         Map<Integer, Player> bestSectorPlayers = new HashMap<>();
 
         for (RaceData data : racers.values()) {
-            if(rankings.get(0).equals(data)) {
-                Bukkit.broadcast(getMessage("race.onEnd.winnerFormat", formatArguments(
-                        "ranking", data.ranking + "",
-                        "player", data.player == null ? "OFFLINE" : data.player.getName(),
-                        "raceTime", formatTime(data.getRaceTime())
-                )));
-            } else {
-                Bukkit.broadcast(getMessage("race.onEnd.playerFormat", formatArguments(
-                        "ranking", data.ranking + "",
-                        "player", data.player == null ? "OFFLINE" : data.player.getName(),
-                        "raceTime", formatTime(data.getRaceTime()),
-                        "gapToNext", formatTime(data.gapToNextTime)
-                )));
-            }
-
-
             if (!data.getLapTimes().isEmpty()) {
                 for (long lapTime : data.getLapTimes()) {
                     if (lapTime < bestLapTime) {
@@ -225,14 +291,11 @@ public class Race {
                 }
             }
 
-
             Map<Integer, List<Long>> sectorTimes = data.getSectorsTimes();
             if (sectorTimes != null) {
                 for (int sectorID : sectorTimes.keySet()) {
                     bestSectorTimes.putIfAbsent(sectorID, Long.MAX_VALUE);
-
                     Long playerSectorTime = Collections.min(sectorTimes.get(sectorID));
-
                     if (playerSectorTime < bestSectorTimes.get(sectorID)) {
                         bestSectorTimes.put(sectorID, playerSectorTime);
                         bestSectorPlayers.put(sectorID, data.player);
@@ -241,19 +304,18 @@ public class Race {
             }
         }
 
-        long winnerTime = rankings.get(0).getRaceTime();
-        long lastTime = rankings.get(rankings.size()-1).getRaceTime();
-        long winnerGap = lastTime - winnerTime;
+        long winnerTime = qualified.isEmpty() ? 0 : qualified.getFirst().getRaceTime();
+        long lastQualifiedTime = qualified.isEmpty() ? 0 : qualified.getLast().getRaceTime();
+        long winnerGap = lastQualifiedTime - winnerTime;
 
         Bukkit.broadcast(getMessage("race.onEnd.highlights", formatArguments(
                 "bestLapPlayer", bestLapPlayer == null ? "§c§oOffline" : bestLapPlayer.getName(),
                 "bestLapTime", bestLapTime == Long.MAX_VALUE ? "N/A" : formatTime(bestLapTime),
                 "worstLapPlayer", worstLapPlayer == null ? "§c§oOffline" : worstLapPlayer.getName(),
-                "worstLapTime", worstLapTime == Long.MIN_VALUE ? "N/A" : formatTime(worstLapTime), // Correction ici (MIN_VALUE)
+                "worstLapTime", worstLapTime == Long.MIN_VALUE ? "N/A" : formatTime(worstLapTime),
                 "winnerGap", formatTime(winnerGap)
         )));
 
-        // 4. Affichage des Secteurs
         if (!bestSectorTimes.isEmpty()) {
             Bukkit.broadcast(getMessage("race.onEnd.bestSectorTimesTop"));
             for (int sectorID : bestSectorTimes.keySet()) {

@@ -22,7 +22,7 @@
 
 #The prefix used in the beginning of every message
 #(except titles and messages under the "noPrefix" section)
-prefix: "<b><gradient:#8DABF3:#10CA9A>[Ice Boat Racing]</gradient></b><reset>"
+prefix: "<b><gradient:#8DABF3:#10CA9A>IBR</gradient><dark_gray> >> </b><reset>"
 
 noPrefix:
   #The title of the scoreboard during a race
@@ -148,9 +148,16 @@ race:
   prepare: "§aLes joueurs seront placés automatiquement." #Displayed when '/race prepare' is used (and prepare toggled OFF)
   cancelPrepare: "§aMode préparation désactivé." #Displayed when '/race prepare' is used (and prepare toggled ON)
   deleted: "§aLa course %race% a été supprimée."#Displayed when '/race delete' is used and is successful
+
+  #Lap count
   currentLapCount: "§bLe nombre de tours de la course %race% est défini à §3%lapCount%§b. \n§8ℹ Utilisez /race setLapCount <nom> <nombre>"
   updatedLapCount: "§bLe nombre de tours de la course §3%race%§b a été défini à §3%lapCount%§b."
   invalidLapCount: "§cLe nombre de tours entré est invalide."
+
+  #Pit stops
+  currentPitStops: "§bLe nombre d'arrêts au stand obligatoires pour la course %race% est défini à §3%pitStops%§b."
+  updatedPitStops: "§bLe nombre d'arrêts au stand obligatoires pour la course §3%race%§b a été défini à §3%pitStops%§b."
+  invalidPitStops: "§cLe nombre d'arrêts au stand entré est invalide."
 
   #Help message
   help: "§3--------- §b§l/race§r §3---------
@@ -172,6 +179,7 @@ race:
     message: "§2%player%§b a terminé la course en §2%time%§a et est classé §2#%ranking%§a !"
     title: "§2Course terminée!"
     subtitle: "§aVous êtes #%ranking%"
+    disqualifiedNotice: "§c%player% §cn'a pas effectué le nombre d'arrêts au stand requis (§4%completed%§c/§4%required%§c) et sera disqualifié !"
     statsMessage: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lRésultats de la course §x§0§0§A§D§F§F§l▬▬▬▬▬▬§r\n
     §bClassement : §3#%ranking%§b/%players%\n
     §bTemps total : §x§4§0§C§4§F§F%raceTime%\n
@@ -200,6 +208,7 @@ race:
     top: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lClassement final §x§0§0§A§D§F§F§l▬▬▬▬▬▬§r\n"
     winnerFormat: "§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%§b\n"
     playerFormat: "§r§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%§b (écart: §x§4§0§C§4§F§F%gapToNext%§b)\n"
+    disqualifiedFormat: "§4DSQ §8» §c%player% §8(§c%raceTime%§8) §7— arrêts au stand incomplets\n"
     highlights: "\n§r§b🏆 Meilleur tour : §a%bestLapPlayer% §8(§a%bestLapTime%§8)\n
     §b🐢 Tour le plus lent : §c%worstLapPlayer% §8(§c%worstLapTime%§8)\n
     §b⚡ Écart victoire : §3%winnerGap%\n"
@@ -268,6 +277,52 @@ race:
       title: "§3Course sauvegardée !"
       subtitle: "§bLa course a été créée avec succès"
       message: "§aLa course a été sauvegardée avec succès !\n§b-> §3/checkpoint autotrace§b pour définir/modifer le circuit\n§b-> §3/car create§b pour enregistrer des voitures\n§b-> §3/race info <nomCourse>§b pour consulter les informations de la course"
+
+pitbox:
+  boxBox: "§b§lBOX BOX §3%player%"
+  completed: "§aArrêt aux stands terminé §7(§f%completed%§7/§f%required%§7)§a, vous pouvez repartir !"
+  countdown:
+    title: "§c§l%seconds%"
+    subtitle: "§7arrêt au stand en cours..."
+    go: "§a§lEnvoi !"
+  noPitBoxes: "§cAucun stand défini pour cette course."
+  invalid: "§cNuméro de stand invalide"
+  removed: "§aStand §6%id%§a supprimé"
+  setAllowed:
+    updated: "§aStand §f#%id%§a mis à jour, autorisé pour : §3%players%"
+  help: "§eSous-commandes de /pitbox :
+  \n§7- §f/pitbox create <nomCourse>
+  \n§7- §f/pitbox list <nomCourse>
+  \n§7- §f/pitbox remove <nomCourse> <id>
+  \n§7- §f/pitbox setAllowed <nomCourse> <id> <joueurs...|*>"
+
+  create:
+    confirm: "confirmer"
+    cancelled: "§bLa création du stand a été annulée."
+    1:
+      title: "§3Nom du stand"
+      subtitle: "§bEntrez le §3nom§b dans le chat"
+      message: "§bEntrez un nom pour ce stand (dans le chat)."
+      completed: "§bLe nom du stand a été défini à §3%name%"
+    2:
+      title: "§3Emplacement"
+      subtitle: "§bDélimitez la zone avec la pelle"
+      message: "§bSélectionnez les §32 coins§b de la zone du stand avec la pelle en bois, puis écrivez §3%confirm%§b."
+      completed: "§bEmplacement du stand enregistré."
+    3:
+      title: "§3Durée"
+      subtitle: "§bEntrez la §3durée§b dans le chat"
+      message: "§bEntrez la §3durée en secondes§b de l'arrêt au stand (dans le chat)."
+      completed: "§bDurée définie à §3%duration%s"
+    4:
+      title: "§3Joueurs autorisés"
+      subtitle: "§bEntrez les noms dans le chat"
+      message: "§bEntrez les §3noms des joueurs§b autorisés (séparés par des espaces), ou §3*§b pour tout le monde."
+      completed: "§bJoueurs autorisés : §3%players%"
+    done:
+      title: "§2Stand créé !"
+      subtitle: "§aLe stand a été sauvegardé"
+      message: "§aLe stand §3%name%§a (§3#%id%§a) a été créé avec succès !"
 
 car:
   #Errors

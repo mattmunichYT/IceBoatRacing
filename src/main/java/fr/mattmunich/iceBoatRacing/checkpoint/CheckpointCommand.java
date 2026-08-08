@@ -206,12 +206,10 @@ public class CheckpointCommand implements Listener, BasicCommand {
                 Location max = checkpoint.getMax();
 
                 Component removeText = Component.text("[x]")
-                        .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND,
-                                ClickEvent.Payload.string("/checkpoint remove " + checkpoint.getId() + " " + race.getName())));
+                        .clickEvent(ClickEvent.runCommand("/checkpoint remove " + checkpoint.getId() + " " + race.getName()));
 
                 Component tpText = Component.text("[→]")
-                        .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND,
-                                ClickEvent.Payload.string("/tp " + min.getBlockX() + " " + min.getBlockY() + " " + min.getBlockZ())));
+                        .clickEvent(ClickEvent.runCommand("/tp " + min.getBlockX() + " " + min.getBlockY() + " " + min.getBlockZ()));
 
                 String shapeTag = checkpoint.getShape() == Checkpoint.Shape.PLANE ? getStringMessage("checkpoint.list.planeTag") : "";
                 String altTag = checkpoint.getAlternates().isEmpty() ? "" :
@@ -232,12 +230,10 @@ public class CheckpointCommand implements Listener, BasicCommand {
             // Page navigation row
             if (totalPages > 1) {
                 Component prev = page > 1
-                        ? c("§a[←]").clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND,
-                        ClickEvent.Payload.string("/checkpoint list " + (page - 1))))
+                        ? c("§a[←]").clickEvent(ClickEvent.runCommand("/checkpoint list " + (page - 1)))
                         : c("§8[←]");
                 Component next = page < totalPages
-                        ? c("§a[→]").clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND,
-                        ClickEvent.Payload.string("/checkpoint list " + (page + 1))))
+                        ? c("§a[→]").clickEvent(ClickEvent.runCommand("/checkpoint list " + (page + 1)))
                         : c("§8[→]");
 
                 p.sendMessage(prev.append(c("  §7Page §f" + page + " §7of §f" + totalPages + "  ")).append(next));
@@ -647,12 +643,10 @@ public class CheckpointCommand implements Listener, BasicCommand {
         Component loopLine = c(getStringMessage(loopKey))
                 .append(c(" "))
                 .append(c(getStringMessage("checkpoint.autotrace.config.panel.toggle"))
-                        .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND,
-                                ClickEvent.Payload.string("/checkpoint autotrace configure loop toggle"))));
+                        .clickEvent(ClickEvent.runCommand("/checkpoint autotrace configure loop toggle")));
 
         Component startButton = c(getStringMessage("checkpoint.autotrace.config.panel.start"))
-                .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND,
-                        ClickEvent.Payload.string("/checkpoint autotrace confirm")));
+                .clickEvent(ClickEvent.runCommand("/checkpoint autotrace confirm"));
 
         return header
                 .append(c("\n")).append(spacingLine)
@@ -664,8 +658,7 @@ public class CheckpointCommand implements Listener, BasicCommand {
 
     private Component editButton(String param) {
         return c(getStringMessage("checkpoint.autotrace.config.panel.edit"))
-                .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.SUGGEST_COMMAND,
-                        ClickEvent.Payload.string("/checkpoint autotrace configure " + param + " ")));
+                .clickEvent(ClickEvent.suggestCommand("/checkpoint autotrace configure " + param + " "));
     }
 
     /** Whole numbers print without a trailing ".0"; anything else keeps one decimal place. */

@@ -205,6 +205,57 @@ public class RaceCommand implements BasicCommand {
                     )));
                 });
             }
+        } else if (args.length >= 1 && args[0].equalsIgnoreCase("setPitStops")) {
+            Race race;
+            boolean definedRaceName = false;
+            if (raceManager.races.size() != 1 || args.length == 3) {
+                if (args.length < 2 || args.length > 3) {
+                    sender.sendMessage(getMessage("race.help"));
+                    return;
+                }
+                String raceName = args[1];
+                race = raceManager.getRace(raceName);
+                definedRaceName = true;
+            } else {
+                race = raceManager.races.getFirst();
+            }
+            if (race == null) {
+                sender.sendMessage(getMessage("race.notFound"));
+                return;
+            }
+
+            Race finalRace = race;
+            int valueIndex = definedRaceName ? 2 : 1;
+
+            if (args.length <= valueIndex) {
+                sender.sendMessage(getMessage("race.currentPitStops", Messages.formatArguments(
+                        "race", finalRace.getName(),
+                        "pitStops", finalRace.getRequiredPitStops()
+                )));
+                return;
+            }
+
+            int pitStops;
+            try {
+                pitStops = Integer.parseInt(args[valueIndex]);
+            } catch (NumberFormatException e) {
+                sender.sendMessage(getMessage("race.invalidPitStops"));
+                return;
+            }
+
+            Bukkit.getScheduler().runTask(main, () -> {
+                finalRace.setRequiredPitStops(pitStops);
+                try {
+                    finalRace.saveConfig();
+                } catch (IOException e) {
+                    sender.sendMessage(getMessage("error.unknown"));
+                    return;
+                }
+                sender.sendMessage(getMessage("race.updatedPitStops", Messages.formatArguments(
+                        "race", finalRace.getName(),
+                        "pitStops", finalRace.getRequiredPitStops()
+                )));
+            });
         } else {
             sender.sendMessage(getMessage("race.help"));
         }
@@ -219,7 +270,7 @@ public class RaceCommand implements BasicCommand {
             races.forEach((race) -> raceList.add(race.getName()));
         } else raceList = List.of("§oNo races defined");
 
-        List<String> baseList = List.of("start","prepare","end","create","delete", "setLapCount");
+        List<String> baseList = List.of("start","prepare","end","create","delete", "setLapCount","setPitStops");
         if(args.length==0) {
             return baseList;
         } else if(args.length==1) {
@@ -237,12 +288,15 @@ public class RaceCommand implements BasicCommand {
                     || args[0].equalsIgnoreCase("end")
                     || args[0].equalsIgnoreCase("delete")
                     || args[0].equalsIgnoreCase("setLapCount")
+                    || args[0].equalsIgnoreCase("setPitStops")
             )
         ) {
             return raceList;
         } else if (args.length==3) {
             if(args[0].equalsIgnoreCase("setLapCount")) {
                 return List.of("§7<lapCount>");
+            } else if(args[0].equalsIgnoreCase("setPitStops")) {
+                return List.of("§7<requiredPitStops>");
             } else {
                 return Collections.emptyList();
             }

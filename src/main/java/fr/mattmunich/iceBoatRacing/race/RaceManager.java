@@ -5,6 +5,7 @@ import fr.mattmunich.iceBoatRacing.Messages;
 import fr.mattmunich.iceBoatRacing.cars.Car;
 import fr.mattmunich.iceBoatRacing.cars.CarManager;
 import fr.mattmunich.iceBoatRacing.checkpoint.CheckpointManager;
+import fr.mattmunich.iceBoatRacing.pitbox.PitBoxManager;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.title.Title;
@@ -29,6 +30,7 @@ public class RaceManager {
     private final Main main;
     private final CarManager carManager;
     private final CheckpointManager checkpointManager;
+    public final PitBoxManager pitBoxManager;
     public final List<Race> races = new ArrayList<>();
     public final List<Race> activeRaces = new ArrayList<>();
     /**
@@ -37,10 +39,11 @@ public class RaceManager {
      */
     public final Map<String, String> unloadedRaces = new HashMap<>();
 
-    public RaceManager(Main main, CarManager carManager, CheckpointManager checkpointManager) {
+    public RaceManager(Main main, CarManager carManager, CheckpointManager checkpointManager, PitBoxManager pitBoxManager) {
         this.main = main;
         this.carManager = carManager;
         this.checkpointManager = checkpointManager;
+        this.pitBoxManager = pitBoxManager;
     }
 
     /**
@@ -121,7 +124,15 @@ public class RaceManager {
             race.setRaceManager(this);
             race.setConfig(config);
             checkpointManager.loadRaceCheckpoints(race);
+            pitBoxManager.loadRacePitBoxes(race);
             carManager.loadCars(race);
+            int lapCount = config.getInt("lapCount");
+            if (lapCount <= 0) {
+                lapCount = 10;
+                main.warn(race.getName() + "'s lap count wasn't found, therefore was set to the default value : 10" );
+            }
+            race.setLapCount(lapCount);
+            race.setRequiredPitStops(config.getInt("requiredPitStops", 1));
 
             races.add(race);
             main.log("Race " + name + " has been loaded");
@@ -167,7 +178,15 @@ public class RaceManager {
         race.setRaceManager(this);
         race.setConfig(config);
         checkpointManager.loadRaceCheckpoints(race);
+        pitBoxManager.loadRacePitBoxes(race);
         carManager.loadCars(race);
+        int lapCount = config.getInt("lapCount");
+        if (lapCount <= 0) {
+            lapCount = 10;
+            main.warn(race.getName() + "'s lap count wasn't found, therefore was set to the default value : 10" );
+        }
+        race.setLapCount(lapCount);
+        race.setRequiredPitStops(config.getInt("requiredPitStops", 1));
 
         races.add(race);
 
@@ -214,6 +233,7 @@ public class RaceManager {
         config.set("name", race.getName());
         config.set("world", race.getWorld().getName());
         config.set("lapCount", race.getLapCount());
+        config.set("requiredPitStops", race.getRequiredPitStops());
 
         try {
             config.save(raceFile);
@@ -264,10 +284,12 @@ public class RaceManager {
                 main.warn(race.getName() + "'s lap count wasn't found, therefore was set to the default value : 10" );
             }
             race.setLapCount(lapCount);
+            race.setRequiredPitStops(config.getInt("requiredPitStops", 1));
 
             //More like reload from file if file/Race unsynced (not really load)
             carManager.loadCars(race);
             checkpointManager.loadRaceCheckpoints(race);
+            pitBoxManager.loadRacePitBoxes(race);
             race.setConfig(config);
 
             //Update race in race list
@@ -512,6 +534,8 @@ public class RaceManager {
         for (Car car : race.getCars()) {
             Player owner = Bukkit.getPlayer(car.getOwner());
             if (owner == null) continue;
+            RaceData data = race.racers.get(owner.getUniqueId());
+            if (data != null && data.pittingBox != null) pitBoxManager.cancelSession(owner, data.pittingBox);
 
             car.destroy();
             race.racers.remove(owner.getUniqueId());

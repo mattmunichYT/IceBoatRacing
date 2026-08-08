@@ -1,6 +1,7 @@
 package fr.mattmunich.iceBoatRacing.race;
 
 import fr.mattmunich.iceBoatRacing.cars.Car;
+import fr.mattmunich.iceBoatRacing.pitbox.PitBox;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -10,11 +11,16 @@ public class RaceData {
     public Player player;
 
     public int ranking = -1;
+    public boolean disqualified = false;
     public int checkpointIndex = 0;
     public int lapCount = -1;
     public Location from;
 
     public Car car;
+
+    public int pitStopsCompleted = 0;
+    public PitBox pittingBox = null;
+    public long lastPitBox = 0;
 
     public long startTime = 0;
     public long lapTime = 0;
