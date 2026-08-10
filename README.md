@@ -1,6 +1,6 @@
 # ❄️ IceBoatRacing
 
-> **A professional-grade Minecraft Paper plugin for competitive ice boat racing** — featuring precision checkpoint detection, live scoreboards, automatic track generation, multi-language support, and a full race management system.
+> **A professional-grade Minecraft Paper plugin for competitive ice boat racing** — featuring precision checkpoint detection, live scoreboards, automatic track generation, mandatory pit stops, multi-language support, and a full race management system.
 
 [![Modrinth](https://img.shields.io/modrinth/dt/ibr?label=Modrinth%20Downloads&color=00AF5C&logo=modrinth)](https://modrinth.com/plugin/ibr)
 [![CurseForge](https://img.shields.io/curseforge/dt/1474021?label=CurseForge%20Downloads&color=F16436&logo=curseforg-)](https://www.curseforge.com/minecraft/bukkit-plugins/ice-boat-racing)
@@ -40,6 +40,7 @@
 - **Interactive race creation wizard** — step-by-step guided setup
 - **Precision checkpoint system** — two geometry modes (BOX legacy / PLANE modern) with alternate routes
 - **AutoTrace** — drive a lap and let the plugin generate oriented-plane checkpoints automatically
+- **Mandatory pit stops** — timed pit boxes with a live countdown, team-livery colors, and automatic disqualification for skipped stops
 - **Live scoreboard** — real-time per-player sidebar during races
 - **Race lights** — configurable stained-glass starting lights (5-4-3-2-1-GO!)
 - **Sector timing** — split times for detailed performance analysis
@@ -60,6 +61,7 @@ Designed for competitive servers like **Grands Prix by Mini Jeux Entre Potes**.
 | 🔄 **Alternate Routes** | Add bypass gates to any checkpoint (pit lanes, spectator bypasses)                                      |
 | 🎯 **Sectors**          | Intermediate timing gates for split analysis                                                            |
 | 🤖 **AutoTrace**        | Record a lap → plugin generates PLANE checkpoints with track-surface detection                          |
+| 🅿️ **Pit Stops**        | Configurable mandatory pit-stop count per race, timed pit boxes with countdown + team-color themes, automatic DSQ for non-compliant finishers |
 | 🚤 **Car System**       | Register boats per player (all wood types + rafts + chest variants), custom names, clickable management |
 | 📊 **Live Sidebar**     | Real-time position/lap/progress per player during race                                                  |
 | 🏁 **Race Lights**      | Optional 6-stage stained glass starting lights (Brown→Red→Orange→Yellow→Lime→Green)                     |
@@ -81,7 +83,7 @@ An interactive, title-guided wizard walks you through:
 5. **Define cars?** — register participant boats
 6. **Save** — race persisted to YAML
 
-> All steps are optional — you can define track/cars later via `/checkpoint autotrace` and `/car create`.
+> All steps are optional — you can define track/cars later via `/checkpoint autotrace` and `/car create`. Pit boxes and required pit-stop count are configured separately after race creation, via `/pitbox create` and `/race setPitStops` (not currently part of the wizard).
 
 ### 📍 Checkpoint System
 
@@ -165,6 +167,30 @@ Configure a 3D region in `config.yml` (`race.lights.from` → `race.lights.to`).
 ```
 Each stage fills the region with the corresponding stained-glass, synced with title countdown and pling sounds.
 
+### 🅿️ Pit Boxes (Mandatory Pit Stops)
+
+Each race can require racers to complete a configurable number of pit stops before finishing counts as valid — enforced end-to-end, from trigger detection through final standings.
+
+**Setup (`/pitbox create <race>`):**
+
+1. **Name the pit box** — for identification in `/pitbox list`
+2. **Define location** — select 2 corners with the wooden shovel wand (reuses the same wand as `/checkpoint create`), then confirm
+3. **Set duration** — seconds the stop takes
+4. **Set allowed players** — specific names, or `*` for anyone racing
+5. **Pick a color** — solid or gradient (see below)
+
+**At race time:**
+
+- Pit box detection is folded into the same `PlayerMoveEvent` loop used for checkpoint crossing — no separate listener re-walking every racing boat each tick.
+- Entering an eligible, unoccupied box freezes the boat (velocity zeroed every tick) for the box's duration — no early exit is possible, since the freeze itself keeps the player inside the trigger volume.
+- An adaptive title countdown (`5, 4, 3... Go!`) tracks the box's configured duration, with a rising-pitch pling on completion.
+- Only one player may occupy a given box at a time; a box can be scoped to specific player names (e.g. a 2-driver team) or opened to everyone.
+- Each race tracks a `requiredPitStops` count (`/race setPitStops <race> <amount>`, defaults to 1). Racers who cross the finish line short of that count are automatically **disqualified**, with an immediate broadcast notice and a `DSQ` marker at the bottom of the final standings — below all qualified finishers, in original crossing order.
+
+**Colors:** a preset `PitBoxColor` enum (not free-form hex), including real F1 team livery gradients — McLaren, Mercedes, Red Bull, Ferrari, Williams, VCARB, Aston Martin, Haas, Alpine, Audi, Cadillac — plus solid basics and a few extra gradients (the plugin's own brand gradient, fire, rainbow). Colors render via MiniMessage and apply to both the "BOX BOX" call and the countdown title. Editable post-creation with `/pitbox setColor <race> <id> <color>`.
+
+> Pit box task type is stored as an enum (`TIMED` for now) rather than hardcoded, so future task types can be added without a config migration.
+
 ### 🌍 Multi-Language (i18n)
 
 Two built-in languages: `en_US` (default), `fr_FR`. Set in `config.yml`:
@@ -183,7 +209,7 @@ Messages use **MiniMessage** (gradients, hex, formatting) + `%placeholder%` subs
 | **Paper**     | 1.21.4-R0.1+ (API)        |
 | **Java**      | 21 (toolchain enforced)   |
 
-> The plugin uses Paper's Brigadier command API, Adventure text components, and modern NMS mappings — **Paper is required**; Spigot/CraftBukkit/Purpur/Folia untested.
+> The plugin uses Paper's Brigadier command API, Adventure text components, and modern NMS mappings — **Paper is required**; Spigot/CraftBukkit/Purpur/Folia untested. `1.21.4` is also the version Paper hard-forked from its former Spigot upstream, making it effectively the floor for the current Paper API — and the version `registerCommand()`, used throughout this plugin's command classes, was introduced in. Built and tested on Java 21 with no errors at this floor.
 
 ---
 
@@ -207,13 +233,14 @@ All commands require the corresponding permission (see [Permissions](#-permissio
 ### `/race` — Race Management
 
 | Subcommand                          | Description                                                           | Permission                     |
-|-------------------------------------|-----------------------------------------------------------------------|--------------------------------|
+|-------------------------------------|-------------------------------------------------------------------------|--------------------------------|
 | `/race create`                      | Start interactive race creation wizard (player only)                  | `iceboatracing.race.create`    |
 | `/race start [name]`                | Begin race with 5-second countdown + lights                           | `iceboatracing.command.race`   |
 | `/race prepare [name]`              | Toggle preparation mode (spawn cars, teleport players, set Adventure) | `iceboatracing.command.race`   |
 | `/race end [name]`                  | End race, broadcast final standings                                   | `iceboatracing.command.race`   |
 | `/race delete [name]`               | Permanently delete race and its YAML                                  | `iceboatracing.race.create`    |
 | `/race setLapCount [name] <amount>` | View or change lap count                                              | `iceboatracing.command.race`   |
+| `/race setPitStops [name] <amount>` | View or change required pit-stop count                                | `iceboatracing.command.race`   |
 | `/race info`                        | Plugin info (author, purpose)                                         | `iceboatracing.command.plugin` |
 
 > If only one race exists, `[name]` is optional.
@@ -221,7 +248,7 @@ All commands require the corresponding permission (see [Permissions](#-permissio
 ### `/checkpoint` — Checkpoint & Track Management
 
 | Subcommand                              | Description                                             | Permission                         |
-|-----------------------------------------|---------------------------------------------------------|------------------------------------|
+|-----------------------------------------|-----------------------------------------------------------|-------------------------------------|
 | `/checkpoint create <race> [SECTOR]`    | Save BOX checkpoint from shovel selection (pos1/pos2)   | `iceboatracing.command.checkpoint` |
 | `/checkpoint setFinish <race>`          | Save START_FINISH BOX checkpoint from shovel selection  | `iceboatracing.command.checkpoint` |
 | `/checkpoint remove [race] [id]`        | Remove checkpoint by ID (or nearest to player)          | `iceboatracing.command.checkpoint` |
@@ -236,7 +263,7 @@ All commands require the corresponding permission (see [Permissions](#-permissio
 #### AutoTrace Subcommands
 
 | Subcommand                                                                             | Description                                                      |
-|----------------------------------------------------------------------------------------|------------------------------------------------------------------|
+|----------------------------------------------------------------------------------------|--------------------------------------------------------------------|
 | `/checkpoint autotrace start <race> [spacing] [halfWidth] [halfHeight] [loop\|noloop]` | Begin recording; shows interactive config panel                  |
 | `/checkpoint autotrace configure <param> <value>`                                      | Adjust spacing/width/height/loop before confirming               |
 | `/checkpoint autotrace confirm`                                                        | Start recording with current panel settings                      |
@@ -248,10 +275,20 @@ All commands require the corresponding permission (see [Permissions](#-permissio
 | `/checkpoint autotrace accept`                                                         | Commit preview to race YAML                                      |
 | `/checkpoint autotrace cancel`                                                         | Discard session                                                  |
 
+### `/pitbox` — Pit Stop Management
+
+| Subcommand                                   | Description                                                        | Permission                     |
+|-----------------------------------------------|---------------------------------------------------------------------|---------------------------------|
+| `/pitbox create <race>`                       | Interactive pit box creation wizard (name → location → duration → allowed → color) | `iceboatracing.command.pitbox` |
+| `/pitbox list <race>`                         | List all pit boxes (clickable edit-allowed/color/remove/TP buttons) | `iceboatracing.command.pitbox` |
+| `/pitbox remove <race> <id>`                  | Remove a pit box                                                    | `iceboatracing.command.pitbox` |
+| `/pitbox setAllowed <race> <id> <names\|*>`   | Change which players may use a pit box                              | `iceboatracing.command.pitbox` |
+| `/pitbox setColor <race> <id> <color>`        | Change a pit box's color/team livery                                | `iceboatracing.command.pitbox` |
+
 ### `/car` — Car/Boat Management
 
 | Subcommand                              | Description                                                           | Permission                  |
-|-----------------------------------------|-----------------------------------------------------------------------|-----------------------------|
+|-----------------------------------------|---------------------------------------------------------------------------|------------------------------|
 | `/car create`                           | Interactive car registration (spawn block → owner → boat item → race) | `iceboatracing.command.car` |
 | `/car list [page]`                      | Paginated list of all cars (clickable remove/TP/changeOwner)          | `iceboatracing.command.car` |
 | `/car remove <id> <race>`               | Delete a car                                                          | `iceboatracing.command.car` |
@@ -261,7 +298,7 @@ All commands require the corresponding permission (see [Permissions](#-permissio
 ### `/ibr` or `/iceboatracing` — Plugin Control
 
 | Subcommand    | Description                                 | Permission                     |
-|---------------|---------------------------------------------|--------------------------------|
+|---------------|-----------------------------------------------|---------------------------------|
 | `/ibr reload` | Reload config, languages, races, scoreboard | `iceboatracing.command.plugin` |
 | `/ibr info`   | Show plugin info (author, purpose)          | `iceboatracing.command.plugin` |
 
@@ -270,12 +307,13 @@ All commands require the corresponding permission (see [Permissions](#-permissio
 ## 🔐 Permissions
 
 | Permission                         | Description                        | Default |
-|------------------------------------|------------------------------------|---------|
+|------------------------------------|--------------------------------------|---------|
 | `iceboatracing.*`                  | All plugin permissions             | `op`    |
 | `iceboatracing.command.*`          | All command permissions            | `op`    |
 | `iceboatracing.command.race`       | `/race` commands                   | `false` |
 | `iceboatracing.command.car`        | `/car` commands                    | `false` |
 | `iceboatracing.command.checkpoint` | `/checkpoint` commands             | `false` |
+| `iceboatracing.command.pitbox`     | `/pitbox` commands                 | `false` |
 | `iceboatracing.command.plugin`     | `/ibr` commands                    | `false` |
 | `iceboatracing.race.*`             | Full race management               | `op`    |
 | `iceboatracing.race.create`        | Create/delete races, set lap count | `false` |
@@ -330,6 +368,7 @@ race:
 - `lights.from`/`to` default to `123456789` — if unchanged, lights are **disabled** regardless of `enabled: true`.
 - `racingGameMode`: `SPECTATOR` will not work (players can't control boats).
 - `startRotation`: Paper uses degrees (0 = South, 90 = West, 180 = North, 270 = East).
+- **Pit stops are not configured in `config.yml`** — they're per-race (`requiredPitStops`, set via `/race setPitStops`) and per-box (location, duration, allowed players, color, set via `/pitbox create`/`setAllowed`/`setColor`), living in each race's own YAML like checkpoints and cars.
 
 ### `paper-plugin.yml` (embedded in JAR)
 
@@ -341,7 +380,8 @@ All messages externalized with MiniMessage formatting. Key sections:
 - `prefix` — global message prefix (gradient)
 - `noPrefix` — scoreboard title, join/quit messages
 - `checkpoint.*` — all checkpoint/AutoTrace messages
-- `race.*` — race lifecycle, lap/sector/finish broadcasts, final standings
+- `race.*` — race lifecycle, lap/sector/finish broadcasts, final standings, pit-stop count
+- `pitbox.*` — pit box creation, list, countdown, disqualification-adjacent messages
 - `car.*` — car creation, errors
 - `error.*` — generic errors
 
@@ -369,6 +409,15 @@ Race Creation (RaceCreator)
     │       ├── Held boat item → type + custom name
     │       └── Save to race YAML (cars.<id>.*)
     └── Done → Race ready
+
+Pit Box Creation (PitBoxCreator) — separate flow, run any time after the race exists
+    │
+    ├── Step 1: Name
+    ├── Step 2: Location (wooden shovel wand, reuses CheckpointCommand's pos1/pos2)
+    ├── Step 3: Duration (seconds)
+    ├── Step 4: Allowed players (names or "*")
+    ├── Step 5: Color (preset PitBoxColor)
+    └── Save → PitBoxManager.savePitBox() → race YAML (pitboxes.<id>.*)
 ```
 
 ### Race Execution (`RaceManager` + `RaceListener`)
@@ -388,15 +437,23 @@ Race Creation (RaceCreator)
    - **Segment-ray intersection** against `nextCheckpoint` (and `next+1` for skip tolerance)
    - `Checkpoint.crosses(from, to)` handles both BOX (slab intersection) and PLANE (ray-plane) + alternates
    - On `START_FINISH`:
-     - Lap 0 → set `startTime`
-     - Lap < total → `onCompleteLap()` (broadcast, title, best-lap check, scoreboard update)
-     - Lap == total → `onFinishRace()` (ranking, gaps, stats, spectate/cleanup)
+      - Lap 0 → set `startTime`
+      - Lap < total → `onCompleteLap()` (broadcast, title, best-lap check, scoreboard update)
+      - Lap == total → `onFinishRace()` (ranking, gaps, stats, spectate/cleanup, disqualification check)
    - On `SECTOR` → record sector split, broadcast
+   - **Pit box check** runs right after the checkpoint loop, reusing the same `RaceData` lookup — no second listener re-iterating racing boats:
+      - Skip if `pitStopsCompleted >= requiredPitStops` (already done) or the player is mid-stop (`pittingBox != null`)
+      - Otherwise, for each unoccupied `PitBox` the player is allowed to use and physically inside: start a session — occupy the box, freeze velocity every tick via a repeating task, run the adaptive countdown title, and on completion increment `pitStopsCompleted` and release the box
 
-4. **`/race end`** or **last finisher** → `endRace()`
+4. **`onFinishRace()`**
+   - Computes `disqualified = pitStopsCompleted < race.getRequiredPitStops()` at the moment of finish-line crossing
+   - Broadcasts a disqualification notice immediately if applicable
+   - Ranking/gap/stats messages otherwise unchanged
+
+5. **`/race end`** or **last finisher** → `endRace()`
    - Broadcasts `race.end`
    - Destroys cars, clears scoreboard, resets race state
-   - Optionally sends full standings (`Race.sendRanking()`)
+   - Sends full standings (`Race.sendRanking()`), which walks finish order by crossing index, lists all qualified finishers first, then disqualified racers at the bottom under a `DSQ` marker
 
 ### Persistence
 
@@ -406,6 +463,7 @@ Each race = one YAML file: `plugins/IceBoatRacing/races/<name>.yml`
 name: "Monaco"
 world: "world"
 lapCount: 3
+requiredPitStops: 2
 checkpoints:
   1:
     shape: PLANE
@@ -418,6 +476,17 @@ checkpoints:
   2:
     shape: PLANE
     #...
+pitboxes:
+  1:
+    name: "Team Red"
+    world: "world"
+    min: "95,64,180"
+    max: "98,66,183"
+    taskType: TIMED
+    duration: 5
+    allowed:
+      - "*"
+    color: FERRARI
 cars:
   1:
     world: "world"
@@ -427,7 +496,7 @@ cars:
     boatCustomName: "Car #1"
 ```
 
-Loaded on startup via `RaceManager.loadAllRaces()` → `CheckpointManager.loadRaceCheckpoints()` + `CarManager.loadCars()`.
+Loaded on startup via `RaceManager.loadAllRaces()` → `CheckpointManager.loadRaceCheckpoints()` + `CarManager.loadCars()` + `PitBoxManager.loadRacePitBoxes()`.
 Or reloaded from file by using `/ibr reload`.
 
 ---
@@ -473,6 +542,25 @@ Or reloaded from file by using `/ibr reload`.
 ```bash
 # Shovel-select two corners of pit lane gate
 /checkpoint addAlternate Monaco 1
+```
+
+### Add Mandatory Pit Stops
+
+```bash
+# Require 2 pit stops to finish
+/race setPitStops Monaco 2
+
+# Create a pit box (wizard)
+/pitbox create Monaco
+# → Enter name: "Team Red"
+# → Shovel-select 2 corners of the pit box zone, type "confirmer"
+# → Enter duration: "5"
+# → Enter allowed players: "*"
+# → Enter color: "FERRARI"
+
+# Edit later without redoing the wizard
+/pitbox setAllowed Monaco 1 Alex Steve
+/pitbox setColor Monaco 1 MCLAREN
 ```
 
 ### Change Language to French
@@ -534,8 +622,18 @@ Check `race.enforceRacingGameMode` and `race.racingGameMode` in `config.yml`. Du
 </details>
 
 <details>
+<summary><strong>What happens if a player skips a required pit stop?</strong></summary>
+They're automatically disqualified the moment they cross the finish line with fewer completed stops than the race's <code>requiredPitStops</code> value, get an immediate broadcast notice, and appear separately at the bottom of the final standings under a <code>DSQ</code> marker. This is checked at finish-line crossing, not enforced by blocking the finish line itself — a player can still complete a lap without having pitted, they just won't be counted as a qualified finisher.
+</details>
+
+<details>
+<summary><strong>Can I lock a pit box to a specific team?</strong></summary>
+Yes — <code>/pitbox setAllowed &lt;race&gt; &lt;id&gt; &lt;names...&gt;</code> restricts a box to specific player names (e.g. both drivers on a team), or use <code>*</code> for anyone racing. Only one player can occupy a given box at a time regardless of who's allowed.
+</details>
+
+<details>
 <summary><strong>How do I back up/migrate races?</strong></summary>
-Copy the `plugins/IceBoatRacing/races/` folder (each `.yml` is a self-contained race). To migrate to another server, copy the folder and the `config.yml` + `lang/` files.
+Copy the `plugins/IceBoatRacing/races/` folder (each `.yml` is a self-contained race, including its pit boxes). To migrate to another server, copy the folder and the `config.yml` + `lang/` files.
 </details>
 
 <details>
@@ -560,14 +658,16 @@ Yes — all vanilla boat types including chest variants (`*_CHEST_BOAT`, `BAMBOO
 IceBoatRacing does **not** currently expose a public Java API for other plugins. However, the following internal classes are stable enough for hooking (use at your own risk):
 
 | Class               | Purpose                                                                                           |
-|---------------------|---------------------------------------------------------------------------------------------------|
+|---------------------|-----------------------------------------------------------------------------------------------------|
 | `RaceManager`       | `getRace(String)`, `getRaces()`, `startRace(Race)`, `endRace(Race)`, `togglePrepareRace()`        |
 | `CheckpointManager` | `saveCheckpoint()`, `saveTracedCheckpoints()`, `loadRaceCheckpoints()`, `toggleViewCheckpoints()` |
+| `PitBoxManager`     | `savePitBox()`, `loadRacePitBoxes()`, `startSession()`, `setAllowed()`, `setColor()`              |
 | `CarManager`        | `saveCar()`, `spawnCar()`, `changeOwner()`, `getAll()`                                            |
 | `AutoTraceManager`  | `start()`, `stop()`, `generatePreview()`, `accept()`, `togglePreview()`                           |
-| `Race`              | `getCheckpoints()`, `getCars()`, `getLapCount()`, `racers` (Map<UUID, RaceData>)                  |
-| `RaceData`          | `lapTimes`, `sectorsTimes`, `bestLapTime()`, `meanLapTime()`, `getRaceTime()`                     |
+| `Race`              | `getCheckpoints()`, `getCars()`, `getPitBoxes()`, `getLapCount()`, `getRequiredPitStops()`, `racers` (Map<UUID, RaceData>) |
+| `RaceData`          | `lapTimes`, `sectorsTimes`, `pitStopsCompleted`, `disqualified`, `bestLapTime()`, `meanLapTime()`, `getRaceTime()` |
 | `Checkpoint`        | `crosses(Location, Location)`, `contains(Location)`, `getAlternates()`                            |
+| `PitBox`            | `contains(Location)`, `isAllowed(String)`, `isOccupied()`, `getColor()`                           |
 | `Messages`          | `getMessage(key, args...)`, `formatArguments(...)`                                                |
 
 > **Stability:** No semantic versioning guarantee for internal classes. If you build an integration, consider forking or contacting the maintainer for a proper API module.
@@ -607,12 +707,12 @@ src/main/java/fr/mattmunich/iceBoatRacing/
 ├── Messages.java             # i18n, MiniMessage, placeholders
 ├── IBRCommand.java           # /ibr command
 ├── race/
-│   ├── Race.java             # Race model, YAML persistence, rankings
+│   ├── Race.java             # Race model, YAML persistence, rankings, DSQ-aware standings
 │   ├── RaceManager.java      # Race loading/saving/starting/ending
-│   ├── RaceCommand.java      # /race command
-│   ├── RaceListener.java     # PlayerMoveEvent → checkpoint crossing
+│   ├── RaceCommand.java      # /race command (incl. setPitStops)
+│   ├── RaceListener.java     # PlayerMoveEvent → checkpoint crossing + pit box detection
 │   ├── RaceCreator.java      # Interactive wizard (AsyncChatEvent)
-│   └── RaceData.java         # Per-player runtime data (laps, sectors, times)
+│   └── RaceData.java         # Per-player runtime data (laps, sectors, times, pit stops, DSQ)
 ├── checkpoint/
 │   ├── Checkpoint.java       # BOX/PLANE geometry, alternates, crossing logic
 │   ├── CheckpointManager.java# Checkpoint persistence + particle preview
@@ -622,12 +722,19 @@ src/main/java/fr/mattmunich/iceBoatRacing/
 │       ├── AutoTraceManager.java   # Recording, preview, editing, commit
 │       ├── AutoTraceSession.java   # Per-player session state
 │       └── PendingAutoTraceConfig.java # Config panel state
+├── pitbox/
+│   ├── PitBox.java            # Pit box model (AABB, task type, duration, allowed, color, occupancy)
+│   ├── PitBoxManager.java     # Persistence + active session handling (velocity freeze, countdown)
+│   ├── PitBoxColor.java       # Preset solid/gradient MiniMessage color enum
+│   ├── PitBoxCreator.java     # Interactive wizard (AsyncChatEvent)
+│   ├── PitBoxCommand.java     # /pitbox command
+│   └── PendingPitBoxConfig.java # Wizard session state
 ├── cars/
-│   ├── Car.java              # Boat entity wrapper + metadata
-│   ├── CarManager.java       # Car persistence + spawning
-│   ├── CarCommand.java       # /car command
-│   ├── CarCreator.java       # Interactive car registration
-│   └── CarListener.java      # Prevent exit, lock movement in prepare
+│   ├── Car.java               # Boat entity wrapper + metadata
+│   ├── CarManager.java        # Car persistence + spawning
+│   ├── CarCommand.java        # /car command
+│   ├── CarCreator.java        # Interactive car registration
+│   └── CarListener.java       # Prevent exit, lock movement in prepare
 └── listeners/
     ├── Connection.java       # Player join/quit during races
     └── WorldLoad.java        # (Unused, reserved)
@@ -647,7 +754,8 @@ Contributions welcome! Please:
 
 **Ideas from TODO.md:**
 - Fix logout/rejoin mid-race
-- Pit box system
+- Pit box task variety (currently `TIMED` only — e.g. skill-based stops)
+- Enforce pit stops at the finish line itself rather than DSQ-ing after crossing
 - Easier alternate route creation
 - Convert legacy config.yml races to per-race YAML
 - More tests
@@ -686,7 +794,7 @@ in the Software without restriction...
 - **Author:** [mattmunichYT](https://github.com/mattmunichYT)
 - **Built for:** **Grands Prix** by **Mini Jeux Entre Potes**
 - **Dependencies:** [Paper API](https://papermc.io) (compile-only), [Adventure](https://github.com/KyoriPowered/Adventure) (shaded via Paper), [MiniMessage](https://github.com/KyoriPowered/Adventure/tree/master/text/minimessage)
-- **Inspiration:** Mario Kart-style lap/timing system (original implementation)
+- **Inspiration:** Mario Kart-style lap/timing system (original implementation); real F1 team liveries for pit box colors
 - **Special thanks:** PaperMC team for the excellent API
 
 ---
