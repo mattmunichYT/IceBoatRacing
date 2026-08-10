@@ -292,7 +292,7 @@ pitbox:
     updated: "§aStand §f#%id%§a mis à jour, autorisé pour : §3%players%"
   setColor:
     updated: "§aStand §f#%id%§a couleur définie à §f%color%"
-    invalid: "§cCouleur invalide. Choix : §fRED, BLUE, GREEN, GOLD, ICE, FIRE, RAINBOW"
+    invalid: "§cCouleur invalide. Choix : §f%availableColors%"
   help: "§eSous-commandes de /pitbox :
   \n§7- §f/pitbox create <nomCourse>
   \n§7- §f/pitbox list <nomCourse>

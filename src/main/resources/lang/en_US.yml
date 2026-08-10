@@ -292,7 +292,7 @@ pitbox:
     updated: "§aPit box §f#%id%§a updated, allowed for: §3%players%"
   setColor:
     updated: "§aPit box §f#%id%§a color set to §f%color%"
-    invalid: "§cInvalid color. Choices: §fRED, BLUE, GREEN, GOLD, ICE, FIRE, RAINBOW"
+    invalid: "§cInvalid color. Choices: §f%availableColors%"
   help: "§eSubcommands of /pitbox:
   \n§7- §f/pitbox create <raceName>
   \n§7- §f/pitbox list <raceName>

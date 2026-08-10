@@ -8,6 +8,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jspecify.annotations.NonNull;
@@ -224,6 +225,7 @@ public class PitBoxCommand implements BasicCommand {
                 } else {
                     suggestions.add("*");
                     for (Player online : Bukkit.getOnlinePlayers()) suggestions.add(online.getName());
+                    for (OfflinePlayer offline : Bukkit.getOfflinePlayers()) suggestions.add(offline.getName());
                 }
             }
             case "setcolor" -> {
@@ -233,7 +235,13 @@ public class PitBoxCommand implements BasicCommand {
                     Race race = raceManager.getRace(args[1]);
                     if (race != null) for (PitBox box : race.getPitBoxes()) suggestions.add("" + box.getId());
                 } else if (args.length == 4) {
-                    for (PitBoxColor color : PitBoxColor.values()) suggestions.add(color.name());
+                    for (PitBoxColor color : PitBoxColor.values()) {
+                        if(args[3] != null && !args[3].isEmpty()) {
+                            if(color.name().toLowerCase().contains(args[3].toLowerCase())) suggestions.add(color.name());
+                        } else {
+                            suggestions.add(color.name());
+                        }
+                    }
                 }
             }
         }
