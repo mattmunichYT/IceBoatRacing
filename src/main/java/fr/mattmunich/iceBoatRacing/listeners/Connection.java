@@ -71,7 +71,7 @@ public class Connection implements Listener {
 
                 //Always remove and place back car to prevent bugs
                 Car car = racer.car;
-                carManager.spawnCar(car,racer.player,logOutLocation);
+                carManager.spawnCar(race, car, racer.player, logOutLocation);
 
                 //Add racer back to racing list
                 race.racing.add(racer);
@@ -97,10 +97,10 @@ public class Connection implements Listener {
             if (car != null) {
                 race.racing.remove(racer);
                 if (main.getConfig().getBoolean("allowRejoin")) {
+                    racer.setLogoutLocation(car.getLocation());
                     if (REMOVE_CAR_ON_LOGOUT) {
                         car.destroy();
                     }
-                    racer.setLogoutLocation(car.getLocation());
                 } else {
                     car.destroy();
                     main.liveSidebar.getScore(p.getName()).resetScore();

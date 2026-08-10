@@ -22,6 +22,7 @@ public class Race {
     private RaceManager raceManager;
     final String name;
     final World world;
+    float startRotation;
     YamlConfiguration config = null;
     int lapCount = 10;
     int requiredPitStops = 0;
@@ -113,6 +114,13 @@ public class Race {
     }
     public World getWorld() {
         return world;
+    }
+
+    public float getStartRotation() {
+        return startRotation;
+    }
+    public void setStartRotation(float startRotation) {
+        this.startRotation = startRotation;
     }
 
     //Lap count

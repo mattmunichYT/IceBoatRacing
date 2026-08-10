@@ -75,12 +75,13 @@ public class CarManager {
         return true;
     }
 
-    public void spawnCar(Car car, Player player) {
-        Location loc = car.getStartingLocation().clone();
+    public void spawnCar(Race race, Car car, Player player) {
+        Location startLoc = car.getStartingLocation().clone();
         Material boatMat = car.getBoatMaterial();
+        player.teleport(startLoc);
 
         // Spawn boat
-        Boat boat = (Boat) loc.getWorld().spawnEntity(loc, boatEntityFromMaterial(boatMat));
+        Boat boat = (Boat) startLoc.getWorld().spawnEntity(startLoc, boatEntityFromMaterial(boatMat));
 
         Component customName;
 
@@ -91,8 +92,7 @@ public class CarManager {
 
         Location boatLocation = boat.getLocation();
 
-        float startRotation = (float) main.getConfig().getInt("race.startRotation");
-        boatLocation.setRotation(startRotation,0F);
+        boatLocation.setRotation(race.getStartRotation(),0F);
         boat.teleport(boatLocation);
 
         boat.setInvulnerable(true);
@@ -101,8 +101,9 @@ public class CarManager {
         car.setBoat(boat);
     }
 
-    public void spawnCar(Car car, Player player, Location spawnLocation) {
+    public void spawnCar(Race race, Car car, Player player, Location spawnLocation) {
         Material boatMat = car.getBoatMaterial();
+        player.teleport(spawnLocation);
 
         //No double cars
         if(car.getBoat() != null) car.destroy();
@@ -121,7 +122,7 @@ public class CarManager {
         Location boatLocation = boat.getLocation();
 
         float startRotation = car.getStartingLocation() == spawnLocation
-                            ? (float) main.getConfig().getInt("race.startRotation")
+                            ? race.getStartRotation()
                             : spawnLocation.getYaw();
         boatLocation.setRotation(startRotation,0F);
         boat.teleport(boatLocation);

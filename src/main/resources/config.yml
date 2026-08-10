@@ -35,6 +35,7 @@ race:
   spectateOnFinish: true
 
   # Whether a player's car should be removed when they log out
+  ## If allowRejoin is false, the car will always be removed
   removeCarWhenLoggingOut: false
 
   # Configure the race lights
@@ -50,9 +51,3 @@ race:
       x: 123456789
       y: 123456789
       z: 123456789
-
-  # The rotation of the boat on race start
-  # ---
-  # Change this if your boats face the wrong
-  # direction when running /race start
-  startRotation: 0

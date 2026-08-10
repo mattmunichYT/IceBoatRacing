@@ -54,19 +54,19 @@ Designed for competitive servers like **Grands Prix by Mini Jeux Entre Potes**.
 
 ## ✨ Key Features
 
-| Feature                 | Description                                                                                             |
-|-------------------------|---------------------------------------------------------------------------------------------------------|
-| 🏁 **Race Lifecycle**   | Create → Prepare → Start (with countdown lights) → Live tracking → Finish with full standings           |
-| 📍 **Checkpoints**      | BOX (axis-aligned cuboid) or PLANE (oriented rectangle) — PLANE supports curved/diagonal tracks         |
-| 🔄 **Alternate Routes** | Add bypass gates to any checkpoint (pit lanes, spectator bypasses)                                      |
-| 🎯 **Sectors**          | Intermediate timing gates for split analysis                                                            |
-| 🤖 **AutoTrace**        | Record a lap → plugin generates PLANE checkpoints with track-surface detection                          |
-| 🅿️ **Pit Stops**        | Configurable mandatory pit-stop count per race, timed pit boxes with countdown + team-color themes, automatic DSQ for non-compliant finishers |
-| 🚤 **Car System**       | Register boats per player (all wood types + rafts + chest variants), custom names, clickable management |
-| 📊 **Live Sidebar**     | Real-time position/lap/progress per player during race                                                  |
-| 🏁 **Race Lights**      | Optional 6-stage stained glass starting lights (Brown→Red→Orange→Yellow→Lime→Green)                     |
-| 🌍 **i18n**             | English & French built-in; MiniMessage formatting with `%placeholder%` substitution                     |
-| 💾 **Persistence**      | One YAML file per race in `plugins/IceBoatRacing/races/`                                                |
+| Feature                 | Description                                                                                                                                   |
+|-------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| 🏁 **Race Lifecycle**   | Create → Prepare → Start (with countdown lights) → Live tracking → Finish with full standings                                                 |
+| 📍 **Checkpoints**      | BOX (axis-aligned cuboid) or PLANE (oriented rectangle) — PLANE supports curved/diagonal tracks                                               |
+| 🔄 **Alternate Routes** | Add bypass gates to any checkpoint (pit lanes, spectator bypasses)                                                                            |
+| 🎯 **Sectors**          | Intermediate timing gates for split analysis                                                                                                  |
+| 🤖 **AutoTrace**        | Record a lap → plugin generates PLANE checkpoints with track-surface detection                                                                |
+| 🅿️ **Pit Stops**         | Configurable mandatory pit-stop count per race, timed pit boxes with countdown + team-color themes, automatic DSQ for non-compliant finishers |
+| 🚤 **Car System**       | Register boats per player (all wood types + rafts + chest variants), custom names, clickable management                                       |
+| 📊 **Live Sidebar**     | Real-time position/lap/progress per player during race                                                                                        |
+| 🏁 **Race Lights**      | Optional 6-stage stained glass starting lights (Brown→Red→Orange→Yellow→Lime→Green)                                                           |
+| 🌍 **i18n**             | English & French built-in; MiniMessage formatting with `%placeholder%` substitution                                                           |
+| 💾 **Persistence**      | One YAML file per race in `plugins/IceBoatRacing/races/`                                                                                      |
 
 ---
 
@@ -185,7 +185,7 @@ Each race can require racers to complete a configurable number of pit stops befo
 - Entering an eligible, unoccupied box freezes the boat (velocity zeroed every tick) for the box's duration — no early exit is possible, since the freeze itself keeps the player inside the trigger volume.
 - An adaptive title countdown (`5, 4, 3... Go!`) tracks the box's configured duration, with a rising-pitch pling on completion.
 - Only one player may occupy a given box at a time; a box can be scoped to specific player names (e.g. a 2-driver team) or opened to everyone.
-- Each race tracks a `requiredPitStops` count (`/race setPitStops <race> <amount>`, defaults to 1). Racers who cross the finish line short of that count are automatically **disqualified**, with an immediate broadcast notice and a `DSQ` marker at the bottom of the final standings — below all qualified finishers, in original crossing order.
+- Each racetrack a `requiredPitStops` count (`/race setPitStops <race> <amount>`, defaults to 1). Racers who cross the finish line short of that count are automatically **disqualified**, with an immediate broadcast notice and a `DSQ` marker at the bottom of the final standings — below all qualified finishers, in original crossing order.
 
 **Colors:** a preset `PitBoxColor` enum (not free-form hex), including real F1 team livery gradients — McLaren, Mercedes, Red Bull, Ferrari, Williams, VCARB, Aston Martin, Haas, Alpine, Audi, Cadillac — plus solid basics and a few extra gradients (the plugin's own brand gradient, fire, rainbow). Colors render via MiniMessage and apply to both the "BOX BOX" call and the countdown title. Editable post-creation with `/pitbox setColor <race> <id> <color>`.
 
@@ -233,7 +233,7 @@ All commands require the corresponding permission (see [Permissions](#-permissio
 ### `/race` — Race Management
 
 | Subcommand                          | Description                                                           | Permission                     |
-|-------------------------------------|-------------------------------------------------------------------------|--------------------------------|
+|-------------------------------------|-----------------------------------------------------------------------|--------------------------------|
 | `/race create`                      | Start interactive race creation wizard (player only)                  | `iceboatracing.race.create`    |
 | `/race start [name]`                | Begin race with 5-second countdown + lights                           | `iceboatracing.command.race`   |
 | `/race prepare [name]`              | Toggle preparation mode (spawn cars, teleport players, set Adventure) | `iceboatracing.command.race`   |
@@ -248,7 +248,7 @@ All commands require the corresponding permission (see [Permissions](#-permissio
 ### `/checkpoint` — Checkpoint & Track Management
 
 | Subcommand                              | Description                                             | Permission                         |
-|-----------------------------------------|-----------------------------------------------------------|-------------------------------------|
+|-----------------------------------------|---------------------------------------------------------|------------------------------------|
 | `/checkpoint create <race> [SECTOR]`    | Save BOX checkpoint from shovel selection (pos1/pos2)   | `iceboatracing.command.checkpoint` |
 | `/checkpoint setFinish <race>`          | Save START_FINISH BOX checkpoint from shovel selection  | `iceboatracing.command.checkpoint` |
 | `/checkpoint remove [race] [id]`        | Remove checkpoint by ID (or nearest to player)          | `iceboatracing.command.checkpoint` |
@@ -263,7 +263,7 @@ All commands require the corresponding permission (see [Permissions](#-permissio
 #### AutoTrace Subcommands
 
 | Subcommand                                                                             | Description                                                      |
-|----------------------------------------------------------------------------------------|--------------------------------------------------------------------|
+|----------------------------------------------------------------------------------------|------------------------------------------------------------------|
 | `/checkpoint autotrace start <race> [spacing] [halfWidth] [halfHeight] [loop\|noloop]` | Begin recording; shows interactive config panel                  |
 | `/checkpoint autotrace configure <param> <value>`                                      | Adjust spacing/width/height/loop before confirming               |
 | `/checkpoint autotrace confirm`                                                        | Start recording with current panel settings                      |
@@ -277,18 +277,18 @@ All commands require the corresponding permission (see [Permissions](#-permissio
 
 ### `/pitbox` — Pit Stop Management
 
-| Subcommand                                   | Description                                                        | Permission                     |
-|-----------------------------------------------|---------------------------------------------------------------------|---------------------------------|
-| `/pitbox create <race>`                       | Interactive pit box creation wizard (name → location → duration → allowed → color) | `iceboatracing.command.pitbox` |
-| `/pitbox list <race>`                         | List all pit boxes (clickable edit-allowed/color/remove/TP buttons) | `iceboatracing.command.pitbox` |
-| `/pitbox remove <race> <id>`                  | Remove a pit box                                                    | `iceboatracing.command.pitbox` |
-| `/pitbox setAllowed <race> <id> <names\|*>`   | Change which players may use a pit box                              | `iceboatracing.command.pitbox` |
-| `/pitbox setColor <race> <id> <color>`        | Change a pit box's color/team livery                                | `iceboatracing.command.pitbox` |
+| Subcommand                                  | Description                                                                        | Permission                     |
+|---------------------------------------------|------------------------------------------------------------------------------------|--------------------------------|
+| `/pitbox create <race>`                     | Interactive pit box creation wizard (name → location → duration → allowed → color) | `iceboatracing.command.pitbox` |
+| `/pitbox list <race>`                       | List all pit boxes (clickable edit-allowed/color/remove/TP buttons)                | `iceboatracing.command.pitbox` |
+| `/pitbox remove <race> <id>`                | Remove a pit box                                                                   | `iceboatracing.command.pitbox` |
+| `/pitbox setAllowed <race> <id> <names\|*>` | Change which players may use a pit box                                             | `iceboatracing.command.pitbox` |
+| `/pitbox setColor <race> <id> <color>`      | Change a pit box's color/team livery                                               | `iceboatracing.command.pitbox` |
 
 ### `/car` — Car/Boat Management
 
 | Subcommand                              | Description                                                           | Permission                  |
-|-----------------------------------------|---------------------------------------------------------------------------|------------------------------|
+|-----------------------------------------|-----------------------------------------------------------------------|-----------------------------|
 | `/car create`                           | Interactive car registration (spawn block → owner → boat item → race) | `iceboatracing.command.car` |
 | `/car list [page]`                      | Paginated list of all cars (clickable remove/TP/changeOwner)          | `iceboatracing.command.car` |
 | `/car remove <id> <race>`               | Delete a car                                                          | `iceboatracing.command.car` |
@@ -298,7 +298,7 @@ All commands require the corresponding permission (see [Permissions](#-permissio
 ### `/ibr` or `/iceboatracing` — Plugin Control
 
 | Subcommand    | Description                                 | Permission                     |
-|---------------|-----------------------------------------------|---------------------------------|
+|---------------|---------------------------------------------|--------------------------------|
 | `/ibr reload` | Reload config, languages, races, scoreboard | `iceboatracing.command.plugin` |
 | `/ibr info`   | Show plugin info (author, purpose)          | `iceboatracing.command.plugin` |
 
@@ -307,7 +307,7 @@ All commands require the corresponding permission (see [Permissions](#-permissio
 ## 🔐 Permissions
 
 | Permission                         | Description                        | Default |
-|------------------------------------|--------------------------------------|---------|
+|------------------------------------|------------------------------------|---------|
 | `iceboatracing.*`                  | All plugin permissions             | `op`    |
 | `iceboatracing.command.*`          | All command permissions            | `op`    |
 | `iceboatracing.command.race`       | `/race` commands                   | `false` |
@@ -359,15 +359,11 @@ race:
       x: 123456789
       y: 123456789
       z: 123456789
-
-  # Boat yaw on race start (degrees) — adjust if boats face wrong way
-  startRotation: 0
 ```
 
 **Notes:**
 - `lights.from`/`to` default to `123456789` — if unchanged, lights are **disabled** regardless of `enabled: true`.
 - `racingGameMode`: `SPECTATOR` will not work (players can't control boats).
-- `startRotation`: Paper uses degrees (0 = South, 90 = West, 180 = North, 270 = East).
 - **Pit stops are not configured in `config.yml`** — they're per-race (`requiredPitStops`, set via `/race setPitStops`) and per-box (location, duration, allowed players, color, set via `/pitbox create`/`setAllowed`/`setColor`), living in each race's own YAML like checkpoints and cars.
 
 ### `paper-plugin.yml` (embedded in JAR)
@@ -386,6 +382,7 @@ All messages externalized with MiniMessage formatting. Key sections:
 - `error.*` — generic errors
 
 Add a new language by copying `en_US.yml` → `<lang>.yml`, translating values, and setting `language: <lang>` in `config.yml`.
+Don't edit the original language files as your edits will be overwritten on restart to guarantee that there are no missing messages when you update.
 
 ---
 
@@ -605,7 +602,7 @@ Not tested. The plugin uses main-thread-only Bukkit APIs (entity spawning, parti
 
 <details>
 <summary><strong>My boats face the wrong direction on start. How do I fix it?</strong></summary>
-Set `race.startRotation` in `config.yml` (degrees: 0=South, 90=West, 180=North, 270=East). Reload with `/ibr reload`.
+Set `startRotation` in the race's config file (degrees: 0=South, 90=West, 180=North, 270=East). Reload with `/ibr reload`.
 </details>
 
 <details>
@@ -657,18 +654,18 @@ Yes — all vanilla boat types including chest variants (`*_CHEST_BOAT`, `BAMBOO
 
 IceBoatRacing does **not** currently expose a public Java API for other plugins. However, the following internal classes are stable enough for hooking (use at your own risk):
 
-| Class               | Purpose                                                                                           |
-|---------------------|-----------------------------------------------------------------------------------------------------|
-| `RaceManager`       | `getRace(String)`, `getRaces()`, `startRace(Race)`, `endRace(Race)`, `togglePrepareRace()`        |
-| `CheckpointManager` | `saveCheckpoint()`, `saveTracedCheckpoints()`, `loadRaceCheckpoints()`, `toggleViewCheckpoints()` |
-| `PitBoxManager`     | `savePitBox()`, `loadRacePitBoxes()`, `startSession()`, `setAllowed()`, `setColor()`              |
-| `CarManager`        | `saveCar()`, `spawnCar()`, `changeOwner()`, `getAll()`                                            |
-| `AutoTraceManager`  | `start()`, `stop()`, `generatePreview()`, `accept()`, `togglePreview()`                           |
+| Class               | Purpose                                                                                                                    |
+|---------------------|----------------------------------------------------------------------------------------------------------------------------|
+| `RaceManager`       | `getRace(String)`, `getRaces()`, `startRace(Race)`, `endRace(Race)`, `togglePrepareRace()`                                 |
+| `CheckpointManager` | `saveCheckpoint()`, `saveTracedCheckpoints()`, `loadRaceCheckpoints()`, `toggleViewCheckpoints()`                          |
+| `PitBoxManager`     | `savePitBox()`, `loadRacePitBoxes()`, `startSession()`, `setAllowed()`, `setColor()`                                       |
+| `CarManager`        | `saveCar()`, `spawnCar()`, `changeOwner()`, `getAll()`                                                                     |
+| `AutoTraceManager`  | `start()`, `stop()`, `generatePreview()`, `accept()`, `togglePreview()`                                                    |
 | `Race`              | `getCheckpoints()`, `getCars()`, `getPitBoxes()`, `getLapCount()`, `getRequiredPitStops()`, `racers` (Map<UUID, RaceData>) |
-| `RaceData`          | `lapTimes`, `sectorsTimes`, `pitStopsCompleted`, `disqualified`, `bestLapTime()`, `meanLapTime()`, `getRaceTime()` |
-| `Checkpoint`        | `crosses(Location, Location)`, `contains(Location)`, `getAlternates()`                            |
-| `PitBox`            | `contains(Location)`, `isAllowed(String)`, `isOccupied()`, `getColor()`                           |
-| `Messages`          | `getMessage(key, args...)`, `formatArguments(...)`                                                |
+| `RaceData`          | `lapTimes`, `sectorsTimes`, `pitStopsCompleted`, `disqualified`, `bestLapTime()`, `meanLapTime()`, `getRaceTime()`         |
+| `Checkpoint`        | `crosses(Location, Location)`, `contains(Location)`, `getAlternates()`                                                     |
+| `PitBox`            | `contains(Location)`, `isAllowed(String)`, `isOccupied()`, `getColor()`                                                    |
+| `Messages`          | `getMessage(key, args...)`, `formatArguments(...)`                                                                         |
 
 > **Stability:** No semantic versioning guarantee for internal classes. If you build an integration, consider forking or contacting the maintainer for a proper API module.
 

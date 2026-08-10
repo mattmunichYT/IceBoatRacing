@@ -133,6 +133,7 @@ public class RaceManager {
             }
             race.setLapCount(lapCount);
             race.setRequiredPitStops(config.getInt("requiredPitStops", 0));
+            race.setStartRotation(config.getInt("startRotation", 0));
 
             races.add(race);
             main.log("Race " + name + " has been loaded");
@@ -187,6 +188,7 @@ public class RaceManager {
         }
         race.setLapCount(lapCount);
         race.setRequiredPitStops(config.getInt("requiredPitStops", 0));
+        race.setStartRotation(config.getInt("startRotation", 0));
 
         races.add(race);
 
@@ -234,6 +236,7 @@ public class RaceManager {
         config.set("world", race.getWorld().getName());
         config.set("lapCount", race.getLapCount());
         config.set("requiredPitStops", race.getRequiredPitStops());
+        config.set("startRotation", 0);
 
         try {
             config.save(raceFile);
@@ -285,6 +288,7 @@ public class RaceManager {
             }
             race.setLapCount(lapCount);
             race.setRequiredPitStops(config.getInt("requiredPitStops", 0));
+            race.setStartRotation(config.getInt("startRotation", 0));
 
             //More like reload from file if file/Race unsynced (not really load)
             carManager.loadCars(race);
@@ -462,7 +466,7 @@ public class RaceManager {
         if (owner == null) return;
 
         owner.setGameMode(GameMode.ADVENTURE);
-        carManager.spawnCar(car,owner);
+        carManager.spawnCar(race, car, owner);
         racers.put(owner.getUniqueId(),new RaceData(owner));
         racers.get(owner.getUniqueId()).car = car;
         racers.get(owner.getUniqueId()).checkpointIndex = -1;
