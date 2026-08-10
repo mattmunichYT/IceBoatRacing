@@ -24,7 +24,7 @@ public class Race {
     final World world;
     YamlConfiguration config = null;
     int lapCount = 10;
-    int requiredPitStops = 1;
+    int requiredPitStops = 0;
     final List<Checkpoint> checkpoints = new ArrayList<>();
     final List<Car> cars = new ArrayList<>();
     public final Map<UUID, RaceData> racers = new HashMap<>();

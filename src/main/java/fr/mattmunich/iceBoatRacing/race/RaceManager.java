@@ -132,7 +132,7 @@ public class RaceManager {
                 main.warn(race.getName() + "'s lap count wasn't found, therefore was set to the default value : 10" );
             }
             race.setLapCount(lapCount);
-            race.setRequiredPitStops(config.getInt("requiredPitStops", 1));
+            race.setRequiredPitStops(config.getInt("requiredPitStops", 0));
 
             races.add(race);
             main.log("Race " + name + " has been loaded");
@@ -186,7 +186,7 @@ public class RaceManager {
             main.warn(race.getName() + "'s lap count wasn't found, therefore was set to the default value : 10" );
         }
         race.setLapCount(lapCount);
-        race.setRequiredPitStops(config.getInt("requiredPitStops", 1));
+        race.setRequiredPitStops(config.getInt("requiredPitStops", 0));
 
         races.add(race);
 
@@ -284,7 +284,7 @@ public class RaceManager {
                 main.warn(race.getName() + "'s lap count wasn't found, therefore was set to the default value : 10" );
             }
             race.setLapCount(lapCount);
-            race.setRequiredPitStops(config.getInt("requiredPitStops", 1));
+            race.setRequiredPitStops(config.getInt("requiredPitStops", 0));
 
             //More like reload from file if file/Race unsynced (not really load)
             carManager.loadCars(race);

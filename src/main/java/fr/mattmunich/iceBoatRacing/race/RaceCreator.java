@@ -12,6 +12,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -182,7 +183,13 @@ public class RaceCreator implements Listener {
         }
 
         // Save race lapCount temporarily
-        Bukkit.getScheduler().runTask(main, () -> tempRace.get(p).setLapCount(count));
+        Bukkit.getScheduler().runTask(main, () -> {tempRace.get(p).setLapCount(count);
+            try {
+                tempRace.get(p).saveConfig();
+            } catch (IOException ignored) {
+                main.warn("Could not save race config when defining lap count on race creation.");
+            }
+        });
 
         p.sendMessage(getMessage(
                 "race.create.2.completed",
