@@ -9,11 +9,12 @@ public class PitBox {
 
     public enum TaskType {
         TIMED
-        // Future: CREATIVE, etc. — kept as an enum now so config doesn't need to migrate later.
+        // Future: CHEST...
     }
 
     private final int id;
     private final String name;
+    private PitBoxColor color;
     private final Location min;
     private final Location max;
     private final TaskType taskType;
@@ -23,7 +24,7 @@ public class PitBox {
     // Runtime-only occupancy state — never persisted, rebuilt as empty on load.
     private UUID occupant;
 
-    public PitBox(int id, String name, Location min, Location max, TaskType taskType, int duration, List<String> allowed) {
+    public PitBox(int id, String name, Location min, Location max, TaskType taskType, int duration, List<String> allowed, PitBoxColor color) {
         this.id = id;
         this.name = name;
         this.min = min;
@@ -31,6 +32,7 @@ public class PitBox {
         this.taskType = taskType;
         this.duration = duration;
         this.allowed = allowed;
+        this.color = color;
     }
 
     public boolean contains(Location loc) {
@@ -53,6 +55,14 @@ public class PitBox {
             if (name.equals("*") || name.equalsIgnoreCase(playerName)) return true;
         }
         return false;
+    }
+
+    public PitBoxColor getColor() {
+        return color;
+    }
+
+    public void setColor(PitBoxColor color) {
+        this.color = color;
     }
 
     public boolean isOccupied() {

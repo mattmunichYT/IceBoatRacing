@@ -227,6 +227,48 @@ public class PitBoxCreator implements Listener {
             tempPitBox.get(p).allowed = new ArrayList<>(allowed);
             p.sendMessage(getMessage("pitbox.create.4.completed", formatArguments("players", String.join(", ", allowed))));
 
+            showStep5(p);
+        });
+    }
+
+    public void showStep5(Player p) {
+        creatingPitBox.put(p, 5);
+
+        Title title = Title.title(
+                getMessage("pitbox.create.5.title"),
+                getMessage("pitbox.create.5.subtitle")
+        );
+        p.showTitle(title);
+        p.sendMessage(getMessage("pitbox.create.5.message", formatArguments("availableColors", PitBoxColor.values())));
+    }
+
+    @EventHandler
+    public void colorStep(AsyncChatEvent e) {
+        Player p = e.getPlayer();
+        Integer step = creatingPitBox.get(p);
+        if (step == null || step != 5) return;
+        if (confirmCancel.contains(p)) return;
+
+        e.setCancelled(true);
+        String message = s(e.message());
+
+        Bukkit.getScheduler().runTask(main, () -> {
+            if (message.equalsIgnoreCase(getStringMessage("race.create.cancel"))) {
+                cancel(p);
+                return;
+            }
+
+            PitBoxColor color;
+            try {
+                color = PitBoxColor.valueOf(message.toUpperCase());
+            } catch (IllegalArgumentException ex) {
+                p.sendMessage(getMessage("pitbox.create.5.invalid", formatArguments("availableColors", PitBoxColor.values())));
+                return;
+            }
+
+            tempPitBox.get(p).color = color;
+            p.sendMessage(getMessage("pitbox.create.5.completed", formatArguments("color", color.name())));
+
             endPitBoxCreation(p);
         });
     }
@@ -241,7 +283,7 @@ public class PitBoxCreator implements Listener {
 
         PitBox box = pitBoxManager.savePitBox(
                 config.race, config.name, config.pos1, config.pos2,
-                PitBox.TaskType.TIMED, config.duration, config.allowed
+                PitBox.TaskType.TIMED, config.duration, config.allowed, config.color
         );
 
         if (box == null) {

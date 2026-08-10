@@ -22,7 +22,7 @@
 
 #The prefix used in the beginning of every message
 #(except titles and messages under the "noPrefix" section)
-prefix: "<b><gradient:#8DABF3:#10CA9A>[Ice Boat Racing]</gradient></b><reset>"
+prefix: "<b><gradient:#8DABF3:#10CA9A>IBR</gradient><dark_gray> >></b><reset>"
 
 noPrefix:
   #The title of the scoreboard during a race
@@ -36,7 +36,7 @@ checkpoint:
   pos:
     1: "§bPos §31§b checkpoint: §3%x%§b, §3%y%§b, §3%z%§b"
     2: "§bPos §32§b checkpoint: §3%x%§b, §3%y%§b, §3%z%§b"
-    notSet: "§cSelect §4both positions§c first!\n§8ℹ Using a wooden shovel"
+    notSet: "§cSelect §4both positions§c first!\n§8ℹ With a wooden shovel"
   #Usage / success messages
   create:
     usage: "§cUsage: /checkpoint create [sector|finish] <raceName>"
@@ -46,8 +46,8 @@ checkpoint:
   sectorSaved: "§aSector §e%sectorID% §asaved!"
   removed: "§aCheckpoint §6%id%§a removed"
   count: "§aThere are %count% checkpoints"
-  resetPlayerScore: "§a%player%'s score has been reset"
-  nearestCheckpointID: "§bThe nearest checkpoint for race §3%race%§b has ID §3%id%"
+  resetPlayerScore: "§a%player%'s§a score has been reset"
+  nearestCheckpointID: "§bThe nearest checkpoint in race §3%race%§b has ID §3%id%"
 
   #Errors
   noCheckpointFound: "§cNo checkpoint found nearby!\n§8ℹ You can also run /checkpoint list"
@@ -65,6 +65,7 @@ checkpoint:
   \n§7- §f/checkpoint remove|delete [raceName] [checkpointID]
   \n§7- §f/checkpoint clearAll <raceName>
   \n§7- §f/checkpoint resetData <player> <raceName>"
+
 
   #Tags shown in /checkpoint list
   list:
@@ -85,25 +86,26 @@ checkpoint:
     \n§7- §f/checkpoint autotrace sector §7(click 2 blocks with the shovel first)
     \n§7- §f/checkpoint autotrace add §7(click 2 blocks to add a manual checkpoint)
     \n§7- §f/checkpoint autotrace resize §7(click 2 blocks marking the correct width)
-    \n§7- §f/checkpoint autotrace delete §7(stand near the checkpoint to delete)
-    \n§7- §f/checkpoint autotrace accept\n§7- §f/checkpoint autotrace cancel"
+    \n§7- §f/checkpoint autotrace delete §7(stand near the checkpoint to remove)
+    \n§7- §f/checkpoint autotrace accept
+    \n§7- §f/checkpoint autotrace cancel"
     usageStart: "§cUsage: /checkpoint autotrace start <raceName> [spacing] [width] [height] [loop|noloop]"
-    started: "§aRecording started for race §f%race%§a. Do a full lap of the track by boat or on foot.\n§8ℹ Recording stops automatically once you're back near the starting point, or run §f/checkpoint autotrace stop §8manually."
+    started: "§aRecording started for race §f%race%§a. Ride or walk the full lap of the track.\n§8ℹ Recording stops automatically once you return near the starting point, or run §f/checkpoint autotrace stop §8manually."
     noSession: "§cYou don't have an active auto-trace session."
-    notEnoughPoints: "§cNot enough recorded points to generate checkpoints. Try again."
+    notEnoughPoints: "§cNot enough points recorded to generate checkpoints. Try again."
     stopped: "§aRecording stopped. §f%count% §acheckpoints generated.\n§8ℹ Run §f/checkpoint autotrace sector §8to mark sectors, /checkpoint autotrace resize/delete to edit checkpoints, or §f/checkpoint autotrace accept §8to save."
     loopClosed: "§aLoop closed — recording stopped automatically. §f%count% §acheckpoints generated."
     noPreview: "§cNo generated checkpoints to preview.\n§8ℹ Run start then stop first."
     previewOn: "§aPreview enabled §7— run the command again to disable it."
     previewOff: "§7Preview disabled."
     noPreviewForSector: "§cNo active preview to add a sector to.\n§8ℹ Run start then stop first."
-    sectorMarked: "§aSector marked.\n§8ℹ Run §f/checkpoint autotrace preview §8to see it, or mark more sectors."
-    sectorFailed: "§cCouldn't place the sector here.\n§8ℹ Try clicking closer to the recorded path."
+    sectorMarked: "§aSector marked.\n§8ℹ Run §f/checkpoint autotrace preview §8to view it, or mark more sectors."
+    sectorFailed: "§cCouldn't place the sector here.\n§8ℹ Try clicking closer to the recorded track."
     resizeFailed: "§cNo checkpoint found near those clicks.\n§8ℹ Try clicking closer to the one you want to resize."
-    resized: "§aCheckpoint §f#%position% §a(§f%type%§a) resized to match your clicks §7(%distance% blocks away)."
+    resized: "§aCheckpoint §f#%position% §a(§f%type%§a) resized based on your clicks §7(%distance% blocks away)."
     addFailed: "§cInvalid auto-trace session, couldn't add a checkpoint."
     added: "§aCheckpoint added!"
-    deleteFailed: "§cNo checkpoint found near you to delete."
+    deleteFailed: "§cNo checkpoint found near you to remove."
     deleted: "§7Checkpoint §f#%position% §7(§f%type%§7) removed from the preview §7(%distance% blocks away)."
     acceptFailed: "§cNothing to save.\n§8ℹ Generate a preview first (start, then stop)."
     accepted: "§aAuto-traced checkpoints saved!"
@@ -120,7 +122,7 @@ checkpoint:
         edit: "§b[Edit]"
         toggle: "§b[Toggle]"
         start: "§a§l[Start recording]"
-      defined: "§aParameter §f%param% §aset to §f%value%§a."
+      defined: "§aSetting §f%param% §aset to §f%value%§a."
       error:
         noneDefined: "§cNo configuration in progress.\n§8ℹ Run §f/checkpoint autotrace start <raceName> §8first."
         invalidNumerical: "§cInvalid numerical value."
@@ -134,11 +136,11 @@ checkpoint:
   clearAll:
     warning: "§c⚠ This will permanently delete the §f%count% §ccheckpoint(s) of race §f%race%§c."
     confirmHint: "§cRun §f/checkpoint clearAll %race% §cagain within 10 seconds to confirm."
-    cleared: "§aAll checkpoints for race §f%race% §ahave been deleted."
+    cleared: "§aAll checkpoints for race §f%race% §ahave been removed."
 
 race:
   #Will be displayed to every player
-  start: "§aRace %race% is starting..." #Displayed when '/race start <name>' is used
+  start: "§aRace %race% starting..." #Displayed when '/race start <name>' is used
   notFound: "§cRace not found." #Displayed when the inputted race is invalid
   end: "§cThe race has ended!" #Displayed when '/race end' is used
 
@@ -146,15 +148,22 @@ race:
   prepare: "§aPlayers will be placed automatically." #Displayed when '/race prepare' is used (and prepare toggled OFF)
   cancelPrepare: "§aPreparation mode disabled." #Displayed when '/race prepare' is used (and prepare toggled ON)
   deleted: "§aRace %race% has been deleted."#Displayed when '/race delete' is used and is successful
+
+  #Lap count
   currentLapCount: "§bThe lap count for race %race% is set to §3%lapCount%§b. \n§8ℹ Use /race setLapCount <name> <number>"
   updatedLapCount: "§bThe lap count for race §3%race%§b has been set to §3%lapCount%§b."
-  invalidLapCount: "§cThe entered lap count is invalid."
+  invalidLapCount: "§cThe lap count entered is invalid."
+
+  #Pit stops
+  currentPitStops: "§bThe number of mandatory pit stops for race %race% is set to §3%pitStops%§b."
+  updatedPitStops: "§bThe number of mandatory pit stops for race §3%race%§b has been set to §3%pitStops%§b."
+  invalidPitStops: "§cThe pit stop count entered is invalid."
 
   #Help message
   help: "§3--------- §b§l/race§r §3---------
   \n§3->§a start [name] §8-§7 Start the race
   \n§3->§a prepare [name] §8-§7 Prepare the players
-  \n§7§oℹ Automatically places players into their cars
+  \n§7§oℹ Automatically places players in their cars
   \n§3->§a end [name] §8-§7 End the race
   \n§3->§a delete [name] §8-§7 Delete the race
   \n§3->§a setLapCount [name] <number> §8-§7 Set the lap count"
@@ -163,13 +172,14 @@ race:
   onCompleteLap:
     title: "§6%currentLapCount%/%raceLapCount%"
     subtitle: "§alaps completed"
-    message: "§3%player%§b §8§l>>§r§b lap n°§3%ID%§b completed in §3%time%§b"
+    message: "§3%player%§b §8§l>>§r§b lap #§3%ID%§b completed in §3%time%§b"
     messageBestLapTimeYet: "§3%player% §8§l>>§b lap §3%ID%§b completed in §3%time%§b §7-§f new record time!"
   onCrossSector: "§r§3%player%§b §8§l>>§r§b sector §3%ID%§b: §3%time%§b"
   onFinish:
     message: "§2%player%§b finished the race in §2%time%§a and is ranked §2#%ranking%§a!"
     title: "§2Race finished!"
     subtitle: "§aYou are #%ranking%"
+    disqualifiedNotice: "§c%player% §cdid not complete the required number of pit stops (§4%completed%§c/§4%required%§c) and will be disqualified!"
     statsMessage: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lRace Results §x§0§0§A§D§F§F§l▬▬▬▬▬▬§r\n
     §bRanking: §3#%ranking%§b/%players%\n
     §bTotal time: §x§4§0§C§4§F§F%raceTime%\n
@@ -179,8 +189,8 @@ race:
     §bBest sector times:\n
     %bestSectorsTimes%
     \n
-    §bGap to the winner: §c%gapToWinner%\n
-    §bGap to the player ahead: §x§F§F§D§7§0§0%gapToNext%\n
+    §bGap to winner: §c%gapToWinner%\n
+    §bGap to next player: §x§F§F§D§7§0§0%gapToNext%\n
     §x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n
     "
     statsMessageWinner: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lRace Results §x§0§0§A§D§F§F§l▬▬▬▬▬▬§r\n
@@ -195,12 +205,13 @@ race:
     "
     sectorFormat: "§b- Sector §3#%sectorID% §8» §a%time%\n"
   onEnd:
-    top: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lFinal Ranking §x§0§0§A§D§F§F§l▬▬▬▬▬▬§r\n"
+    top: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬▬ §x§5§5§D§D§F§F§lFinal Standings §x§0§0§A§D§F§F§l▬▬▬▬▬▬§r\n"
     winnerFormat: "§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%§b\n"
     playerFormat: "§r§3#%ranking% §b%player% §8» §x§4§0§C§4§F§F%raceTime%§b (gap: §x§4§0§C§4§F§F%gapToNext%§b)\n"
+    disqualifiedFormat: "§4DSQ §8» §c%player% §8(§c%raceTime%§8) §7— incomplete pit stops\n"
     highlights: "\n§r§b🏆 Best lap: §a%bestLapPlayer% §8(§a%bestLapTime%§8)\n
     §b🐢 Slowest lap: §c%worstLapPlayer% §8(§c%worstLapTime%§8)\n
-    §b⚡ Victory gap: §3%winnerGap%\n"
+    §b⚡ Win gap: §3%winnerGap%\n"
     bestSectorTimesTop: "\n§x§0§0§A§D§F§F§l▬▬▬▬▬ §x§5§5§D§D§F§F§lBest Sectors §x§0§0§A§D§F§F§l▬▬▬▬▬§r\n"
     sectorFormat: "§r§bSector §3#%sectorID% §8» §a%player% §8(§e%time%§8)\n"
     bottom: "§x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
@@ -214,7 +225,7 @@ race:
     later: "no"
     confirm: "confirm" #Confirm race deletion
     cancel: "cancel" #The message to send to cancel the race creation process
-    confirmCancel: "§eAre you sure you want to cancel race creation?\nUse §c%confirm%§e to confirm and §a%cancel%§e to cancel the deletion."
+    confirmCancel: "§eAre you sure you want to cancel the race creation?\nUse §c%confirm%§e to confirm and §a%cancel%§e to cancel the deletion."
     cancelled: "§bRace creation has been cancelled." #When you cancel the creation
     #Naming the race
     1:
@@ -222,7 +233,7 @@ race:
       subtitle: "§bEnter the §3name§b in chat"
       message: "§bStart by entering the race name below (in chat)."
       completed: "§bThe race name has been set to §3%name%"
-      alreadyExists: "§cA race with that name already exists, please choose another name."
+      alreadyExists: "§cA race with the same name already exists, please choose another name."
     2:
       title: "§3Lap count"
       subtitle: "§bEnter the §3number§b in chat"
@@ -233,22 +244,22 @@ race:
     3:
       title: "§3Track?"
       subtitle: "§bDefine the track?"
-      message: "§bWould you like to define the race track? 
-      \n-> Enter §3%start%§b to start now or §3%later%§b to configure this later.
-      \n§8§oℹ This will be used to update participants' live score. You can always do this later!"
+      message: "§bDo you want to define the race track? 
+      \n-> Enter §3%start%§b to start or §3%later%§b to configure this later.
+      \n§8§oℹ This will be used to update participants' live scores. You can always do this later!"
 
     #Track definition process
     4:
       title: "§3Track definition"
-      subtitle: "§bPosition yourself at the start"
-      message: "§bStand on the start line and adjust the settings below if needed, then click §3Start recording§b."
+      subtitle: "§bStand at the start"
+      message: "§bStand on the starting line and adjust the parameters below if needed, then click §3Start recording§b."
       done:
         title: "§2Done"
         subtitle: "§aTrack saved!"
     5:
       title: "§3Cars?"
       subtitle: "§bDefine the cars?"
-      message: "§bWould you like to define the participants' cars? \n-> Enter §3%start%§b to start now or §3%later%§b to configure this later.\n§8§oℹ︎ These will be automatically placed when the race starts, with their passengers teleported inside. You can always do this later!"
+      message: "§bWould you like to define the participants' cars? \n-> Enter §3%start%§b to start or §3%later%§b to configure this later.\n§8§oℹ These will be automatically placed when the race starts, and their passengers teleported into them. You can always do this later!"
     6:
       title: "§3Car creation"
       subtitle: "§bCreation is about to begin..."
@@ -265,11 +276,63 @@ race:
     done:
       title: "§3Race saved!"
       subtitle: "§bThe race was created successfully"
-      message: "§aThe race was saved successfully!\n§b-> §3/checkpoint autotrace§b to define/edit the track\n§b-> §3/car create§b to register cars\n§b-> §3/race info <raceName>§b to view race information"
+      message: "§aThe race has been saved successfully!\n§b-> §3/checkpoint autotrace§b to define/edit the track\n§b-> §3/car create§b to register cars\n§b-> §3/race info <raceName>§b to view the race's information"
 
 pitbox:
-  boxBox: "§b§lBOX BOX §f%player%§c"
-  completed: "§aPit box done, you can now proceed!"
+  boxBox: "BOX BOX %player%"
+  completed: "§aPit stop complete §7(§f%completed%§7/§f%required%§7)§a, you can go now!"
+  countdown:
+    title: "§c§l%seconds%"
+    subtitle: "§7pit stop in progress..."
+    go: "§a§lGo!"
+  noPitBoxes: "§cNo pit boxes defined for this race."
+  invalid: "§cInvalid pit box number"
+  removed: "§aPit box §6%id%§a removed"
+  setAllowed:
+    updated: "§aPit box §f#%id%§a updated, allowed for: §3%players%"
+  setColor:
+    updated: "§aPit box §f#%id%§a color set to §f%color%"
+    invalid: "§cInvalid color. Choices: §fRED, BLUE, GREEN, GOLD, ICE, FIRE, RAINBOW"
+  help: "§eSubcommands of /pitbox:
+  \n§7- §f/pitbox create <raceName>
+  \n§7- §f/pitbox list <raceName>
+  \n§7- §f/pitbox remove <raceName> <id>
+  \n§7- §f/pitbox setAllowed <raceName> <id> <players...|*>
+  \n§7- §f/pitbox setColor <raceName> <id> <color>"
+
+  create:
+    confirm: "confirm"
+    cancelled: "§bPit box creation has been cancelled."
+    1:
+      title: "§3Pit box name"
+      subtitle: "§bEnter the §3name§b in chat"
+      message: "§bEnter a name for this pit box (in chat)."
+      completed: "§bThe pit box name has been set to §3%name%"
+    2:
+      title: "§3Location"
+      subtitle: "§bMark the zone with the shovel"
+      message: "§bSelect the §32 corners§b of the pit box zone with the wooden shovel, then type §3%confirm%§b."
+      completed: "§bPit box location saved."
+    3:
+      title: "§3Duration"
+      subtitle: "§bEnter the §3duration§b in chat"
+      message: "§bEnter the §3duration in seconds§b of the pit stop (in chat)."
+      completed: "§bDuration set to §3%duration%s"
+    4:
+      title: "§3Allowed players"
+      subtitle: "§bEnter the names in chat"
+      message: "§bEnter the §3names of the players§b allowed (separated by spaces), or §3*§b for everyone."
+      completed: "§bAllowed players: §3%players%"
+    5:
+      title: "§3Color"
+      subtitle: "§bChoose a color"
+      message: "§bChoose a color for this pit box (type the name): §f%availableColors%"
+      completed: "§bColor set to §f%color%"
+      invalid: "§cInvalid color. Choices: §f%availableColors%"
+    done:
+      title: "§2Pit box created!"
+      subtitle: "§aThe pit box has been saved"
+      message: "§aPit box §3%name%§a (§3#%id%§a) was created successfully!"
 
 car:
   #Errors
@@ -300,7 +363,7 @@ car:
     3:
       title: "§3Choose the boat"
       subtitle: "§3%check% §bto confirm"
-      message: "§bHold a boat, then type §3%check%§b."
+      message: "§bHold a boat then type §3%check%§b."
       invalidItem: "§cHold a boat in your hand!"
       check: "done"
 
@@ -316,5 +379,5 @@ car:
 error:
   invalidNumber: "§cInvalid number"
   playerNotFound: "§cPlayer not found"
-  playerToExecuteCommand: "§cYou must be a player to do that."
+  playerToExecuteCommand: "§cYou must be a player to do this."
   unknown: "§cAn unknown error occurred. Check the console for an error message."

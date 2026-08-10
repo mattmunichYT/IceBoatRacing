@@ -1,37 +1,32 @@
 package fr.mattmunich.iceBoatRacing.pitbox;
 
 import fr.mattmunich.iceBoatRacing.Main;
-import fr.mattmunich.iceBoatRacing.Messages;
 import fr.mattmunich.iceBoatRacing.race.Race;
 import fr.mattmunich.iceBoatRacing.race.RaceData;
-import fr.mattmunich.iceBoatRacing.race.RaceManager;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Boat;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.util.Vector;
 
 import java.io.IOException;
 import java.util.*;
 
-import static fr.mattmunich.iceBoatRacing.Messages.formatArguments;
-import static fr.mattmunich.iceBoatRacing.Messages.getMessage;
+import static fr.mattmunich.iceBoatRacing.Messages.*;
 
 public class PitBoxManager {
 
     private final Main main;
-    private RaceManager raceManager;
 
     /**
      * Tracks the repeating velocity-zero task for each player currently serving a pit stop,
-     * so it can be cancelled on completion, race end, or plugin disable.
+     * so it can be canceled on completion, race end, or plugin disable.
      */
     private final Map<UUID, BukkitTask> activeSessions = new HashMap<>();
 
@@ -39,15 +34,12 @@ public class PitBoxManager {
         this.main = main;
     }
 
-    public void setRaceManager(RaceManager raceManager) {
-        this.raceManager = raceManager;
-    }
 
     // ---------------------------------------------------------------------
     // Storage (mirrors CheckpointManager's save/load conventions)
     // ---------------------------------------------------------------------
 
-    public PitBox savePitBox(Race race, String name, Location l1, Location l2, PitBox.TaskType taskType, int duration, List<String> allowed) {
+    public PitBox savePitBox(Race race, String name, Location l1, Location l2, PitBox.TaskType taskType, int duration, List<String> allowed, PitBoxColor color) {
         Location min = min(l1, l2);
         Location max = max(l1, l2);
         int id = nextId(race);
@@ -66,6 +58,7 @@ public class PitBoxManager {
         config.set(path + ".taskType", taskType.name());
         config.set(path + ".duration", duration);
         config.set(path + ".allowed", allowed);
+        config.set(path + ".color", color.name());
 
         try {
             race.saveConfig();
@@ -74,7 +67,7 @@ public class PitBoxManager {
             return null;
         }
 
-        PitBox box = new PitBox(id, name, min, max, taskType, duration, allowed);
+        PitBox box = new PitBox(id, name, min, max, taskType, duration, allowed, color);
         race.addPitBox(box);
         return box;
     }
@@ -96,6 +89,26 @@ public class PitBoxManager {
         }
 
         box.setAllowed(allowed);
+        return true;
+    }
+
+    public boolean setColor(Race race, PitBox box, PitBoxColor color) {
+        YamlConfiguration config = race.getConfig();
+        if (config == null) {
+            main.log("§cColor for pit box " + box.getId() + " on race " + race.getName() + " wasn't updated, see cause above.");
+            return false;
+        }
+
+        config.set("pitboxes." + box.getId() + ".color", color.name());
+
+        try {
+            race.saveConfig();
+        } catch (IOException e) {
+            main.err("Couldn't update color for pit box " + box.getId() + " on race " + race.getName() + " because its config threw an error on saving.", e);
+            return false;
+        }
+
+        box.setColor(color);
         return true;
     }
 
@@ -144,7 +157,10 @@ public class PitBoxManager {
             List<String> allowed = config.getStringList("pitboxes." + key + ".allowed");
             if (allowed.isEmpty()) allowed = List.of("*");
 
-            race.addPitBox(new PitBox(id, name, min, max, taskType, duration, allowed));
+            String colorString = config.getString("pitboxes." + key + ".color");
+            PitBoxColor color = colorString == null ? PitBoxColor.ICE : PitBoxColor.valueOf(colorString);
+
+            race.addPitBox(new PitBox(id, name, min, max, taskType, duration, allowed, color));
         }
 
         race.getPitBoxes().sort(Comparator.comparingInt(PitBox::getId));
@@ -169,7 +185,7 @@ public class PitBoxManager {
         data.pittingBox = box;
         data.lastPitBox = System.currentTimeMillis();
 
-        Bukkit.broadcast(getMessage("pitbox.boxBox", formatArguments("player", player.getName())));
+        Bukkit.broadcast(buildBoxBoxMessage(player, box));
 
         long endTimeMillis = System.currentTimeMillis() + (box.getDuration() * 1000L);
         final int[] lastShownSecond = {-1}; // effectively-final holder so the lambda can mutate it
@@ -264,5 +280,11 @@ public class PitBoxManager {
                 Math.max(a.getX(), b.getX()),
                 Math.max(a.getY(), b.getY()),
                 Math.max(a.getZ(), b.getZ()));
+    }
+
+    private Component buildBoxBoxMessage(Player player, PitBox box) {
+        String raw = getStringMessage("pitbox.boxBox").replace("%player%", player.getName());
+        String tagged = box.getColor().getTagPrefix() + raw + box.getColor().getTagSuffix();
+        return MiniMessage.miniMessage().deserialize(tagged);
     }
 }

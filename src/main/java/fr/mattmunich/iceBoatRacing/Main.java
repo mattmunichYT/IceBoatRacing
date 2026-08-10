@@ -137,7 +137,6 @@ public final class Main extends JavaPlugin {
         //Initalise race manager in car and checkpoint manager
         carManager.setRaceManager(raceManager);
         checkpointManager.setRaceManager(raceManager);
-        pitBoxManager.setRaceManager(raceManager);
         log("Initiazed RaceManager for Car and Checkpoint managers");
 
         //Load races after CarManager and CheckpointManager have RaceManager set and after server startup, so that all worlds are loaded.
@@ -186,7 +185,7 @@ public final class Main extends JavaPlugin {
         registerCommand("race", "Command to manage the race", new RaceCommand(this, raceManager,raceCreator));
         registerCommand("checkpoint", "Command to manage checkpoints", new CheckpointCommand(checkpointManager, raceManager, autoTraceManager, new RaceCreator(this, raceManager, carManager, carCreator), this));
         registerCommand("car", "Command to manage cars", new CarCommand(carManager,raceManager,carCreator));
-        registerCommand("pitbox", "Command to manage pit boxes", new PitBoxCommand(this, raceManager, pitBoxManager, pitBoxCreator));
+        registerCommand("pitbox", "Command to manage pit boxes", new PitBoxCommand(raceManager, pitBoxManager, pitBoxCreator));
         log("Done registering commands!");
     }
 

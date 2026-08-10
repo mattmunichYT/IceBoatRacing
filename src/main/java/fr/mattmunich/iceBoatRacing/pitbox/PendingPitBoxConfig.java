@@ -14,6 +14,7 @@ public class PendingPitBoxConfig {
     public Location pos2;
     public int duration = 5;
     public List<String> allowed = new ArrayList<>();
+    public PitBoxColor color = PitBoxColor.ICE;
 
     public PendingPitBoxConfig(Race race) {
         this.race = race;

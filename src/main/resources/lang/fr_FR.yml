@@ -22,7 +22,7 @@
 
 #The prefix used in the beginning of every message
 #(except titles and messages under the "noPrefix" section)
-prefix: "<b><gradient:#8DABF3:#10CA9A>IBR</gradient><dark_gray> >> </b><reset>"
+prefix: "<b><gradient:#8DABF3:#10CA9A>IBR</gradient><dark_gray> >></b><reset>"
 
 noPrefix:
   #The title of the scoreboard during a race
@@ -279,7 +279,7 @@ race:
       message: "§aLa course a été sauvegardée avec succès !\n§b-> §3/checkpoint autotrace§b pour définir/modifer le circuit\n§b-> §3/car create§b pour enregistrer des voitures\n§b-> §3/race info <nomCourse>§b pour consulter les informations de la course"
 
 pitbox:
-  boxBox: "§b§lBOX BOX §3%player%"
+  boxBox: "BOX BOX %player%"
   completed: "§aArrêt aux stands terminé §7(§f%completed%§7/§f%required%§7)§a, vous pouvez repartir !"
   countdown:
     title: "§c§l%seconds%"
@@ -290,11 +290,15 @@ pitbox:
   removed: "§aStand §6%id%§a supprimé"
   setAllowed:
     updated: "§aStand §f#%id%§a mis à jour, autorisé pour : §3%players%"
+  setColor:
+    updated: "§aStand §f#%id%§a couleur définie à §f%color%"
+    invalid: "§cCouleur invalide. Choix : §fRED, BLUE, GREEN, GOLD, ICE, FIRE, RAINBOW"
   help: "§eSous-commandes de /pitbox :
   \n§7- §f/pitbox create <nomCourse>
   \n§7- §f/pitbox list <nomCourse>
   \n§7- §f/pitbox remove <nomCourse> <id>
-  \n§7- §f/pitbox setAllowed <nomCourse> <id> <joueurs...|*>"
+  \n§7- §f/pitbox setAllowed <nomCourse> <id> <joueurs...|*>
+  \n§7- §f/pitbox setColor <nomCourse> <id> <couleur>"
 
   create:
     confirm: "confirmer"
@@ -319,6 +323,12 @@ pitbox:
       subtitle: "§bEntrez les noms dans le chat"
       message: "§bEntrez les §3noms des joueurs§b autorisés (séparés par des espaces), ou §3*§b pour tout le monde."
       completed: "§bJoueurs autorisés : §3%players%"
+    5:
+      title: "§3Couleur"
+      subtitle: "§bChoisissez une couleur"
+      message: "§bChoisissez une couleur pour ce stand (tapez le nom) : §f%availableColors%"
+      completed: "§bCouleur définie à §f%color%"
+      invalid: "§cCouleur invalide. Choix : §f%availableColors%"
     done:
       title: "§2Stand créé !"
       subtitle: "§aLe stand a été sauvegardé"
