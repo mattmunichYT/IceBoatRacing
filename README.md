@@ -4,10 +4,10 @@
 
 [![Modrinth](https://img.shields.io/modrinth/dt/ibr?label=Modrinth%20Downloads&color=00AF5C&logo=modrinth)](https://modrinth.com/plugin/ibr)
 [![CurseForge](https://img.shields.io/curseforge/dt/1474021?label=CurseForge%20Downloads&color=F16436&logo=curseforg-)](https://www.curseforge.com/minecraft/bukkit-plugins/ice-boat-racing)
-[![Paper](https://img.shields.io/badge/Paper-1.21.9%2B-FF4444?logo=paper)](https://papermc.io)
+[![Paper](https://img.shields.io/badge/Paper-1.21.4%2B-FF4444?logo=paper)](https://papermc.io)
 [![Java](https://img.shields.io/badge/Java-21-007396?logo=openjdk)](https://openjdk.org)
 [![License](https://img.shields.io/github/license/mattmunichYT/IceBoatRacing?color=blue)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-v2.0--BETA--2-orange)](https://github.com/mattmunichYT/IceBoatRacing/releases)
+[![Version](https://img.shields.io/badge/Version-v2.0--RELEASE-light)](https://github.com/mattmunichYT/IceBoatRacing/releases)
 
 ---
 
@@ -35,7 +35,7 @@
 
 ## 🎯 Overview
 
-**IceBoatRacing** transforms your Minecraft server into a competitive ice boat racing platform. Built for **Paper 1.21.9+** with **Java 21**, the plugin provides everything needed to create, manage, and run professional ice boat races:
+**IceBoatRacing** transforms your Minecraft server into a competitive ice boat racing platform. Built for **Paper 1.21.4+** with **Java 21**, the plugin provides everything needed to create, manage, and run professional ice boat races:
 
 - **Interactive race creation wizard** — step-by-step guided setup
 - **Precision checkpoint system** — two geometry modes (BOX legacy / PLANE modern) with alternate routes
@@ -179,8 +179,8 @@ Messages use **MiniMessage** (gradients, hex, formatting) + `%placeholder%` subs
 
 | Requirement   | Version                   |
 |---------------|---------------------------|
-| **Minecraft** | 1.21.9+                   |
-| **Paper**     | 1.21.9-R0.1+ (API)        |
+| **Minecraft** | 1.21.4+                   |
+| **Paper**     | 1.21.4-R0.1+ (API)        |
 | **Java**      | 21 (toolchain enforced)   |
 
 > The plugin uses Paper's Brigadier command API, Adventure text components, and modern NMS mappings — **Paper is required**; Spigot/CraftBukkit/Purpur/Folia untested.
@@ -550,7 +550,7 @@ Yes — `RaceManager.activeRaces` supports multiple concurrent races. Each has i
 
 <details>
 <summary><strong>Does the plugin support chest boats / bamboo rafts?</strong></summary>
-Yes — all vanilla boat types including chest variants (`*_CHEST_BOAT`, `BAMBOO_CHEST_RAFT`) and `PALE_OAK_BOAT` (1.21.9+). Just hold the item during `/car create` step 3.
+Yes — all vanilla boat types including chest variants (`*_CHEST_BOAT`, `BAMBOO_CHEST_RAFT`) and `PALE_OAK_BOAT` (1.21.4+). Just hold the item during `/car create` step 3.
 </details>
 
 ---
