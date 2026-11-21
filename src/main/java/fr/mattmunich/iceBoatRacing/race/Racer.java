@@ -1,6 +1,7 @@
 package fr.mattmunich.iceBoatRacing.race;
 
 import fr.mattmunich.iceBoatRacing.cars.Car;
+import fr.mattmunich.iceBoatRacing.checkpoint.Checkpoint;
 import fr.mattmunich.iceBoatRacing.pitbox.PitBox;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -30,6 +31,18 @@ public class Racer {
     public final List<Long> lapTimes = new ArrayList<>();
     public final Map<Integer,List<Long>> sectorsTimes = new HashMap<>();
 
+    /**
+     * Position on the starting grid (1 = pole), 0 until it has been assigned.
+     * Used by the live score as the baseline for {@code positionChange}.
+     */
+    public int gridPosition = 0;
+
+    /**
+     * Wall-clock time ({@link System#currentTimeMillis()}) at which this racer passed each checkpoint,
+     * keyed by {@link #getProgress()}. Used by the live score to compute gaps between racers.
+     */
+    private final Map<Integer, Long> progressTimes = new HashMap<>();
+
     public Race race;
     public Location logoutLocation;
 
@@ -51,6 +64,42 @@ public class Racer {
 
     public int getScore() {
         return ((lapCount-1) * getRace().getCheckpoints().size()) + checkpointIndex;
+    }
+
+    /**
+     * How many of the race's checkpoints (by ID order) the racer has passed in the current lap:
+     * 0 = none yet, 1 = the start/finish line, ... Unlike {@link #checkpointIndex} this has no gaps
+     * when checkpoint IDs have been removed.
+     */
+    public int getCheckpointOrdinal() {
+        int ordinal = 0;
+        for (Checkpoint cp : race.getCheckpoints()) {
+            if (cp.getId() <= checkpointIndex) ordinal++;
+        }
+        return ordinal;
+    }
+
+    /**
+     * Total number of checkpoints passed since the start line, across all laps. Strictly increases
+     * as the racer drives; 0 until they have crossed the start line.
+     */
+    public int getProgress() {
+        if (lapCount < 1) return 0;
+        return (lapCount - 1) * race.getCheckpoints().size() + getCheckpointOrdinal();
+    }
+
+    /**
+     * Remembers when the racer reached their current {@link #getProgress()}.
+     * Call right after {@link #checkpointIndex} / {@link #lapCount} were updated.
+     */
+    public void recordProgress(long now) {
+        int progress = getProgress();
+        if (progress > 0) progressTimes.put(progress, now);
+    }
+
+    /** @return when the racer reached the given {@link #getProgress()} value, or null if never recorded */
+    public Long getProgressTime(int progress) {
+        return progressTimes.get(progress);
     }
 
     public long bestLapTime() {

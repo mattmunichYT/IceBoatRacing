@@ -99,6 +99,7 @@ public class RaceListener implements Listener {
                 if (handleCrossing(racer, afterNext, now, race, player)) break;      // actually crossed one
 
                 racer.checkpointIndex = afterNext.getId();
+                racer.recordProgress(now);
                 liveScoreManager.updateRacer(racer);
                 break;
             }
@@ -107,6 +108,7 @@ public class RaceListener implements Listener {
             if (handleCrossing(racer, nextCheckpoint, now, race, player)) break;
 
             racer.checkpointIndex = nextCheckpoint.getId();
+            racer.recordProgress(now);
             liveScoreManager.updateRacer(racer);
         }
 
@@ -231,6 +233,7 @@ public class RaceListener implements Listener {
         racer.lapTime = now;
         racer.lapCount++;
         racer.checkpointIndex = firstCheckpointId(race);
+        racer.recordProgress(now);
         liveScoreManager.updateRacer(racer);
     }
 

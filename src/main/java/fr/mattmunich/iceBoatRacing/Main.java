@@ -165,7 +165,7 @@ public final class Main extends JavaPlugin {
         checkpointManager = new CheckpointManager(this);
         autoTraceManager = new AutoTraceManager(this, checkpointManager);
         pitBoxManager = new PitBoxManager(this);
-        liveScoreManager = new LiveScoreManager();
+        liveScoreManager = new LiveScoreManager(this);
 
         //Load race manager
         raceManager = new RaceManager(this,carManager, checkpointManager, pitBoxManager, liveScoreManager);
