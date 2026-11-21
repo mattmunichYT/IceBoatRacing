@@ -297,8 +297,6 @@ public class RaceListener implements Listener {
         Player player = racer.player;
         Race race = racer.race;
 
-        liveScoreManager.removeRacer(racer); //make sure that the last players are visible
-
         Map<Integer, Racer> finished = race.rankings;
         race.racing.remove(racer);
         racer.endTime = now;
@@ -308,6 +306,7 @@ public class RaceListener implements Listener {
         int ranking = finished.size();
         racer.ranking = ranking; //Used for the final ranking later on
         racer.disqualified = racer.pitStopsCompleted < race.getRequiredPitStops();
+        liveScoreManager.updateRacer(racer);
         boolean isWinner = ranking == 1;
 
         long raceTime = now - racer.startTime;

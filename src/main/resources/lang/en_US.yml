@@ -24,18 +24,6 @@
 #(except titles and messages under the "noPrefix" section)
 prefix: "<b><gradient:#8DABF3:#10CA9A>IBR</gradient><dark_gray> >></b><reset>"
 
-liveScore:
-  #The title of the scoreboard during a race
-  title: "§3-- §b§lIce Boat Race §3--"
-  #The line shown for each racer. Available arguments:
-  # %player%, %ranking% (1 = leading), %raceTime%, %lastLapTime%, %bestLapTime%,
-  # %gapToLeader%, %gapToNext% (to the racer in front), %gapToPrevious% (to the racer behind),
-  # %completedLapCount%, %currentLap%, %lapCount%, %lapProgress% (in %),
-  # %completedPitStops%, %remainingPitStops%, %requiredPitStops%,
-  # %positionChange% (places gained/lost since the start), %playersRemaining%, %isLeader% (true/false)
-  # Values that don't exist (yet) show up as "-"
-  format: "§b%player% §7- §3Laps: §b%completedLapCount%§3/§b%lapCount% §7- §3Pits: §b%completedPitStops%§3/§b%requiredPitStops%"
-
 sidebar:
   hidden: "§aRace sidebar hidden. Use /sidebar to show it again."
   visible: "§aRace sidebar shown."

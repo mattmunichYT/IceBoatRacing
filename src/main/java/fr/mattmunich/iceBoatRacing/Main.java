@@ -217,6 +217,7 @@ public final class Main extends JavaPlugin {
     public void onDisable() {
         super.onDisable();
         if (trainingManager != null) trainingManager.cleanupAll();
+        if (liveScoreManager != null) liveScoreManager.reset();
         raceManager.saveAllRaces();
         statsManager.saveAll();
     }

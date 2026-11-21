@@ -555,10 +555,10 @@ public class RaceManager {
         racer.race = race;
         racer.player = owner;
 
-        liveScoreManager.removeRacer(owner);
-        liveScoreManager.addRacer(racer);
         race.racing.add(racer);
         racers.put(owner.getUniqueId(), racer);
+        liveScoreManager.removeRacer(owner);
+        liveScoreManager.addRacer(racer);
         return Result.SUCCESS;
     }
 
@@ -651,7 +651,7 @@ public class RaceManager {
             car.destroy();
         }
 
-        liveScoreManager.empty();
+        liveScoreManager.removeRace(race);
         race.racers.clear();
 
         if (wasStarted && main.getStatsManager() != null) {

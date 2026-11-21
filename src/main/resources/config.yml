@@ -16,6 +16,51 @@
 # Will read from the file [language].yml, so by default: en_US.yml
 language: en_US
 
+# Configure the per-player sidebars shown during official races.
+# Text supports legacy section-sign color codes (for example §b) and %placeholders%.
+# Each lines entry becomes one sidebar row, in the configured order; at most 15 rows are shown.
+raceSidebar:
+  racer:
+    title: "§3-- §bIce Boat Racing §3--"
+    emptyValue: "---"
+    # Racer placeholders: %race%, %player%, %position%, %lap%, %currentLap%, %completedLapCount%, %lapCount%,
+    # %lapProgress%, %lastLapTime%, %bestLapTime%, %raceTime%, %gapToLeader%, %gapToNext%, %gapToPrevious%,
+    # %completedPitStops%, %requiredPitStops%, %remainingPitStops%, %positionChange%, %playersRemaining%, %isLeader%.
+    # Nearby row placeholders: %aheadLine%, %selfLine%, %behindLine%.
+    # The row format placeholders are %position%, %player%, %gap%, %lap%.
+    aheadFormat: "§e%position%. §f%player% §7%gap%"
+    selfFormat: "§b> %position%. §f%player% §7%gap%"
+    behindFormat: "§7%position%. §f%player% §8%gap%"
+    lines:
+      - "§7%race%"
+      - ""
+      - "§bPOS §f%position%"
+      - "§bLAP §f%completedLapCount%/%lapCount%"
+      - "§bLAST §f%lastLapTime%"
+      - "§bBEST §f%bestLapTime%"
+      - "§bGAP §f%gapToLeader%"
+      - ""
+      - "%aheadLine%"
+      - "%selfLine%"
+      - "%behindLine%"
+      - ""
+      - "§bPITS §f%completedPitStops%/%requiredPitStops%"
+  spectator:
+    title: "§3-- §bIce Boat Racing §3--"
+    emptyValue: "---"
+    # Spectator placeholders: %race%, %racerCount%, %playersRemaining%, %lapCount%, %requiredPitStops%,
+    # %leader%, %leaderLap%, %leaderLapProgress%, %leaderBestLap%, and %top1% / %top2% / %top3%.
+    # Top row format placeholders: %position%, %player%, %gap%, %lap%.
+    topFormat: "§b%position%. §f%player% §7%gap%"
+    lines:
+      - "§7%race%"
+      - "§7LIVE STANDINGS"
+      - "%top1%"
+      - "%top2%"
+      - "%top3%"
+      - ""
+      - "§bON TRACK §f%playersRemaining%"
+
 # Configure the race.
 race:
   # Whether a player should be allowed to continue racing even after logging out and back in

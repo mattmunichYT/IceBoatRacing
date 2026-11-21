@@ -3,19 +3,20 @@ package fr.mattmunich.iceBoatRacing;
 import fr.mattmunich.iceBoatRacing.checkpoint.Checkpoint;
 import fr.mattmunich.iceBoatRacing.race.Race;
 import fr.mattmunich.iceBoatRacing.race.Racer;
+import io.papermc.paper.scoreboard.numbers.NumberFormat;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.*;
 import org.bukkit.util.Vector;
 
 import java.util.*;
 
+import static fr.mattmunich.iceBoatRacing.Main.c;
 import static fr.mattmunich.iceBoatRacing.Main.formatTime;
-import static fr.mattmunich.iceBoatRacing.Messages.*;
 
 public class LiveScoreManager {
     /** Shown for a value that doesn't exist (yet), e.g. the gap to the player ahead when you are leading. */
@@ -24,37 +25,29 @@ public class LiveScoreManager {
     /** How often the sidebar is refreshed on its own, so that time-based values keep ticking between checkpoints. */
     private static final long REFRESH_INTERVAL_TICKS = 20L;
 
-    private final Plugin plugin;
+    private final Main main;
     private BukkitTask refreshTask;
 
-    /** The racers currently shown on the sidebar. Their lines are all refreshed together, as one racer moving changes everyone's ranking/gaps. */
+    /** Registered racers keep their personalized view, including finishers and disqualified racers. */
     private final Map<UUID, Racer> tracked = new LinkedHashMap<>();
-    /** Scoreboards replaced while a player has hidden the shared race sidebar. */
+    /** One independent sidebar scoreboard per viewer, with the previous scoreboard retained for handoff. */
+    private final Map<UUID, SidebarState> sidebars = new HashMap<>();
+    /** Scoreboards hidden by /sidebar; the value is the scoreboard to restore when shown again. */
     private final Map<UUID, Scoreboard> hiddenSidebarScoreboards = new HashMap<>();
 
-    Scoreboard scoreboard;
-    Objective liveScore;
-    private String entryFormat(Racer racer) { return "liveScore-" + racer.getPlayerName(); }
+    private static final String OBJECTIVE_NAME = "ibr_sidebar";
+    private static final int MAX_LINES = 15;
 
-    public LiveScoreManager(Plugin plugin) {
-        this.plugin = plugin;
-        register();
-    }
-
-    private void register() {
-        scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
-        Objective tempSidebar = scoreboard.getObjective("IBR.liveScore");
-        if(tempSidebar != null) tempSidebar.unregister();
-        liveScore = scoreboard.registerNewObjective("IBR.liveScore", Criteria.DUMMY, getMessage("liveScore.title"));
-        liveScore.setDisplaySlot(DisplaySlot.SIDEBAR);
-//        liveScore.numberFormat(NumberFormat.blank());
+    public LiveScoreManager(Main main) {
+        this.main = main;
+        Objective oldSharedSidebar = Bukkit.getScoreboardManager().getMainScoreboard().getObjective("IBR.liveScore");
+        if (oldSharedSidebar != null) oldSharedSidebar.unregister();
         startRefreshTask();
     }
 
     private void startRefreshTask() {
         stopRefreshTask();
-        if (plugin == null) return;
-        refreshTask = Bukkit.getScheduler().runTaskTimer(plugin, this::refreshAll, REFRESH_INTERVAL_TICKS, REFRESH_INTERVAL_TICKS);
+        refreshTask = Bukkit.getScheduler().runTaskTimer(main, this::refreshAll, REFRESH_INTERVAL_TICKS, REFRESH_INTERVAL_TICKS);
     }
 
     private void stopRefreshTask() {
@@ -66,56 +59,39 @@ public class LiveScoreManager {
 
     public LiveScoreManager reload() {
         reset();
-        register();
+        startRefreshTask();
         return this;
     }
 
     public void reset() {
         stopRefreshTask();
         tracked.clear();
-        if (liveScore == null) return;
-        try { liveScore.unregister(); } catch (Exception ignored) {}
-        liveScore = null;
-        scoreboard = null;
+        for (UUID playerId : new ArrayList<>(sidebars.keySet())) clearSidebar(playerId);
+        hiddenSidebarScoreboards.clear();
     }
 
     public void empty() {
         tracked.clear();
-        if (liveScore == null) return;
-        try { liveScore.unregister(); } catch (Exception ignored) {}
-        liveScore = null;
-        register();
+        for (UUID playerId : new ArrayList<>(sidebars.keySet())) clearSidebar(playerId);
+        hiddenSidebarScoreboards.clear();
     }
 
     public void addRacer(Racer racer) throws NullPointerException, IllegalArgumentException {
-        if (liveScore == null) {
-            throw new NullPointerException("Couldn't add racer, because the liveScore wasn't found! (this.liveScore is null)");
-        }
-        Score s;
-        try {
-            s = liveScore.getScore(entryFormat(racer));
-        } catch (Exception e) {
-            throw new IllegalArgumentException(e);
-        }
-        s.customName(formatScore(racer, new Standings(racer.getRace())));
-        s.setScore(0);
         tracked.put(racer.uniqueId, racer);
+        refreshRace(racer.getRace(), new Standings(racer.getRace()));
     }
 
     public void removeRacer(Racer racer) {
-        if (liveScore == null) return;
-        tracked.remove(racer.uniqueId);
-        Score s = liveScore.getScore(entryFormat(racer));
-        s.resetScore();
+        // Finishers remain racers for sidebar purposes; this call refreshes their final position.
+        if (racer.getRace() != null) refreshRace(racer.getRace(), new Standings(racer.getRace()));
     }
 
     public void removeRacer(Player racer) {
-        if (liveScore == null) return;
-        tracked.remove(racer.getUniqueId());
-        try {
-            Score s = liveScore.getScore(racer);
-            s.resetScore();
-        } catch (Exception ignored) {}
+        Racer removed = tracked.remove(racer.getUniqueId());
+        if (removed != null) {
+            clearSidebar(racer.getUniqueId());
+            if (removed.getRace() != null) refreshRace(removed.getRace(), new Standings(removed.getRace()));
+        }
     }
 
     /** Toggles the race sidebar for one player without changing the shared scoreboard. */
@@ -123,7 +99,13 @@ public class LiveScoreManager {
         UUID playerId = player.getUniqueId();
         Scoreboard previous = hiddenSidebarScoreboards.remove(playerId);
         if (previous != null) {
+            SidebarState state = sidebars.get(playerId);
+            if (state != null && state.yieldedToTraining
+                    && !hasTrainingScoreboard(player.getScoreboard()) && hasTrainingScoreboard(previous)) {
+                previous = state.scoreboard;
+            }
             player.setScoreboard(previous);
+            refreshAll();
             return false;
         }
 
@@ -134,7 +116,9 @@ public class LiveScoreManager {
 
     /** Drops per-session sidebar state when the player disconnects. */
     public void forgetSidebar(Player player) {
-        hiddenSidebarScoreboards.remove(player.getUniqueId());
+        UUID playerId = player.getUniqueId();
+        clearSidebar(playerId);
+        hiddenSidebarScoreboards.remove(playerId);
     }
 
     /**
@@ -142,93 +126,249 @@ public class LiveScoreManager {
      * because the ranking and the gaps of the other racers may have changed too.
      */
     public void updateRacer(Racer racer) {
-        if (liveScore == null) return;
         tracked.putIfAbsent(racer.uniqueId, racer);
-        refreshRace(racer.getRace());
+        if (racer.getRace() != null) refreshRace(racer.getRace(), new Standings(racer.getRace()));
     }
 
     private void refreshAll() {
-        if (liveScore == null || tracked.isEmpty()) return;
+        if (tracked.isEmpty()) {
+            for (UUID playerId : new ArrayList<>(sidebars.keySet())) clearSidebar(playerId);
+            return;
+        }
         Set<Race> races = new LinkedHashSet<>();
         for (Racer racer : tracked.values()) {
             if (racer.getRace() != null) races.add(racer.getRace());
         }
-        for (Race race : races) refreshRace(race);
-    }
-
-    private void refreshRace(Race race) {
-        if (liveScore == null || race == null) return;
-        Standings standings = new Standings(race);
-        for (Racer racer : tracked.values()) {
-            if (racer.getRace() != race) continue;
-            Score s = liveScore.getScore(entryFormat(racer));
-            s.setScore(racer.getScore());
-            s.customName(formatScore(racer, standings));
+        Set<UUID> activeViewers = new HashSet<>();
+        for (Race race : races) {
+            refreshRace(race, new Standings(race));
+            for (UUID id : race.racers.keySet()) activeViewers.add(id);
+            for (Player player : race.getWorld().getPlayers()) {
+                if (!race.racers.containsKey(player.getUniqueId())) activeViewers.add(player.getUniqueId());
+            }
+        }
+        for (UUID playerId : new ArrayList<>(sidebars.keySet())) {
+            if (!activeViewers.contains(playerId)) clearSidebar(playerId);
         }
     }
 
-    /**
-     * Placeholders available in {@code liveScore.format} (lang files):
-     * <ul>
-     *   <li>{@code player}, {@code completedLapCount}, {@code lapCount}, {@code completedPitStops}, {@code requiredPitStops}</li>
-     *   <li>{@code ranking}: current position, 1 = leading (racers who already finished come first, in finishing order)</li>
-     *   <li>{@code raceTime}: time since the racer first crossed the start line</li>
-     *   <li>{@code lastLapTime} / {@code bestLapTime}: last / best lap of this racer</li>
-     *   <li>{@code gapToLeader}: time behind the race leader</li>
-     *   <li>{@code gapToNext}: time behind the racer in front (same meaning as in the finish messages)</li>
-     *   <li>{@code gapToPrevious}: time ahead of the racer right behind</li>
-     *   <li>{@code remainingPitStops}: required pit stops still to do (never negative)</li>
-     *   <li>{@code currentLap}: the lap the racer is driving, 1-based (0 before crossing the start line)</li>
-     *   <li>{@code lapProgress}: how far through the current lap the racer is, in %</li>
-     *   <li>{@code positionChange}: places gained (+) or lost (-) compared to the starting grid</li>
-     *   <li>{@code playersRemaining}: racers still on track (not finished, not gone)</li>
-     *   <li>{@code isLeader}: {@code true} / {@code false}</li>
-     * </ul>
-     * Times and gaps have no value ({@value NO_VALUE}) until they exist, e.g. {@code lastLapTime} before the first lap is done.
-     */
-    private Component formatScore(Racer racer, Standings standings) {
-        Race race = racer.getRace();
-        long now = System.currentTimeMillis();
+    private void refreshRace(Race race, Standings standings) {
+        if (race == null || race.getWorld() == null) return;
+        Set<UUID> racerIds = race.racers.keySet();
+        for (Racer racer : race.racers.values()) {
+            Player player = Bukkit.getPlayer(racer.uniqueId);
+            if (player != null && player.isOnline()) {
+                refreshViewer(player, race, standings, racer, false);
+            }
+        }
+        for (Player player : race.getWorld().getPlayers()) {
+            if (!racerIds.contains(player.getUniqueId())) refreshViewer(player, race, standings, null, true);
+        }
+    }
 
+    private void refreshViewer(Player player, Race race, Standings standings, Racer racer, boolean spectator) {
+        UUID id = player.getUniqueId();
+        SidebarState state = sidebars.get(id);
+        if (hasTrainingScoreboard(player.getScoreboard())) {
+            if (state != null) state.yieldedToTraining = true;
+            return;
+        }
+        if (hiddenSidebarScoreboards.containsKey(id)) {
+            if (state != null && state.yieldedToTraining
+                    && player.getScoreboard() == state.previousScoreboard) {
+                player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+            }
+            return;
+        }
+        if (state != null && state.race != race) {
+            clearSidebar(id);
+            state = null;
+        }
+        if (state == null) {
+            Scoreboard board = Bukkit.getScoreboardManager().getNewScoreboard();
+            Objective objective = board.registerNewObjective(OBJECTIVE_NAME, Criteria.DUMMY, Component.empty());
+            objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+            objective.numberFormat(NumberFormat.blank());
+            state = new SidebarState(race, board, objective, player.getScoreboard());
+            sidebars.put(id, state);
+            player.setScoreboard(board);
+        } else if (player.getScoreboard() == state.previousScoreboard
+                || (state.yieldedToTraining && player.getScoreboard() == Bukkit.getScoreboardManager().getMainScoreboard())) {
+            // TrainingManager restores the main scoreboard when training ends.
+            player.setScoreboard(state.scoreboard);
+            state.yieldedToTraining = false;
+        } else if (player.getScoreboard() != state.scoreboard) {
+            // Another plugin currently owns the player's scoreboard.
+            return;
+        }
+
+        SidebarLayout layout = readLayout(spectator ? "spectator" : "racer");
+        Map<String, String> values = spectator
+                ? spectatorValues(race, standings, layout)
+                : racerValues(racer, standings, layout);
+        state.objective.displayName(c(formatTemplate(layout.title, values)));
+        List<String> lines = layout.lines.stream()
+                .map(line -> formatTemplate(line, values))
+                .limit(MAX_LINES)
+                .toList();
+        for (int i = 0; i < lines.size(); i++) {
+            String entry = "ibr-line-" + i;
+            Score score = state.objective.getScore(entry);
+            score.setScore(MAX_LINES - i);
+            score.customName(c(lines.get(i)));
+            state.lineEntries.add(entry);
+        }
+        Set<String> currentEntries = new HashSet<>();
+        for (int i = 0; i < lines.size(); i++) currentEntries.add("ibr-line-" + i);
+        for (String stale : new HashSet<>(state.lineEntries)) {
+            if (!currentEntries.contains(stale)) {
+                state.objective.getScore(stale).resetScore();
+                state.lineEntries.remove(stale);
+            }
+        }
+    }
+
+    private static boolean hasTrainingScoreboard(Scoreboard scoreboard) {
+        return scoreboard.getTeam("ibr_training") != null;
+    }
+
+    private Map<String, String> racerValues(Racer racer, Standings standings, SidebarLayout layout) {
+        Map<String, String> values = new HashMap<>();
+        if (racer == null) return values;
         int index = standings.indexOf(racer);
-        boolean known = index >= 0;
-        int ranking = index + 1;
-
-        // Race time: runs from the racer's own first start-line crossing, like the final result does
-        long raceTime = 0;
-        if (racer.startTime > 0) raceTime = (racer.endTime > 0 ? racer.endTime : now) - racer.startTime;
-
+        int position = index + 1;
+        long now = System.currentTimeMillis();
         List<Long> lapTimes = racer.getLapTimes();
-        String lastLapTime = lapTimes.isEmpty() ? NO_VALUE : formatTime(lapTimes.getLast());
-        String bestLapTime = lapTimes.isEmpty() ? NO_VALUE : formatTime(racer.bestLapTime());
+        String raceTime = racer.startTime <= 0 ? NO_VALUE : formatTime((racer.endTime > 0 ? racer.endTime : now) - racer.startTime);
+        String gapToLeader = index > 0 ? formatGap(racer, standings.get(0)) : NO_VALUE;
+        values.put("race", racer.getRace().getName());
+        values.put("player", racer.getPlayerName());
+        values.put("position", index < 0 ? NO_VALUE : String.valueOf(position));
+        values.put("lap", String.valueOf(Math.max(0, racer.lapCount)));
+        values.put("lapCount", String.valueOf(racer.getRace().getLapCount()));
+        values.put("completedLapCount", String.valueOf(racer.getCompletedLapCount()));
+        values.put("lapProgress", standings.lapProgress(racer) + "%");
+        values.put("lastLapTime", lapTimes.isEmpty() ? NO_VALUE : formatTime(lapTimes.getLast()));
+        values.put("bestLapTime", lapTimes.isEmpty() ? NO_VALUE : formatTime(racer.bestLapTime()));
+        values.put("raceTime", raceTime);
+        values.put("gapToLeader", gapToLeader);
+        values.put("gapToNext", index > 0 ? formatGap(racer, standings.get(index - 1)) : NO_VALUE);
+        values.put("gapToPrevious", index >= 0 && index < standings.size() - 1 ? formatGap(standings.get(index + 1), racer) : NO_VALUE);
+        values.put("completedPitStops", String.valueOf(racer.getCompletedPitStops()));
+        values.put("requiredPitStops", String.valueOf(racer.getRace().getRequiredPitStops()));
+        values.put("remainingPitStops", String.valueOf(Math.max(0, racer.getRace().getRequiredPitStops() - racer.getCompletedPitStops())));
+        int positionChange = racer.gridPosition > 0 ? racer.gridPosition - position : 0;
+        values.put("positionChange", positionChange > 0 ? "+" + positionChange : String.valueOf(positionChange));
+        values.put("currentLap", String.valueOf(Math.max(0, racer.lapCount)));
+        values.put("playersRemaining", String.valueOf(standings.playersRemaining));
+        values.put("isLeader", String.valueOf(index == 0));
 
-        String gapToLeader = known && index > 0 ? formatGap(racer, standings.get(0)) : NO_VALUE;
-        String gapToNext = known && index > 0 ? formatGap(racer, standings.get(index - 1)) : NO_VALUE;
-        String gapToPrevious = known && index < standings.size() - 1 ? formatGap(standings.get(index + 1), racer) : NO_VALUE;
+        Racer ahead = index > 0 ? standings.get(index - 1) : null;
+        Racer behind = index >= 0 && index < standings.size() - 1 ? standings.get(index + 1) : null;
+        values.put("aheadLine", ahead == null ? layout.emptyValue : racerRow(layout.aheadFormat, ahead, index - 1, standings));
+        values.put("selfLine", racerRow(layout.selfFormat, racer, index, standings));
+        values.put("behindLine", behind == null ? layout.emptyValue : racerRow(layout.behindFormat, behind, index + 1, standings));
+        return values;
+    }
 
-        // gridPosition is 0 until the race has started
-        int positionChange = known && racer.gridPosition > 0 ? racer.gridPosition - ranking : 0;
+    private Map<String, String> spectatorValues(Race race, Standings standings, SidebarLayout layout) {
+        Map<String, String> values = new HashMap<>();
+        values.put("race", race.getName());
+        values.put("lapCount", String.valueOf(race.getLapCount()));
+        values.put("requiredPitStops", String.valueOf(race.getRequiredPitStops()));
+        values.put("playersRemaining", String.valueOf(standings.playersRemaining));
+        values.put("racerCount", String.valueOf(race.racers.size()));
+        for (int i = 0; i < 3; i++) {
+            String key = "top" + (i + 1);
+            if (i < standings.size()) values.put(key, racerRow(layout.topFormat, standings.get(i), i, standings));
+            else values.put(key, layout.emptyValue);
+        }
+        Racer leader = standings.size() > 0 ? standings.get(0) : null;
+        values.put("leader", leader == null ? layout.emptyValue : leader.getPlayerName());
+        values.put("leaderLap", leader == null ? NO_VALUE : String.valueOf(Math.max(0, leader.lapCount)));
+        values.put("leaderLapProgress", leader == null ? NO_VALUE : standings.lapProgress(leader) + "%");
+        values.put("leaderBestLap", leader == null || leader.getLapTimes().isEmpty() ? NO_VALUE : formatTime(leader.bestLapTime()));
+        return values;
+    }
 
-        return getMessage("liveScore.format", formatArguments(
-                "ranking", known ? String.valueOf(ranking) : NO_VALUE,
-                "player", racer.disqualified ? racer.getPlayerName() + " §cDSQ" : racer.getPlayerName(),
-                "raceTime", formatTime(raceTime),
-                "lastLapTime", lastLapTime,
-                "bestLapTime", bestLapTime,
-                "gapToLeader", gapToLeader,
-                "gapToNext", gapToNext,
-                "gapToPrevious", gapToPrevious,
-                "completedLapCount", racer.getCompletedLapCount(),
-                "lapCount", race.getLapCount(),
-                "completedPitStops", racer.getCompletedPitStops(),
-                "requiredPitStops", race.getRequiredPitStops(),
-                "remainingPitStops", Math.max(0, race.getRequiredPitStops() - racer.getCompletedPitStops()),
-                "currentLap", Math.max(0, racer.lapCount),
-                "lapProgress", standings.lapProgress(racer) + "%",
-                "positionChange", positionChange > 0 ? "+" + positionChange : String.valueOf(positionChange),
-                "playersRemaining", standings.playersRemaining,
-                "isLeader", known && index == 0
+    private String racerRow(String template, Racer racer, int index, Standings standings) {
+        String gap = index > 0 ? formatGap(racer, standings.get(index - 1)) : NO_VALUE;
+        return formatTemplate(template, Map.of(
+                "position", String.valueOf(index + 1),
+                "player", racer.getPlayerName(),
+                "gap", gap,
+                "lap", String.valueOf(Math.max(0, racer.lapCount))
         ));
+    }
+
+    private SidebarLayout readLayout(String kind) {
+        FileConfiguration config = main.getConfig();
+        String path = "raceSidebar." + kind;
+        List<String> defaults = kind.equals("racer")
+                ? List.of("§7%race%", "", "§bPOS §f%position%", "§bLAP §f%completedLapCount%/%lapCount%", "§bLAST §f%lastLapTime%", "§bBEST §f%bestLapTime%", "§bGAP §f%gapToLeader%", "", "%aheadLine%", "%selfLine%", "%behindLine%", "", "§bPITS §f%completedPitStops%/%requiredPitStops%")
+                : List.of("§7%race%", "§7LIVE STANDINGS", "%top1%", "%top2%", "%top3%", "", "§bON TRACK §f%playersRemaining%");
+        List<String> lines = config.getStringList(path + ".lines");
+        if (lines.isEmpty()) lines = defaults;
+        return new SidebarLayout(
+                config.getString(path + ".title", "§3-- §bIce Boat Racing §3--"),
+                lines,
+                config.getString(path + ".emptyValue", "---"),
+                config.getString(path + ".aheadFormat", "§e%position%. §f%player% §7%gap%"),
+                config.getString(path + ".selfFormat", "§b> %position%. §f%player% §7%gap%"),
+                config.getString(path + ".behindFormat", "§7%position%. §f%player% §8%gap%"),
+                config.getString(path + ".topFormat", "§b%position%. §f%player% §7%gap%")
+        );
+    }
+
+    private static String formatTemplate(String template, Map<String, String> values) {
+        String result = template;
+        for (Map.Entry<String, String> entry : values.entrySet()) {
+            result = result.replace("%" + entry.getKey() + "%", entry.getValue());
+        }
+        return result.replaceAll("%[A-Za-z][A-Za-z0-9]*%", "");
+    }
+
+    private void clearSidebar(UUID playerId) {
+        SidebarState state = sidebars.remove(playerId);
+        if (state == null) return;
+        Player player = Bukkit.getPlayer(playerId);
+        Scoreboard restore = state.previousScoreboard;
+        if (player != null && player.isOnline() && player.getScoreboard() == state.scoreboard) player.setScoreboard(restore);
+        if (hiddenSidebarScoreboards.get(playerId) == state.scoreboard) hiddenSidebarScoreboards.put(playerId, restore);
+        unregister(state);
+    }
+
+    private static void unregister(SidebarState state) {
+        try { state.objective.unregister(); } catch (Exception ignored) {}
+    }
+
+    /** Clears one race's viewers without disturbing scoreboards for races in other worlds. */
+    public void removeRace(Race race) {
+        tracked.values().removeIf(racer -> racer.getRace() == race);
+        for (UUID playerId : new ArrayList<>(sidebars.keySet())) {
+            SidebarState state = sidebars.get(playerId);
+            if (state != null && state.race == race) clearSidebar(playerId);
+        }
+        refreshAll();
+    }
+
+    private record SidebarLayout(String title, List<String> lines, String emptyValue,
+                                 String aheadFormat, String selfFormat, String behindFormat, String topFormat) {}
+
+    private static final class SidebarState {
+        final Race race;
+        final Scoreboard scoreboard;
+        final Objective objective;
+        final Scoreboard previousScoreboard;
+        final Set<String> lineEntries = new HashSet<>();
+        boolean yieldedToTraining;
+
+        SidebarState(Race race, Scoreboard scoreboard, Objective objective, Scoreboard previousScoreboard) {
+            this.race = race;
+            this.scoreboard = scoreboard;
+            this.objective = objective;
+            this.previousScoreboard = previousScoreboard;
+        }
     }
 
     private static String formatGap(Racer behind, Racer ahead) {

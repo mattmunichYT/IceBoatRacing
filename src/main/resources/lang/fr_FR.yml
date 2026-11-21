@@ -24,18 +24,6 @@
 #(except titles and messages under the "noPrefix" section)
 prefix: "<b><gradient:#8DABF3:#10CA9A>IBR</gradient><dark_gray> >></b><reset>"
 
-liveScore:
-  #The title of the scoreboard during a race
-  title: "§3-- §b§lCourse de bateaux §3--"
-  #La ligne affichée pour chaque pilote. Arguments disponibles :
-  # %player%, %ranking% (1 = en tête), %raceTime%, %lastLapTime%, %bestLapTime%,
-  # %gapToLeader%, %gapToNext% (avec le pilote devant), %gapToPrevious% (avec le pilote derrière),
-  # %completedLapCount%, %currentLap%, %lapCount%, %lapProgress% (en %),
-  # %completedPitStops%, %remainingPitStops%, %requiredPitStops%,
-  # %positionChange% (places gagnées/perdues depuis le départ), %playersRemaining%, %isLeader% (true/false)
-  # Les valeurs qui n'existent pas (encore) s'affichent "-"
-  format: "%ranking%§7| %gapToNext% §8// §b%player% §7- §3Stands: §b%completedPitStops%§3/§b%requiredPitStops% §7| §b%lapProgress%"
-
 sidebar:
   hidden: "§aSidebar de course masquée. Utilisez /sidebar pour l'afficher à nouveau."
   visible: "§aSidebar de course affichée."
