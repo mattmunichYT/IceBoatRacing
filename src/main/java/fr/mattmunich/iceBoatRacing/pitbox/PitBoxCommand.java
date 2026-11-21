@@ -1,9 +1,17 @@
 package fr.mattmunich.iceBoatRacing.pitbox;
 
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import com.mojang.brigadier.tree.LiteralCommandNode;
+import fr.mattmunich.iceBoatRacing.CommandUtil;
 import fr.mattmunich.iceBoatRacing.race.Race;
 import fr.mattmunich.iceBoatRacing.race.RaceManager;
-import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -11,16 +19,30 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.util.StringUtil;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 
+import static fr.mattmunich.iceBoatRacing.CommandUtil.*;
 import static fr.mattmunich.iceBoatRacing.Main.c;
 import static fr.mattmunich.iceBoatRacing.Messages.*;
 
-public class PitBoxCommand implements BasicCommand {
+/**
+ * /pitbox command (Brigadier).
+ * <pre>
+ * /pitbox create <race>
+ * /pitbox list <race>
+ * /pitbox remove|delete <race> <box>
+ * /pitbox setAllowed <race> <box> <players... | *>
+ * /pitbox setColor <race> <box> <color>
+ * </pre>
+ * &lt;box&gt; is either the pit box's ID or its name.
+ */
+public class PitBoxCommand {
+    public static final String PERM_BASE = "iceboatracing.command.pitbox";
+    public static final String PERM_CREATE = PERM_BASE + ".create";
+    public static final String PERM_LIST = PERM_BASE + ".list";
+    public static final String PERM_REMOVE = PERM_BASE + ".remove";
+    public static final String PERM_MODIFY = PERM_BASE + ".modify"; // setAllowed, setColor
 
     private final RaceManager raceManager;
     private final PitBoxManager pitBoxManager;
@@ -32,252 +54,226 @@ public class PitBoxCommand implements BasicCommand {
         this.pitBoxCreator = pitBoxCreator;
     }
 
-    @Override
-    public void execute(@NonNull CommandSourceStack source, String @NonNull [] args) {
-        CommandSender sender = source.getSender();
+    // ------------------------------------------------------------------
+    // Command tree
+    // ------------------------------------------------------------------
 
-        if (args.length == 2 && args[0].equalsIgnoreCase("create")) {
-            if (!(sender instanceof Player p)) {
-                sender.sendMessage(getMessage("error.playerToExecuteCommand"));
-                return;
-            }
-
-            Race race = raceManager.getRace(args[1]);
-            if (race == null) {
-                sender.sendMessage(getMessage("race.notFound"));
-                return;
-            }
-
-            pitBoxCreator.createPitBox(p, race);
-
-        } else if (args.length == 2 && args[0].equalsIgnoreCase("list")) {
-            Race race = raceManager.getRace(args[1]);
-            if (race == null) {
-                sender.sendMessage(getMessage("race.notFound"));
-                return;
-            }
-
-            List<PitBox> boxes = race.getPitBoxes();
-            if (boxes.isEmpty()) {
-                sender.sendMessage(getMessage("pitbox.noPitBoxes"));
-                return;
-            }
-
-            sender.sendMessage(c("§bPit boxes §7— §f" + race.getName() + "§7:"));
-            for (PitBox box : boxes) {
-                Component editText = Component.text("[✎]")
-                        .hoverEvent(HoverEvent.showText(c("Click to define allowed players")))
-                        .clickEvent(ClickEvent.suggestCommand("/pitbox setAllowed " + race.getName() + " " + box.getId() + " "));
-
-                Component colorText = Component.text("[🎨]")
-                        .hoverEvent(HoverEvent.showText(c("Click to copy to change color")))
-                        .clickEvent(ClickEvent.suggestCommand("/pitbox setColor " + race.getName() + " " + box.getId() + " "));
-
-                Component removeText = Component.text("[x]")
-                        .hoverEvent(HoverEvent.showText(c("Click to delete")))
-                        .clickEvent(ClickEvent.runCommand("/pitbox remove " + race.getName() + " " + box.getId()));
-
-                Component tpText = Component.text("[→]")
-                        .hoverEvent(HoverEvent.showText(c("Click to teleport")))
-                        .clickEvent(ClickEvent.runCommand("/tp " + box.getCenter().getBlockX() + " "
-                                + box.getCenter().getBlockY() + " " + box.getCenter().getBlockZ()));
-
-                List<String> allowedNames = new ArrayList<>();
-                box.getAllowed().forEach(allowed -> allowedNames.add(Bukkit.getOfflinePlayer(allowed).getName() == null ? getStringMessage("playerNotFound") : Bukkit.getOfflinePlayer(allowed).getName()));
-
-                sender.sendMessage(c(
-                        "§3  #" + box.getId() + " §b" + box.getName()
-                                + " §7— §f" + box.getDuration() + "s"
-                                + " §7— §f" + String.join(",", allowedNames)
-                                + " §7— §f" + box.getColor().name()
-                                + " §7 | §f"
-                ).append(editText).append(c(" ")).append(colorText).append(c(" ")).append(removeText).append(c(" ")).append(tpText));
-            }
-
-        } else if (args.length == 3 && (args[0].equalsIgnoreCase("remove") || args[0].equalsIgnoreCase("delete"))) {
-            Race race = raceManager.getRace(args[1]);
-            if (race == null) {
-                sender.sendMessage(getMessage("race.notFound"));
-                return;
-            }
-
-            PitBox box = getBox(args, race, sender);
-            if (box == null) return;
-            String name = box.getName();
-
-            boolean success = pitBoxManager.remove(race, box);
-            if (!success) {
-                sender.sendMessage(getMessage("error.unknown"));
-                return;
-            }
-            sender.sendMessage(getMessage("pitbox.removed", formatArguments("name", name)));
-
-        } else if (args.length >= 4 && args[0].equalsIgnoreCase("setAllowed")) {
-            Race race = raceManager.getRace(args[1]);
-            if (race == null) {
-                sender.sendMessage(getMessage("race.notFound"));
-                return;
-            }
-
-            PitBox box = getBox(args, race, sender);
-            if (box == null) return;
-
-            List<String> allowedNames = new ArrayList<>(Arrays.asList(args).subList(3, args.length));
-            if(allowedNames.getFirst().equals("*")) allowedNames = new ArrayList<>();
-            List<UUID> allowedUUIDs = new ArrayList<>();
-
-            OfflinePlayer[] offlinePlayers = Bukkit.getOfflinePlayers();
-            for  (String allowedName : allowedNames) {
-                Optional<OfflinePlayer> result = Arrays.stream(offlinePlayers)
-                        .filter(off -> Objects.requireNonNull(off.getName()).equalsIgnoreCase(allowedName))
-                        .findFirst();
-                if (result.isPresent()) {
-                    allowedUUIDs.add(result.get().getUniqueId());
-                } else {
-                    sender.sendMessage(getMessage("playerNeverJoined", formatArguments("name",  allowedName)));
-                    return;
-                }
-            }
-
-            boolean success = pitBoxManager.setAllowed(race, box, allowedUUIDs);
-            if (!success) {
-                sender.sendMessage(getMessage("error.unknown"));
-                return;
-            }
-
-            sender.sendMessage(getMessage("pitbox.setAllowed.updated", formatArguments(
-                    "name", box.getName(),
-                    "players", allowedNames.isEmpty() ? "*" : String.join(", ", allowedNames))
-            ));
-
-        } else if (args.length == 4 && args[0].equalsIgnoreCase("setColor")) {
-            Race race = raceManager.getRace(args[1]);
-            if (race == null) {
-                sender.sendMessage(getMessage("race.notFound"));
-                return;
-            }
-
-            PitBox box = getBox(args, race, sender);
-            if (box == null) return;
-
-            PitBoxColor color;
-            try {
-                color = PitBoxColor.valueOf(args[3].toUpperCase());
-            } catch (IllegalArgumentException e) {
-                sender.sendMessage(getMessage("pitbox.setColor.invalid", formatArguments("availableColors", String.join(", ", PitBoxColor.names()))));
-                return;
-            }
-
-            boolean success = pitBoxManager.setColor(race, box, color);
-            if (!success) {
-                sender.sendMessage(getMessage("error.unknown"));
-                return;
-            }
-
-            sender.sendMessage(getMessage("pitbox.setColor.updated", formatArguments("name", box.getName(), "color", color.name())));
-
-        } else {
-            sender.sendMessage(getMessage("pitbox.help"));
-        }
+    public LiteralCommandNode<CommandSourceStack> build() {
+        return Commands.literal("pitbox")
+                .requires(playerPerm(PERM_BASE, PERM_CREATE, PERM_LIST, PERM_REMOVE, PERM_MODIFY))
+                .executes(ctx -> help(ctx, "pitbox.help"))
+                .then(Commands.literal("create")
+                        .requires(perm(PERM_CREATE))
+                        .then(raceArgument("race", raceManager).executes(this::create)))
+                .then(Commands.literal("list")
+                        .requires(perm(PERM_LIST))
+                        .then(raceArgument("race", raceManager).executes(this::list)))
+                .then(removeNode("remove"))
+                .then(removeNode("delete"))
+                .then(Commands.literal("setAllowed")
+                        .requires(perm(PERM_MODIFY))
+                        .then(raceArgument("race", raceManager)
+                                .then(boxArgument()
+                                        .then(Commands.argument("players", StringArgumentType.greedyString())
+                                                .suggests(this::suggestPlayers)
+                                                .executes(this::setAllowed)))))
+                .then(Commands.literal("setColor")
+                        .requires(perm(PERM_MODIFY))
+                        .then(raceArgument("race", raceManager)
+                                .then(boxArgument()
+                                        .then(Commands.argument("color", StringArgumentType.word())
+                                                .suggests((ctx, builder) -> CommandUtil.suggest(Arrays.asList(PitBoxColor.names()), builder))
+                                                .executes(this::setColor)))))
+                .build();
     }
 
-    private static @Nullable PitBox getBox(String @NonNull [] args, Race race, CommandSender sender) {
+    private LiteralArgumentBuilder<CommandSourceStack> removeNode(String literal) {
+        return Commands.literal(literal)
+                .requires(perm(PERM_REMOVE))
+                .then(raceArgument("race", raceManager)
+                        .then(boxArgument().executes(this::remove)));
+    }
+
+    /** Pit box ID or name, completed from the race typed just before. */
+    private RequiredArgumentBuilder<CommandSourceStack, String> boxArgument() {
+        return Commands.argument("box", StringArgumentType.word()).suggests((ctx, builder) -> {
+            List<String> options = new ArrayList<>();
+            Race race = raceManager.getRace(StringArgumentType.getString(ctx, "race"));
+            if (race != null) {
+                for (PitBox box : race.getPitBoxes()) {
+                    options.add(box.getName());
+                    options.add(String.valueOf(box.getId()));
+                }
+            }
+            return CommandUtil.suggest(options, builder);
+        });
+    }
+
+    /** Completes the LAST word of the greedy "players" argument. */
+    private java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestPlayers(
+            CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
+        String remaining = builder.getRemaining();
+        SuggestionsBuilder lastWord = builder.createOffset(builder.getStart() + remaining.lastIndexOf(' ') + 1);
+
+        List<String> options = new ArrayList<>();
+        options.add("*");
+        for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
+            if (offlinePlayer.getName() != null) options.add(offlinePlayer.getName());
+        }
+        return CommandUtil.suggest(options, lastWord);
+    }
+
+    // ------------------------------------------------------------------
+    // Handlers
+    // ------------------------------------------------------------------
+
+    private int create(CommandContext<CommandSourceStack> ctx) {
+        Player p = player(ctx);
+        Race race = getRace(ctx, "race", raceManager);
+        if (race == null) return 0;
+
+        pitBoxCreator.createPitBox(p, race);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int list(CommandContext<CommandSourceStack> ctx) {
+        CommandSender sender = ctx.getSource().getSender();
+        Race race = getRace(ctx, "race", raceManager);
+        if (race == null) return 0;
+
+        List<PitBox> boxes = race.getPitBoxes();
+        if (boxes.isEmpty()) {
+            sender.sendMessage(getMessage("pitbox.noPitBoxes"));
+            return 0;
+        }
+
+        sender.sendMessage(c("§bPit boxes §7— §f" + race.getName() + "§7:"));
+        for (PitBox box : boxes) {
+            Component editText = Component.text("[✎]")
+                    .hoverEvent(HoverEvent.showText(c("Click to define allowed players")))
+                    .clickEvent(ClickEvent.suggestCommand("/pitbox setAllowed " + race.getName() + " " + box.getId() + " "));
+
+            Component colorText = Component.text("[🎨]")
+                    .hoverEvent(HoverEvent.showText(c("Click to copy to change color")))
+                    .clickEvent(ClickEvent.suggestCommand("/pitbox setColor " + race.getName() + " " + box.getId() + " "));
+
+            Component removeText = Component.text("[x]")
+                    .hoverEvent(HoverEvent.showText(c("Click to delete")))
+                    .clickEvent(ClickEvent.runCommand("/pitbox remove " + race.getName() + " " + box.getId()));
+
+            Component tpText = Component.text("[→]")
+                    .hoverEvent(HoverEvent.showText(c("Click to teleport")))
+                    .clickEvent(ClickEvent.runCommand("/tp " + box.getCenter().getBlockX() + " "
+                            + box.getCenter().getBlockY() + " " + box.getCenter().getBlockZ()));
+
+            List<String> allowedNames = new ArrayList<>();
+            for (UUID allowed : box.getAllowed()) {
+                String name = Bukkit.getOfflinePlayer(allowed).getName();
+                allowedNames.add(name == null ? getStringMessage("playerNotFound") : name);
+            }
+
+            sender.sendMessage(c(
+                    "§3  #" + box.getId() + " §b" + box.getName()
+                            + " §7— §f" + box.getDuration() + "s"
+                            + " §7— §f" + String.join(",", allowedNames)
+                            + " §7— §f" + box.getColor().name()
+                            + " §7 | §f"
+            ).append(editText).append(c(" ")).append(colorText).append(c(" ")).append(removeText).append(c(" ")).append(tpText));
+        }
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int remove(CommandContext<CommandSourceStack> ctx) {
+        CommandSender sender = ctx.getSource().getSender();
+        Race race = getRace(ctx, "race", raceManager);
+        if (race == null) return 0;
+
+        PitBox box = getBox(ctx, race, sender);
+        if (box == null) return 0;
+        String name = box.getName();
+
+        if (!pitBoxManager.remove(race, box)) {
+            sender.sendMessage(getMessage("error.unknown"));
+            return 0;
+        }
+        sender.sendMessage(getMessage("pitbox.removed", formatArguments("name", name)));
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int setAllowed(CommandContext<CommandSourceStack> ctx) {
+        CommandSender sender = ctx.getSource().getSender();
+        Race race = getRace(ctx, "race", raceManager);
+        if (race == null) return 0;
+
+        PitBox box = getBox(ctx, race, sender);
+        if (box == null) return 0;
+
+        List<String> allowedNames = new ArrayList<>(Arrays.asList(
+                StringArgumentType.getString(ctx, "players").trim().split("\\s+")));
+        if (allowedNames.getFirst().equals("*")) allowedNames = new ArrayList<>();
+
+        List<UUID> allowedUUIDs = new ArrayList<>();
+        OfflinePlayer[] offlinePlayers = Bukkit.getOfflinePlayers();
+        for (String allowedName : allowedNames) {
+            Optional<OfflinePlayer> result = Arrays.stream(offlinePlayers)
+                    .filter(off -> allowedName.equalsIgnoreCase(off.getName()))
+                    .findFirst();
+            if (result.isEmpty()) {
+                sender.sendMessage(getMessage("playerNeverJoined", formatArguments("name", allowedName)));
+                return 0;
+            }
+            allowedUUIDs.add(result.get().getUniqueId());
+        }
+
+        if (!pitBoxManager.setAllowed(race, box, allowedUUIDs)) {
+            sender.sendMessage(getMessage("error.unknown"));
+            return 0;
+        }
+
+        sender.sendMessage(getMessage("pitbox.setAllowed.updated", formatArguments(
+                "name", box.getName(),
+                "players", allowedNames.isEmpty() ? "*" : String.join(", ", allowedNames))
+        ));
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int setColor(CommandContext<CommandSourceStack> ctx) {
+        CommandSender sender = ctx.getSource().getSender();
+        Race race = getRace(ctx, "race", raceManager);
+        if (race == null) return 0;
+
+        PitBox box = getBox(ctx, race, sender);
+        if (box == null) return 0;
+
+        PitBoxColor color;
+        try {
+            color = PitBoxColor.valueOf(StringArgumentType.getString(ctx, "color").toUpperCase());
+        } catch (IllegalArgumentException e) {
+            sender.sendMessage(getMessage("pitbox.setColor.invalid",
+                    formatArguments("availableColors", String.join(", ", PitBoxColor.names()))));
+            return 0;
+        }
+
+        if (!pitBoxManager.setColor(race, box, color)) {
+            sender.sendMessage(getMessage("error.unknown"));
+            return 0;
+        }
+
+        sender.sendMessage(getMessage("pitbox.setColor.updated", formatArguments("name", box.getName(), "color", color.name())));
+        return Command.SINGLE_SUCCESS;
+    }
+
+    /** The "box" argument is an ID if it's a number, a name otherwise. */
+    private static PitBox getBox(CommandContext<CommandSourceStack> ctx, Race race, CommandSender sender) {
+        String value = StringArgumentType.getString(ctx, "box");
         PitBox box;
         try {
-            int id = Integer.parseInt(args[2]);
-            box = race.getPitBox(id);
+            box = race.getPitBox(Integer.parseInt(value));
         } catch (NumberFormatException e) {
-            box = race.getPitBox(args[2]);
+            box = race.getPitBox(value);
         }
 
-
-        if (box == null) {
-            sender.sendMessage(getMessage("pitbox.invalid"));
-            return null;
-        }
+        if (box == null) sender.sendMessage(getMessage("pitbox.invalid"));
         return box;
-    }
-
-    @Override
-    public @NonNull Collection<String> suggest(@NonNull CommandSourceStack source, String @NonNull [] args) {
-        List<String> suggestions = new ArrayList<>();
-
-        if (args.length <= 1) {
-            suggestions.add("create");
-            suggestions.add("list");
-            suggestions.add("remove");
-            suggestions.add("setAllowed");
-            suggestions.add("setColor");
-            return suggestions;
-        }
-
-        List<String> pitBoxList = new ArrayList<>();
-
-        switch (args[0].toLowerCase()) {
-            case "create", "list" -> {
-                if (args.length == 2) for (Race race : raceManager.races) suggestions.add(race.getName());
-            }
-            case "remove", "delete" -> {
-                if (args.length == 2) {
-                    for (Race race : raceManager.races) suggestions.add(race.getName());
-                } else if (args.length == 3) {
-                    suggestRaces(args, pitBoxList, suggestions);
-                }
-            }
-            case "setallowed" -> {
-                List<String> playerNames = new ArrayList<>();
-                for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
-                    playerNames.add(offlinePlayer.getName());
-                }
-                if (args.length == 2) {
-                    for (Race race : raceManager.races) suggestions.add(race.getName());
-                } else if (args.length == 3) {
-                    suggestRaces(args, pitBoxList, suggestions);
-                } else {
-                    suggestions.add("*");
-                    if(args[args.length - 1] != null && args[args.length-1].isEmpty()) {
-                        suggestions.addAll(playerNames);
-                    } else {
-                        StringUtil.copyPartialMatches(args[args.length-1].toLowerCase(), playerNames, suggestions);
-                    }
-                }
-            }
-            case "setcolor" -> {
-                if (args.length == 2) {
-                    for (Race race : raceManager.races) suggestions.add(race.getName());
-                } else if (args.length == 3) {
-                    suggestRaces(args, pitBoxList, suggestions);
-                } else if (args.length == 4 && args[3] != null) {
-                    List<String> colorNames = Arrays.asList(PitBoxColor.names());
-                    StringUtil.copyPartialMatches(args[3], colorNames, suggestions);
-                }
-            }
-        }
-
-        return suggestions.isEmpty() ? Collections.emptyList() : suggestions;
-    }
-
-    private void suggestRaces(String @NonNull [] args, List<String> pitBoxList, List<String> suggestions) {
-        Race race = raceManager.getRace(args[1]);
-        if (race != null) race.getPitBoxes().forEach(box -> {
-            pitBoxList.add(box.getName());
-            pitBoxList.add("" + box.getId());
-        });
-
-        if (args[2] != null) {
-            StringUtil.copyPartialMatches(args[2], pitBoxList, suggestions);
-        } else {
-            suggestions.addAll(pitBoxList);
-        }
-    }
-
-    @Override
-    public boolean canUse(@NonNull CommandSender sender) {
-        return sender instanceof Player && sender.hasPermission("iceboatracing.command.pitbox");
-    }
-
-    @Override
-    public @Nullable String permission() {
-        return "iceboatracing.command.pitbox";
     }
 }

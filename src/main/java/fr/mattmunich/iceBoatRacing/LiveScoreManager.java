@@ -24,7 +24,7 @@ public class LiveScoreManager {
         if(tempSidebar != null) tempSidebar.unregister();
         liveScore = scoreboard.registerNewObjective("IBR.liveScore", Criteria.DUMMY, getMessage("liveScore.title"));
         liveScore.setDisplaySlot(DisplaySlot.SIDEBAR);
-        liveScore.numberFormat(NumberFormat.blank());
+//        liveScore.numberFormat(NumberFormat.blank());
     }
 
     public void clear() {

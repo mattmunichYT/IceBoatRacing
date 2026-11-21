@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static fr.mattmunich.iceBoatRacing.Main.err;
+import static fr.mattmunich.iceBoatRacing.Main.log;
 
 public class CheckpointManager {
 
@@ -104,7 +105,7 @@ public class CheckpointManager {
 
         YamlConfiguration config = race.getConfig();
         if(config == null) {
-            main.log("§cCheckpoint " + checkpoint.getId() + " for race " + race.getName() + " wasn't removed, see cause above.");
+            log("§cCheckpoint " + checkpoint.getId() + " for race " + race.getName() + " wasn't removed, see cause above.");
             return false;
         }
 
@@ -120,11 +121,13 @@ public class CheckpointManager {
 
     /**
      * Saves a checkpoint for a race
-     * @param race The race that the checkpoint is assigned to
+     * @param race The {@link Race} that the checkpoint is assigned to
      * @param l1 The 1st location of the checkpoint (pos 1)
      * @param l2 The 2nd location of the checkpoint (pos 2)
-     * @param type The checkpoint's type (NORMAL or START_FINISH)
+     * @param type The {@link Checkpoint.Type} (NORMAL or START_FINISH)
+ * @deprecated Use {@link Checkpoint.Shape#PLANE} checkpoints instead
      */
+    @Deprecated
     public Checkpoint saveCheckpoint(Race race, Location l1, Location l2, Checkpoint.Type type) {
         Location min = min(l1, l2);
         Location max = max(l1, l2);
@@ -133,7 +136,7 @@ public class CheckpointManager {
 
         YamlConfiguration config = race.getConfig();
         if(config == null) {
-            main.log("§cCheckpoint " + ID + " for race " + race.getName() + " wasn't saved, see cause above.");
+            log("§cCheckpoint " + ID + " for race " + race.getName() + " wasn't saved, see cause above.");
             return null;
         }
 
@@ -157,6 +160,58 @@ public class CheckpointManager {
         return checkpoint;
     }
 
+    /**
+     * Saves a manually placed oriented-plane checkpoint from two wand positions.
+     * The plane is vertical, centered between the two points, and its normal is perpendicular
+     * to the line pos1 -> pos2. SECTOR checkpoints get the next free sector ID.
+     */
+    public Checkpoint savePlaneCheckpoint(Race race, Location l1, Location l2, Checkpoint.Type type) {
+        YamlConfiguration config = race.getConfig();
+        if (config == null) {
+            log("§cCheckpoint for race " + race.getName() + " wasn't saved, see cause above.");
+            return null;
+        }
+
+        int ID = nextId(race);
+
+        Vector span = l2.toVector().subtract(l1.toVector());
+        Vector normal = new Vector(-span.getZ(), 0, span.getX());
+        if (normal.lengthSquared() < 1e-6) normal = new Vector(1, 0, 0);
+        normal.normalize();
+
+        Location center = CheckpointGeometry.midpoint(l1, l2);
+        double horizontalLength = Math.hypot(span.getX(), span.getZ());
+        double halfWidth = Math.max(horizontalLength / 2.0 + CheckpointGeometry.WIDTH_PADDING, 0.5);
+        double heightDiff = Math.abs(span.getY());
+        double halfHeight = heightDiff > 0.5 ? heightDiff / 2.0 : 2.5;
+
+        String path = "checkpoints." + ID;
+        config.set(path + ".shape", Checkpoint.Shape.PLANE.name());
+        config.set(path + ".world", center.getWorld().getName());
+        config.set(path + ".center", serializePrecise(center));
+        config.set(path + ".normal", serializeVector(normal));
+        config.set(path + ".halfWidth", halfWidth);
+        config.set(path + ".halfHeight", halfHeight);
+        config.set(path + ".type", type.name());
+
+        Checkpoint checkpoint = new Checkpoint(ID, center, normal, halfWidth, halfHeight, type);
+        if (type == Checkpoint.Type.SECTOR) {
+            int sectorID = nextSectorId(race);
+            checkpoint.setSectorID(sectorID);
+            config.set(path + ".sectorID", sectorID);
+        }
+
+        try {
+            race.saveConfig();
+        } catch (IOException e) {
+            err("Couldn't save checkpoint " + ID + " for race " + race.getName() + " because the it's config threw an error on saving. ", e);
+            return null;
+        }
+
+        race.addCheckpoint(checkpoint);
+        return checkpoint;
+    }
+
     public Checkpoint saveSectorCheckpoint(Race race, Location l1, Location l2) {
         Location min = min(l1, l2);
         Location max = max(l1, l2);
@@ -166,7 +221,7 @@ public class CheckpointManager {
 
         YamlConfiguration config = race.getConfig();
         if(config == null) {
-            main.log("§cCheckpoint " + ID + " for race " + race.getName() + " wasn't saved, see cause above.");
+            log("§cCheckpoint " + ID + " for race " + race.getName() + " wasn't saved, see cause above.");
             return null;
         }
 
@@ -205,7 +260,7 @@ public class CheckpointManager {
 
         YamlConfiguration config = race.getConfig();
         if (config == null) {
-            main.log("§cAuto-traced checkpoints for race " + race.getName() + " weren't saved, see cause above.");
+            log("§cAuto-traced checkpoints for race " + race.getName() + " weren't saved, see cause above.");
             return false;
         }
 
@@ -268,7 +323,7 @@ public class CheckpointManager {
     public boolean saveAlternateRoute(Race race, Checkpoint target, Location center, Vector normal, double halfWidth, double halfHeight) {
         YamlConfiguration config = race.getConfig();
         if (config == null) {
-            main.log("§cAlternate route for checkpoint " + target.getId() + " on race " + race.getName() + " wasn't saved, see cause above.");
+            log("§cAlternate route for checkpoint " + target.getId() + " on race " + race.getName() + " wasn't saved, see cause above.");
             return false;
         }
 
@@ -299,7 +354,7 @@ public class CheckpointManager {
     public boolean clearAllCheckpoints(Race race) {
         YamlConfiguration config = race.getConfig();
         if (config == null) {
-            main.log("§cCheckpoints for race " + race.getName() + " weren't cleared, see cause above.");
+            log("§cCheckpoints for race " + race.getName() + " weren't cleared, see cause above.");
             return false;
         }
 
@@ -319,13 +374,13 @@ public class CheckpointManager {
     public void loadRaceCheckpoints(Race race) {
         YamlConfiguration config = race.getConfig();
         if(config == null) {
-            main.log("§cCheckpoints for race " + race.getName() + " were not loaded, see cause above.");
+            log("§cCheckpoints for race " + race.getName() + " were not loaded, see cause above.");
             return;
         }
 
         race.clearCheckpoints();
         if (!config.isConfigurationSection("checkpoints")) {
-            main.log("§eNo checkpoints to load for race " + race.getName());
+            log("§eNo checkpoints to load for race " + race.getName());
             return;
         }
 

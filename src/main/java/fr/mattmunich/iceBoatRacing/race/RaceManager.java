@@ -12,7 +12,6 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.title.Title;
 import org.bukkit.*;
-import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -37,6 +36,9 @@ public class RaceManager {
     public final List<Race> races = new ArrayList<>();
     public final List<Race> activeRaces = new ArrayList<>();
 
+    /** Running countdown task per race, so ending a race before "GO" can cancel it. */
+    private final Map<Race, BukkitTask> countdownTasks = new HashMap<>();
+
     /**
      * A map that contains the races that failed to load on startup. <br/>
      * Format: {@code Map<worldName, raceName>}
@@ -49,6 +51,40 @@ public class RaceManager {
         this.checkpointManager = checkpointManager;
         this.pitBoxManager = pitBoxManager;
         this.liveScoreManager = liveScoreManager;
+    }
+
+    /**
+     * Single source of truth for a race's config file, so every read/write/delete hits the same file
+     * (spaces in the race name become underscores).
+     */
+    public File getRaceFile(String raceName) {
+        return new File(new File(main.getDataFolder(), "races"), raceName.replace(" ", "_") + ".yml");
+    }
+
+    /**
+     * Applies lap count, pit stops, start rotation and lights from {@code config} onto {@code race}.
+     */
+    private void applyRaceSettings(Race race, YamlConfiguration config) {
+        int lapCount = config.getInt("lapCount");
+        if (lapCount <= 0) {
+            lapCount = 10;
+            warn(race.getName() + "'s lap count wasn't found, therefore was set to the default value : 10");
+        }
+        race.setLapCount(lapCount);
+        race.setRequiredPitStops(config.getInt("requiredPitStops", 0));
+        race.setStartRotation((float) config.getDouble("startRotation", 0));
+
+        if (!config.getBoolean("lights.enabled", false)
+                || !config.isConfigurationSection("lights.from")
+                || !config.isConfigurationSection("lights.to")) {
+            race.setLights(new Race.Lights(false, null, null));
+            return;
+        }
+        Location from = new Location(race.getWorld(),
+                config.getInt("lights.from.x"), config.getInt("lights.from.y"), config.getInt("lights.from.z"));
+        Location to = new Location(race.getWorld(),
+                config.getInt("lights.to.x"), config.getInt("lights.to.y"), config.getInt("lights.to.z"));
+        race.setLights(new Race.Lights(true, from, to));
     }
 
     /**
@@ -129,43 +165,7 @@ public class RaceManager {
             pitBoxManager.loadRacePitBoxes(race);
             carManager.loadCars(race);
 
-            int lapCount = config.getInt("lapCount");
-            if (lapCount <= 0) {
-                lapCount = 10;
-                warn(race.getName() + "'s lap count wasn't found, therefore was set to the default value : 10" );
-            }
-
-            race.setLapCount(lapCount);
-            race.setRequiredPitStops(config.getInt("requiredPitStops", 0));
-            race.setStartRotation(config.getInt("startRotation", 0));
-
-            //Lights
-            boolean lightsEnabled = config.getBoolean("lights.enabled", false);
-            if(lightsEnabled) {
-                Location from = new Location(
-                        race.getWorld(),
-                        config.getInt("lights.from.x"),
-                        config.getInt("lights.from.y"),
-                        config.getInt("lights.from.z")
-                );
-
-                Location to = new Location(
-                        race.getWorld(),
-                        config.getInt("lights.to.x"),
-                        config.getInt("lights.to.y"),
-                        config.getInt("lights.to.z")
-                );
-                Block origin = race.getWorld().getBlockAt(0, 0, 0);
-                if(from.getBlock().equals(origin) && to.getBlock().equals(origin)) {
-                    //No values found in the config
-                    race.setLights(new Race.Lights(false, null, null));
-                } else {
-                    Race.Lights lights = new Race.Lights(true, from, to);
-                    race.setLights(lights);
-                }
-            } else {
-                race.setLights(new Race.Lights(false, null, null));
-            }
+            applyRaceSettings(race, config);
 
             races.add(race);
             log("Race " + name + " has been loaded");
@@ -186,7 +186,7 @@ public class RaceManager {
             return false;
         }
 
-        File file = new File(racesFolder, raceName + ".yml");
+        File file = getRaceFile(raceName);
         if (!file.exists()) {
             severe("The race " + raceName + "'s file wasn't found and therefore could not be loaded.");
             return false;
@@ -215,43 +215,7 @@ public class RaceManager {
         pitBoxManager.loadRacePitBoxes(race);
         carManager.loadCars(race);
 
-        int lapCount = config.getInt("lapCount");
-        if (lapCount <= 0) {
-            lapCount = 10;
-            warn(race.getName() + "'s lap count wasn't found, therefore was set to the default value : 10" );
-        }
-
-        race.setLapCount(lapCount);
-        race.setRequiredPitStops(config.getInt("requiredPitStops", 0));
-        race.setStartRotation(config.getInt("startRotation", 0));
-
-        //Lights
-        boolean lightsEnabled = config.getBoolean("lights.enabled", false);
-        if(lightsEnabled) {
-            Location from = new Location(
-                    race.getWorld(),
-                    config.getInt("lights.from.x"),
-                    config.getInt("lights.from.y"),
-                    config.getInt("lights.from.z")
-            );
-
-            Location to = new Location(
-                    race.getWorld(),
-                    config.getInt("lights.to.x"),
-                    config.getInt("lights.to.y"),
-                    config.getInt("lights.to.z")
-            );
-            Block origin = race.getWorld().getBlockAt(0, 0, 0);
-            if(from.getBlock().equals(origin) && to.getBlock().equals(origin)) {
-                //No values found in the config
-                race.setLights(new Race.Lights(false, null, null));
-            } else {
-                Race.Lights lights = new Race.Lights(true, from, to);
-                race.setLights(lights);
-            }
-        } else {
-            race.setLights(new Race.Lights(false, null, null));
-        }
+        applyRaceSettings(race, config);
 
         races.add(race);
 
@@ -291,7 +255,7 @@ public class RaceManager {
     @SuppressWarnings("UnusedReturnValue")
     public Race createRace(Race race) {
         log("Creating race " + race.getName());
-        File raceFile = new File(main.getDataFolder(), "races/" + race.getName().replace(" ","_") + ".yml");
+        File raceFile = getRaceFile(race.getName());
         raceFile.getParentFile().mkdirs();
 
         YamlConfiguration config = new YamlConfiguration();
@@ -300,7 +264,6 @@ public class RaceManager {
         config.set("lapCount", race.getLapCount());
         config.set("startRotation", race.getStartRotation());
         config.set("requiredPitStops", race.getRequiredPitStops());
-        config.set("startRotation", 0);
         config.set("lights.enabled", false);
 
         try {
@@ -325,7 +288,7 @@ public class RaceManager {
      */
     public boolean updateRace(Race race) {
         try {
-            File raceFile = new File(main.getDataFolder(), "races/" + race.getName().replace(" ","_") + ".yml");
+            File raceFile = getRaceFile(race.getName());
             if (!raceFile.exists()) {
                 warn("Race " + race.getName() + " wasn't updated because it's config file does not exist.");
                 return false;
@@ -339,56 +302,13 @@ public class RaceManager {
                 return false;
             }
 
-            try {
-                config.save(raceFile);
-            } catch (IOException e) {
-                err("Couldn't save race " + race.getName(),e);
-                return false;
-            }
-
-            int lapCount = config.getInt("lapCount");
-            if (lapCount <= 0) {
-                lapCount = 10;
-                warn(race.getName() + "'s lap count wasn't found, therefore was set to the default value : 10" );
-            }
-
-            race.setLapCount(lapCount);
-            race.setRequiredPitStops(config.getInt("requiredPitStops", 0));
-            race.setStartRotation(config.getInt("startRotation", 0));
-
-            //Lights
-            boolean lightsEnabled = config.getBoolean("lights.enabled", false);
-            if(lightsEnabled) {
-                Location from = new Location(
-                        race.getWorld(),
-                        config.getInt("lights.from.x"),
-                        config.getInt("lights.from.y"),
-                        config.getInt("lights.from.z")
-                );
-
-                Location to = new Location(
-                        race.getWorld(),
-                        config.getInt("lights.to.x"),
-                        config.getInt("lights.to.y"),
-                        config.getInt("lights.to.z")
-                );
-                Block origin = race.getWorld().getBlockAt(0, 0, 0);
-                if(from.getBlock().equals(origin) && to.getBlock().equals(origin)) {
-                    //No values found in the config
-                    race.setLights(new Race.Lights(false, null, null));
-                } else {
-                    Race.Lights lights = new Race.Lights(true, from, to);
-                    race.setLights(lights);
-                }
-            } else {
-                race.setLights(new Race.Lights(false, null, null));
-            }
+            race.setConfig(config);
+            applyRaceSettings(race, config);
 
             //More like reload from file if file/Race unsynced (not really load)
             carManager.loadCars(race);
             checkpointManager.loadRaceCheckpoints(race);
             pitBoxManager.loadRacePitBoxes(race);
-            race.setConfig(config);
 
             //Update race in race list
             races.remove(race);
@@ -414,7 +334,7 @@ public class RaceManager {
         log("Deleting race " + race.getName());
         try { race.end(false); } catch (Exception ignored) {}
 
-        File raceFile = new File(main.getDataFolder(), "races/" + race.getName().replace(" ","_") + ".yml");
+        File raceFile = getRaceFile(race.getName());
         boolean deleted = raceFile.delete();
 
         races.remove(race);
@@ -436,7 +356,7 @@ public class RaceManager {
             return null;
         }
 
-        File file = new File(racesFolder, race.getName().replace(" ","_") + ".yml");
+        File file = getRaceFile(race.getName());
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
         if (!file.exists()) {
             log("§cCouldn't get config for race " + race.getName() + " because the race config file didn't exist.");
@@ -460,8 +380,7 @@ public class RaceManager {
             return;
         }
 
-        File file = new File(racesFolder, race.getName() + ".yml");
-        config.save(file);
+        config.save(getRaceFile(race.getName()));
     }
 
     //RaceData management
@@ -501,8 +420,14 @@ public class RaceManager {
             return Result.ERROR;
         }
 
+        // Make sure the race isn't already running / counting down (would start it twice).
+        // A race that is only in preparation mode is kept: its racers are already placed.
+        if (race.startingRace || race.hasRaceStarted) {
+            endRace(race, false);
+        }
+
         race.startingRace = true;
-        activeRaces.add(race);
+        if (!activeRaces.contains(race)) activeRaces.add(race);
         if(!race.preparingRace) {
             for (Car car : race.getCars()) {
                 try {
@@ -571,10 +496,12 @@ public class RaceManager {
             if(timesRun[0] == 5) {
                 race.startingRace = false;
                 race.hasRaceStarted = true;
+                countdownTasks.remove(race);
                 task[0].cancel();
             }
             timesRun[0]++;
         },0L,20L);
+        countdownTasks.put(race, task[0]);
         return Result.SUCCESS;
     }
 
@@ -621,7 +548,7 @@ public class RaceManager {
     public void prepareRace(CommandSender sender, Race race) {
         sender.sendMessage(getMessage("race.prepare", Messages.formatArguments("name", race.getName())));
         race.preparingRace = true;
-        activeRaces.add(race);
+        if (!activeRaces.contains(race)) activeRaces.add(race);
         for (Car car : race.getCars()) {
             Player owner = Bukkit.getPlayer(car.getOwner());
             if (owner == null) continue;
@@ -657,8 +584,24 @@ public class RaceManager {
      * @param race The race to end
      */
     public void endRace(Race race) {
-        if(!race.hasStarted()) return;
-        activeRaces.remove(race);
+        endRace(race, true);
+    }
+
+    /**
+     * Ends the inputted {@code race}. Works at any stage: preparation, countdown or running.
+     * Does nothing if the race isn't active at all.
+     * @param race The race to end
+     * @param announce Whether to broadcast the "race ended" message
+     */
+    public void endRace(Race race, boolean announce) {
+        boolean wasStarted = race.hasStarted();
+        if (!wasStarted && !race.isStarting() && !race.isPreparing() && !activeRaces.contains(race)) return;
+
+        // Stop a countdown that is still running (ending the race before "GO")
+        BukkitTask countdown = countdownTasks.remove(race);
+        if (countdown != null) countdown.cancel();
+
+        activeRaces.removeIf(r -> r == race); // removes every entry, not just the first
         race.rankings = new HashMap<>();
 
         race.currentBestLapTime = Long.MAX_VALUE;
@@ -669,11 +612,11 @@ public class RaceManager {
         race.preparingRace = false;
         race.hasRaceStarted = false;
 
-        Bukkit.broadcast(getMessage("race.end", Messages.formatArguments("name", race.getName())));
+        if (announce) Bukkit.broadcast(getMessage("race.end", Messages.formatArguments("name", race.getName())));
         for (Car car : race.getCars()) {
             Player owner = Bukkit.getPlayer(car.getOwner());
             if (owner == null) continue;
-            if (SPECTATE_ON_FINISH) owner.setGameMode(GameMode.SPECTATOR);
+            if (SPECTATE_ON_FINISH && wasStarted) owner.setGameMode(GameMode.SPECTATOR);
             Racer data = race.racers.get(owner.getUniqueId());
             if (data != null && data.pittingBox != null) pitBoxManager.cancelSession(owner, data.pittingBox);
 

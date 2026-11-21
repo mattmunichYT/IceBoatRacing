@@ -30,17 +30,114 @@ permissions:
       iceboatracing.command.checkpoint: true
       iceboatracing.command.car: true
       iceboatracing.command.race: true
+      iceboatracing.command.pitbox: true
       iceboatracing.command.plugin: true
+
+  # ---- /race ----
   iceboatracing.command.race:
     description: The permission for the /race command
     default: op
-  iceboatracing.command.car:
-    description: The permission for the /car command
+    children:
+      iceboatracing.command.race.start: true
+      iceboatracing.command.race.end: true
+      iceboatracing.command.race.delete: true
+      iceboatracing.command.race.modify: true
+  iceboatracing.command.race.start:
+    description: The permission for /race start and /race prepare
     default: op
+  iceboatracing.command.race.end:
+    description: The permission for /race end
+    default: op
+  iceboatracing.command.race.delete:
+    description: The permission for /race delete
+    default: op
+  iceboatracing.command.race.modify:
+    description: The permission for /race create, setLights, setPitStops, setStartRotation, setLapCount
+    default: op
+
+  # ---- /pitbox ----
+  iceboatracing.command.pitbox:
+    description: The permission for the /pitbox command
+    default: op
+    children:
+      iceboatracing.command.pitbox.create: true
+      iceboatracing.command.pitbox.list: true
+      iceboatracing.command.pitbox.remove: true
+      iceboatracing.command.pitbox.modify: true
+  iceboatracing.command.pitbox.create:
+    description: The permission for /pitbox create
+    default: op
+  iceboatracing.command.pitbox.list:
+    description: The permission for /pitbox list
+    default: op
+  iceboatracing.command.pitbox.remove:
+    description: The permission for /pitbox remove
+    default: op
+  iceboatracing.command.pitbox.modify:
+    description: The permission for /pitbox setAllowed and /pitbox setColor
+    default: op
+
+  # ---- /checkpoint ----
   iceboatracing.command.checkpoint:
     description: The permission for the /checkpoint command
     default: op
+    children:
+      iceboatracing.command.checkpoint.create: true
+      iceboatracing.command.checkpoint.remove: true
+      iceboatracing.command.checkpoint.view: true
+      iceboatracing.command.checkpoint.list: true
+      iceboatracing.command.checkpoint.resetdata: true
+      iceboatracing.command.checkpoint.autotrace: true
+      iceboatracing.command.checkpoint.alternate: true
+      iceboatracing.command.checkpoint.clearall: true
+  iceboatracing.command.checkpoint.create:
+    description: The permission for /checkpoint create
+    default: op
+  iceboatracing.command.checkpoint.remove:
+    description: The permission for /checkpoint remove|delete
+    default: op
+  iceboatracing.command.checkpoint.view:
+    description: The permission for /checkpoint view
+    default: op
+  iceboatracing.command.checkpoint.list:
+    description: The permission for /checkpoint list, count and getID
+    default: op
+  iceboatracing.command.checkpoint.resetdata:
+    description: The permission for /checkpoint resetData
+    default: op
+  iceboatracing.command.checkpoint.autotrace:
+    description: The permission for /checkpoint autotrace
+    default: op
+  iceboatracing.command.checkpoint.alternate:
+    description: The permission for /checkpoint addAlternate
+    default: op
+  iceboatracing.command.checkpoint.clearall:
+    description: The permission for /checkpoint clearAll
+    default: op
+
+  # ---- /car ----
+  iceboatracing.command.car:
+    description: The permission for the /car command
+    default: op
+    children:
+      iceboatracing.command.car.create: true
+      iceboatracing.command.car.list: true
+      iceboatracing.command.car.remove: true
+      iceboatracing.command.car.changeowner: true
+  iceboatracing.command.car.create:
+    description: The permission for /car create (and the creation wizard's selectRace)
+    default: op
+  iceboatracing.command.car.list:
+    description: The permission for /car list
+    default: op
+  iceboatracing.command.car.remove:
+    description: The permission for /car remove
+    default: op
+  iceboatracing.command.car.changeowner:
+    description: The permission for /car changeOwner
+    default: op
+
+  # ---- /iceboatracing ----
   iceboatracing.command.plugin:
     description: The permission for the /iceboatracing or /ibr command
     default: op
-

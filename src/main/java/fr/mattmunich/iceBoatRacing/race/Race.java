@@ -85,7 +85,31 @@ public class Race {
         return config;
     }
 
+    /**
+     * Copies the in-memory settings (lap count, pit stops, start rotation, lights) into the config,
+     * then writes it to disk. Without this sync, setters like {@link #setLapCount(int)} would only
+     * change the field and the old values would be saved back.
+     */
     public void saveConfig() throws IOException {
+        if (config != null) {
+            config.set("lapCount", lapCount);
+            config.set("requiredPitStops", requiredPitStops);
+            config.set("startRotation", startRotation);
+
+            Lights l = getLights();
+            if (l != null && l.enabled()) {
+                config.set("lights.enabled", true);
+                config.set("lights.from.x", l.from().getBlockX());
+                config.set("lights.from.y", l.from().getBlockY());
+                config.set("lights.from.z", l.from().getBlockZ());
+                config.set("lights.to.x", l.to().getBlockX());
+                config.set("lights.to.y", l.to().getBlockY());
+                config.set("lights.to.z", l.to().getBlockZ());
+            } else {
+                config.set("lights", null);
+                config.set("lights.enabled", false);
+            }
+        }
         raceManager.saveRaceConfig(this, config);
     }
 
@@ -116,8 +140,8 @@ public class Race {
     public void togglePrepare(CommandSender sender) {
         raceManager.togglePrepareRace(sender, this);
     }
-    public boolean isNotStarting() {
-        return !startingRace;
+    public boolean isStarting() {
+        return startingRace;
     }
     public boolean isPreparing() {
         return preparingRace;

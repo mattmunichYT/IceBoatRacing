@@ -195,6 +195,8 @@ race:
   "
 
   #In race events
+  actionBar:
+    lapInfo: "§bLap §3%currentLap%§b/§3%lapCount% §8| §bTime: §3%time%"
   onCompleteLap:
     title: "§6%currentLapCount%/%raceLapCount%"
     subtitle: "§alaps completed"

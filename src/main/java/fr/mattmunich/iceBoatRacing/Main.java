@@ -10,6 +10,8 @@ import fr.mattmunich.iceBoatRacing.pitbox.PitBoxManager;
 import fr.mattmunich.iceBoatRacing.race.*;
 import fr.mattmunich.iceBoatRacing.checkpoint.CheckpointCommand;
 import fr.mattmunich.iceBoatRacing.checkpoint.CheckpointManager;
+import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -91,12 +93,12 @@ public final class Main extends JavaPlugin {
     private void registerListeners() {
         PluginManager pm = Bukkit.getPluginManager();
         pm.registerEvents(new CarListener(raceManager),this);
-        pm.registerEvents(new CarCreator(this, raceManager, carManager), this);
+        pm.registerEvents(carCreator, this);
         pm.registerEvents(new Connection(this, raceManager, carManager, liveScoreManager),this);
         pm.registerEvents(new RaceListener(raceManager, pitBoxManager, liveScoreManager),this);
-        pm.registerEvents(new RaceCreator(this, raceManager,carCreator), this);
+        pm.registerEvents(raceCreator, this);
         pm.registerEvents(new WorldLoad(this, raceManager), this);
-        pm.registerEvents(new PitBoxCreator(this, pitBoxManager), this);
+        pm.registerEvents(pitBoxCreator, this);
         pm.registerEvents(new PosSelection(), this);
     }
 
@@ -168,11 +170,17 @@ public final class Main extends JavaPlugin {
 
     private void registerCommands() {
         log("Registering commands...");
+        // Basic command
         registerCommand("iceboatracing", "Command to manage the plugin", List.of("ibr"), new IBRCommand(this));
-        registerCommand("race", "Command to manage the race", new RaceCommand(this, raceManager,raceCreator));
-        registerCommand("checkpoint", "Command to manage checkpoints", new CheckpointCommand(checkpointManager, raceManager, autoTraceManager, new RaceCreator(this, raceManager, carCreator), liveScoreManager));
-        registerCommand("car", "Command to manage cars", new CarCommand(carManager,raceManager,carCreator));
-        registerCommand("pitbox", "Command to manage pit boxes", new PitBoxCommand(raceManager, pitBoxManager, pitBoxCreator));
+
+        // Brigadier API commands
+        getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
+            Commands registrar = event.registrar();
+            registrar.register(new RaceCommand(raceManager, raceCreator).build(), "Command to manage the race");
+            registrar.register(new CheckpointCommand(checkpointManager, raceManager, autoTraceManager, raceCreator, liveScoreManager).build(), "Command to manage checkpoints");
+            registrar.register(new CarCommand(carManager, raceManager, carCreator).build(), "Command to manage cars");
+            registrar.register(new PitBoxCommand(raceManager, pitBoxManager, pitBoxCreator).build(), "Command to manage pit boxes");
+        });
         log("Done registering commands!");
     }
 

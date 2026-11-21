@@ -1,27 +1,47 @@
 package fr.mattmunich.iceBoatRacing.cars;
 
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.tree.LiteralCommandNode;
+import fr.mattmunich.iceBoatRacing.CommandUtil;
 import fr.mattmunich.iceBoatRacing.race.Race;
 import fr.mattmunich.iceBoatRacing.race.RaceManager;
-import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Listener;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 
+import static fr.mattmunich.iceBoatRacing.CommandUtil.*;
 import static fr.mattmunich.iceBoatRacing.Main.c;
 import static fr.mattmunich.iceBoatRacing.Messages.*;
 
-public class CarCommand implements BasicCommand, Listener {
+/**
+ * /car command (Brigadier).
+ * <pre>
+ * /car create
+ * /car list [page]
+ * /car changeOwner <id> <race> <player>
+ * /car remove <id> <race>
+ * /car selectRace <race>      (used by the car creation wizard)
+ * </pre>
+ */
+public class CarCommand {
+    public static final String PERM_BASE = "iceboatracing.command.car";
+    public static final String PERM_CREATE = PERM_BASE + ".create";           // create + selectRace
+    public static final String PERM_LIST = PERM_BASE + ".list";
+    public static final String PERM_REMOVE = PERM_BASE + ".remove";
+    public static final String PERM_CHANGE_OWNER = PERM_BASE + ".changeowner";
+
+    private static final int PAGE_SIZE = 10;
 
     private final CarManager carManager;
     private final RaceManager raceManager;
@@ -33,97 +53,107 @@ public class CarCommand implements BasicCommand, Listener {
         this.carCreator = carCreator;
     }
 
-    @Override
-    public void execute(@NonNull CommandSourceStack source, String @NonNull [] args) {
-        if(!(source.getSender() instanceof Player p)) {
-            source.getSender().sendMessage(getMessage("error.playerToExecuteCommand"));
-            return;
-        }
-
-        if(args.length == 1 && args[0].equalsIgnoreCase("create")) {
-            carCreator.createCar(p);
-        } else if (args.length <= 2 && args[0].equalsIgnoreCase("list")) {
-            listCommand(args, p);
-        } else if (args.length == 4 && args[0].equalsIgnoreCase("changeOwner")) {
-            changeOwner(args, p);
-        } else if (args.length == 3 && args[0].equalsIgnoreCase("remove")) {
-            int id;
-            try {
-                id = Integer.parseInt(args[1]);
-            } catch (NumberFormatException e) {
-                p.sendMessage(getMessage("error.invalidNumber"));
-                return;
-            }
-
-            String raceName = args[2];
-
-            Race race = raceManager.getRace(raceName);
-            if(race == null) {
-                p.sendMessage(getMessage("race.notFound"));
-                return;
-            }
-
-            Car car = carManager.get(race,id);
-            if(car == null) {
-                p.sendMessage(getMessage("car.invalidID",formatArguments("id", String.valueOf(id))));
-                return;
-            }
-
-            boolean success = carManager.remove(race,car);
-            if(!success) {
-                p.sendMessage(getMessage("error.unknown"));
-                return;
-            }
-            p.sendMessage(getMessage("car.removed",formatArguments("id", String.valueOf(id))));
-        } else if (args.length == 2 && args[0].equalsIgnoreCase("selectRace")) {
-            carCreator.selectRace(args, p);
-        } else {
-            p.sendMessage(getMessage("car.help"));
-        }
+    public LiteralCommandNode<CommandSourceStack> build() {
+        return Commands.literal("car")
+                .requires(playerPerm(PERM_BASE, PERM_CREATE, PERM_LIST, PERM_REMOVE, PERM_CHANGE_OWNER))
+                .executes(ctx -> help(ctx, "car.help"))
+                .then(Commands.literal("create")
+                        .requires(perm(PERM_CREATE))
+                        .executes(ctx -> {
+                            carCreator.createCar(player(ctx));
+                            return Command.SINGLE_SUCCESS;
+                        }))
+                .then(Commands.literal("list")
+                        .requires(perm(PERM_LIST))
+                        .executes(ctx -> list(ctx, 1))
+                        .then(Commands.argument("page", IntegerArgumentType.integer(1))
+                                .executes(ctx -> list(ctx, IntegerArgumentType.getInteger(ctx, "page")))))
+                .then(Commands.literal("changeOwner")
+                        .requires(perm(PERM_CHANGE_OWNER))
+                        .then(Commands.argument("id", IntegerArgumentType.integer(0))
+                                .then(raceArgument("race", raceManager)
+                                        .then(Commands.argument("player", StringArgumentType.word())
+                                                .suggests((ctx, builder) -> CommandUtil.suggest(
+                                                        Arrays.stream(Bukkit.getOfflinePlayers())
+                                                                .map(OfflinePlayer::getName)
+                                                                .filter(Objects::nonNull)
+                                                                .toList(), builder))
+                                                .executes(this::changeOwner)))))
+                .then(Commands.literal("remove")
+                        .requires(perm(PERM_REMOVE))
+                        .then(Commands.argument("id", IntegerArgumentType.integer(0))
+                                .then(raceArgument("race", raceManager).executes(this::remove))))
+                .then(Commands.literal("selectRace")
+                        .requires(perm(PERM_CREATE))
+                        .then(raceArgument("race", raceManager).executes(ctx -> {
+                            // Race validation is done by the creator, as before
+                            carCreator.selectRace(
+                                    new String[]{"selectRace", StringArgumentType.getString(ctx, "race")},
+                                    player(ctx));
+                            return Command.SINGLE_SUCCESS;
+                        })))
+                .build();
     }
 
-    private void changeOwner(String @NonNull [] args, Player p) {
-        int id;
-        try {
-            id = Integer.parseInt(args[1]);
-        } catch (NumberFormatException e) {
-            p.sendMessage(getMessage("error.invalidNumber"));
-            return;
+    // ------------------------------------------------------------------
+    // Handlers
+    // ------------------------------------------------------------------
+
+    private int remove(CommandContext<CommandSourceStack> ctx) {
+        Player p = player(ctx);
+        int id = IntegerArgumentType.getInteger(ctx, "id");
+
+        Race race = getRace(ctx, "race", raceManager);
+        if (race == null) return 0;
+
+        Car car = carManager.get(race, id);
+        if (car == null) {
+            p.sendMessage(getMessage("car.invalidID", formatArguments("id", String.valueOf(id))));
+            return 0;
         }
 
-
-        Race race = raceManager.getRace(args[2]);
-        if(race == null) {
-            p.sendMessage(getMessage("race.notFound"));
-            return;
-        }
-
-        Car car = carManager.get(race,id);
-        if(car == null) {
-            p.sendMessage(getMessage("car.invalidID",formatArguments("id", String.valueOf(id))));
-            return;
-        }
-
-        OfflinePlayer target = Bukkit.getOfflinePlayer(args[3]);
-        if(!target.hasPlayedBefore()) {
-            p.sendMessage(getMessage("error.playerNotFound"));
-            return;
-        }
-
-        boolean success = carManager.changeOwner(race,car,target.getUniqueId());
-        if(!success) {
+        if (!carManager.remove(race, car)) {
             p.sendMessage(getMessage("error.unknown"));
-            return;
+            return 0;
         }
-        p.sendMessage(getMessage("car.changedOwner",formatArguments("owner", target.getName())));
+        p.sendMessage(getMessage("car.removed", formatArguments("id", String.valueOf(id))));
+        return Command.SINGLE_SUCCESS;
     }
 
-    private void listCommand(String @NonNull [] args, Player p) {
+    private int changeOwner(CommandContext<CommandSourceStack> ctx) {
+        Player p = player(ctx);
+        int id = IntegerArgumentType.getInteger(ctx, "id");
+
+        Race race = getRace(ctx, "race", raceManager);
+        if (race == null) return 0;
+
+        Car car = carManager.get(race, id);
+        if (car == null) {
+            p.sendMessage(getMessage("car.invalidID", formatArguments("id", String.valueOf(id))));
+            return 0;
+        }
+
+        OfflinePlayer target = Bukkit.getOfflinePlayer(StringArgumentType.getString(ctx, "player"));
+        if (!target.hasPlayedBefore()) {
+            p.sendMessage(getMessage("error.playerNotFound"));
+            return 0;
+        }
+
+        if (!carManager.changeOwner(race, car, target.getUniqueId())) {
+            p.sendMessage(getMessage("error.unknown"));
+            return 0;
+        }
+        p.sendMessage(getMessage("car.changedOwner", formatArguments("owner", target.getName())));
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int list(CommandContext<CommandSourceStack> ctx, int page) {
+        Player p = player(ctx);
         Map<Race, List<Car>> all = carManager.getAll();
 
         if (all.values().stream().allMatch(List::isEmpty)) {
             p.sendMessage(getMessage("car.noCars"));
-            return;
+            return 0;
         }
 
         // Flatten into ordered (Race, Car) pairs for pagination
@@ -134,22 +164,10 @@ public class CarCommand implements BasicCommand, Listener {
             }
         }
 
-        final int PAGE_SIZE = 10;
         int totalPages = (int) Math.ceil((double) entries.size() / PAGE_SIZE);
-
-        int page = 1;
-        if (args.length == 2) {
-            try {
-                page = Integer.parseInt(args[1]);
-            } catch (NumberFormatException e) {
-                p.sendMessage(getMessage("error.invalidNumber"));
-                return;
-            }
-        }
-
-        if (page < 1 || page > totalPages) {
+        if (page > totalPages) {
             p.sendMessage(c("§cInvalid page (1-" + totalPages + ")"));
-            return;
+            return 0;
         }
 
         int start = (page - 1) * PAGE_SIZE;
@@ -220,33 +238,6 @@ public class CarCommand implements BasicCommand, Listener {
 
             p.sendMessage(prev.append(c("  §7Page §f" + page + " §7of §f" + totalPages + "  ")).append(next));
         }
+        return Command.SINGLE_SUCCESS;
     }
-
-    @Override
-    public @NonNull Collection<String> suggest(@NonNull CommandSourceStack source, String @NonNull [] args) {
-        ArrayList<String> suggestions = new ArrayList<>();
-
-        if(args.length <= 1) {
-            suggestions.add("create");
-            suggestions.add("list");
-            suggestions.add("changeOwner");
-            suggestions.add("remove");
-        }
-        if(args.length != 0 && args[0] != null && !suggestions.isEmpty() && !args[0].isEmpty()) {
-            suggestions.removeIf(s -> !s.startsWith(args[0]));
-        }
-        return suggestions;
-    }
-
-    @Override
-    public boolean canUse(@NonNull CommandSender sender) {
-        return sender.hasPermission("iceboatracing.command.car") && sender instanceof Player;
-    }
-
-    @Override
-    public @Nullable String permission() {
-        return "iceboatracing.command.car";
-    }
-
-
 }
