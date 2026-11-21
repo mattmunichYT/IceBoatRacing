@@ -12,6 +12,8 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import fr.mattmunich.iceBoatRacing.Main;
 import fr.mattmunich.iceBoatRacing.Messages;
 import fr.mattmunich.iceBoatRacing.Result;
+import fr.mattmunich.iceBoatRacing.stats.StatsCommand;
+import fr.mattmunich.iceBoatRacing.stats.StatsManager;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import org.bukkit.Location;
@@ -57,10 +59,16 @@ public class RaceCommand {
 
     private final RaceManager raceManager;
     private final RaceCreator raceCreator;
+    private final StatsCommand statsCommand;
 
     public RaceCommand(RaceManager raceManager, RaceCreator raceCreator) {
+        this(raceManager, raceCreator, null);
+    }
+
+    public RaceCommand(RaceManager raceManager, RaceCreator raceCreator, StatsManager statsManager) {
         this.raceManager = raceManager;
         this.raceCreator = raceCreator;
+        this.statsCommand = statsManager != null ? new StatsCommand(statsManager, raceManager) : null;
     }
 
     // ------------------------------------------------------------------
@@ -82,7 +90,7 @@ public class RaceCommand {
     // ------------------------------------------------------------------
 
     public LiteralCommandNode<CommandSourceStack> build() {
-        return Commands.literal("race")
+        var builder = Commands.literal("race")
                 .requires(perm(PERM_BASE, PERM_START, PERM_END, PERM_DELETE, PERM_MODIFY))
                 .executes(ctx -> help(ctx, "race.help"))
                 .then(raceAction("start", PERM_START, this::start))
@@ -95,8 +103,13 @@ public class RaceCommand {
                 .then(setting("setPitStops", IntegerArgumentType.integer(0), Integer.class,
                         this::showPitStops, this::setPitStops))
                 .then(startRotation())
-                .then(raceAction("setLights", PERM_MODIFY, this::lights))
-                .build();
+                .then(raceAction("setLights", PERM_MODIFY, this::lights));
+
+        if (statsCommand != null) {
+            builder.then(statsCommand.build());
+        }
+
+        return builder.build();
     }
 
     private RequiredArgumentBuilder<CommandSourceStack, String> raceArg() {

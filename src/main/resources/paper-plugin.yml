@@ -42,6 +42,8 @@ permissions:
       iceboatracing.command.race.end: true
       iceboatracing.command.race.delete: true
       iceboatracing.command.race.modify: true
+      iceboatracing.command.race.stats: true
+      iceboatracing.command.race.stats.other: true
   iceboatracing.command.race.start:
     description: The permission for /race start and /race prepare
     default: op
@@ -53,6 +55,12 @@ permissions:
     default: op
   iceboatracing.command.race.modify:
     description: The permission for /race create, setLights, setPitStops, setStartRotation, setLapCount
+    default: op
+  iceboatracing.command.race.stats:
+    description: The permission for /race stats (own stats)
+    default: true
+  iceboatracing.command.race.stats.other:
+    description: The permission for /race stats <player> (view other players' stats)
     default: op
 
   # ---- /pitbox ----

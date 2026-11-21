@@ -74,7 +74,6 @@ public class Connection implements Listener {
                     warn("Couldn't put " + p.getName() + " back in it's car after logging back in because the log out location was null.");
                     return;
                 }
-                p.teleport(logOutLocation);
 
                 //Always remove and place back car to prevent bugs
                 Car car = racer.car;
@@ -95,6 +94,10 @@ public class Connection implements Listener {
     public void onQuit(PlayerQuitEvent e) {
         Player p = e.getPlayer();
         e.quitMessage(getMessage("noPrefix.quit",formatArguments("player", p.getName())));
+
+        if (main.getStatsManager() != null) {
+            main.getStatsManager().savePlayerAsync(p.getUniqueId());
+        }
 
         for (Race race : new ArrayList<>(raceManager.activeRaces)) {
             Racer racer = race.racers.get(p.getUniqueId());

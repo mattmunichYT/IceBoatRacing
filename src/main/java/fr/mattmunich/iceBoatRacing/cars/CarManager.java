@@ -99,7 +99,7 @@ public class CarManager {
 
     public void spawnCar(Race race, Car car, Player player, Location spawnLocation) {
         Material boatMat = car.getBoatMaterial();
-        player.teleport(spawnLocation);
+        player.teleport(spawnLocation.add(0,1,0));
 
         //No double cars
         if(car.getBoat() != null) car.destroy();
@@ -115,13 +115,11 @@ public class CarManager {
 
         boat.customName(customName);
 
-        Location boatLocation = boat.getLocation();
-
         float startRotation = car.getStartingLocation() == spawnLocation
                             ? race.getStartRotation()
                             : spawnLocation.getYaw();
-        boatLocation.setRotation(startRotation,0F);
-        boat.teleport(boatLocation);
+        spawnLocation.setRotation(startRotation,0F);
+        boat.teleport(spawnLocation);
 
         boat.setInvulnerable(true);
 

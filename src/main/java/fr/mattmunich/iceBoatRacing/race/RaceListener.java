@@ -4,6 +4,7 @@ import fr.mattmunich.iceBoatRacing.LiveScoreManager;
 import fr.mattmunich.iceBoatRacing.checkpoint.Checkpoint;
 import fr.mattmunich.iceBoatRacing.pitbox.PitBox;
 import fr.mattmunich.iceBoatRacing.pitbox.PitBoxManager;
+import fr.mattmunich.iceBoatRacing.stats.StatsManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
@@ -25,11 +26,17 @@ public class RaceListener implements Listener {
     private final RaceManager raceManager;
     private final PitBoxManager pitBoxManager;
     private final LiveScoreManager liveScoreManager;
+    private final StatsManager statsManager;
 
     public RaceListener(RaceManager raceManager, PitBoxManager pitBoxManager, LiveScoreManager liveScoreManager) {
+        this(raceManager, pitBoxManager, liveScoreManager, null);
+    }
+
+    public RaceListener(RaceManager raceManager, PitBoxManager pitBoxManager, LiveScoreManager liveScoreManager, StatsManager statsManager) {
         this.raceManager = raceManager;
         this.pitBoxManager = pitBoxManager;
         this.liveScoreManager = liveScoreManager;
+        this.statsManager = statsManager;
     }
 
     @EventHandler
@@ -241,9 +248,22 @@ public class RaceListener implements Listener {
     private void onCompleteLap(Racer racer, long now) {
         Player player = racer.player;
         long lapDuration = now - racer.lapTime;
+        if (lapDuration <= 0) return;
         long result = racer.race.isBestLapTimeYet(lapDuration);
         boolean bestLapTimeYet = result != -1;
         racer.lapTimes.add(lapDuration);
+
+        // --- Statistics recording (official only; guard against missing manager) ---
+        if (statsManager != null && player != null) {
+            statsManager.recordOfficialLap(
+                    player.getUniqueId(),
+                    racer.race.getName(),
+                    lapDuration,
+                    racer.lapCount   // 1-based lap number being completed
+            );
+        }
+        // -------------------------------------------------------------------------
+
         if (bestLapTimeYet) {
             Bukkit.broadcast(getMessage("race.onCompleteLap.messageBestLapTimeYet",
                     formatArguments(
@@ -288,6 +308,13 @@ public class RaceListener implements Listener {
         boolean isWinner = ranking == 1;
 
         long raceTime = now - racer.startTime;
+
+        // --- Statistics recording (only for non-disqualified finishers) ----------
+        if (statsManager != null && player != null && !racer.disqualified) {
+            statsManager.recordOfficialRaceFinished(player.getUniqueId(), race.getName(), raceTime);
+        }
+        // -------------------------------------------------------------------------
+
         long gapToWinner = isWinner ? -1 : (raceTime - finished.get(0).getRaceTime());
         //get(ranking-1) = self ; get(ranking-2) = player #(ranking-1) ; because ranking = size (starts @ 1) and get(x) starts @ 0
         long gapToNext = isWinner ? -1 : (raceTime - finished.get(ranking - 2).getRaceTime());
@@ -375,7 +402,7 @@ public class RaceListener implements Listener {
         if (racer.pitStopsCompleted >= race.getRequiredPitStops()) return; // done for this race
         if (racer.pittingBox != null) return; // already serving a stop
         long sinceLastPitBox = System.currentTimeMillis() - racer.lastPitBox;
-        if (sinceLastPitBox < 10000) return; //10 secs delay before pitting again -> prevent double pitting
+        if (sinceLastPitBox < 30000) return; //10 secs delay before pitting again -> prevent double pitting
 
         for (PitBox box : race.getPitBoxes()) {
             if (!box.contains(to)) continue;

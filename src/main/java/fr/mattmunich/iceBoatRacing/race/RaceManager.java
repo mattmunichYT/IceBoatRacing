@@ -629,6 +629,10 @@ public class RaceManager {
             race.racing.clear();
         }
 
+        if (wasStarted && main.getStatsManager() != null) {
+            main.getStatsManager().saveDirtyAsync();
+        }
+
         race.hasRaceStarted=false;
     }
 

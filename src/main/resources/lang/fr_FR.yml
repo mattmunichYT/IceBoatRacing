@@ -191,6 +191,7 @@ race:
   \n§3->§a setStartRotation [nom] <0-360 ou n/w/s/e> §8-§7 Définir l'angle de départ
   \n§3->§a setPitStops [nom] <nombre> §8-§7 Définir le nombre de d'arrêts aux stands requis
   \n§3->§a setLights [nom] §8-§7 Définir les feux de départ
+  \n§3->§a stats [joueur] [course] §8-§7 Afficher les statistiques de course
   "
 
   #In race events
@@ -199,7 +200,7 @@ race:
   onCompleteLap:
     title: "§6%currentLapCount%/%raceLapCount%"
     subtitle: "§atours complétés"
-    message: "§3%player%§b§8§l:§r§b our n°§3%ID%§b terminé en §3%time%§b"
+    message: "§3%player%§b§8§l:§r§b tour n°§3%ID%§b terminé en §3%time%§b"
     messageBestLapTimeYet: "§3%player%§8§l:§b tour §3%ID%§b terminé en §3%time%§b §7-§f nouveau temps record !"
   onCrossSector: "§r§3%player%§b§8§l:§r§b secteur §3%ID%§b: §3%time%§b"
   onFinish:
@@ -245,6 +246,20 @@ race:
     error:
       noRacers: "§4Impossible d'envoyer le classement de la course:§c aucun joueur trouvé."
       noRanking: "§4Impossible d'envoyer le classement de la course:§c pas de classement."
+
+  #/race stats messages
+  stats:
+    header: "§x§0§0§A§D§F§F§l▬▬▬▬ §x§5§5§D§D§F§F§lStatistiques §8— §b%player% §8sur §b%race% §x§0§0§A§D§F§F§l▬▬▬▬§r"
+    races: "§bCourses complétées : §3%count%"
+    laps: "§bTours complétés : §3%count%"
+    personalBest: "§bMeilleur tour personnel : §a%time%"
+    averageLap: "§bTour moyen : §3%time%"
+    fastestRace: "§bCourse la plus rapide : §a%time%"
+    footer: "§x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
+    noData: "§cAucune statistique trouvée pour §4%player% §csur la course §4%race%§c."
+    noDataAny: "§cAucune statistique trouvée pour §4%player%§c."
+    summaryHeader: "§x§0§0§A§D§F§F§l▬▬▬▬ §x§5§5§D§D§F§F§lRésumé des stats §8— §b%player% §x§0§0§A§D§F§F§l▬▬▬▬§r"
+    summaryRow: "§b%race% §8» §3%races% course(s) §8| §3%laps% tour(s) §8| MT: §a%pb%"
 
   select: "§bSélectionnez une course:"
   create:
@@ -415,6 +430,7 @@ car:
 
 #Some basic error messages
 error:
+  noPermission: "§cVous n'avez pas la permission d'exécuter cette commande."
   invalidNumber: "§cNombre invalide"
   playerNotFound: "§cJoueur introuvable"
   playerNeverJoined: "§cLe joueur §4%name%§c ne s'est jamais connecté, et est donc introuvable."

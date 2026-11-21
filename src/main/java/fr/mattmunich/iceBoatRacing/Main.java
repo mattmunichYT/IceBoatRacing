@@ -10,6 +10,7 @@ import fr.mattmunich.iceBoatRacing.pitbox.PitBoxManager;
 import fr.mattmunich.iceBoatRacing.race.*;
 import fr.mattmunich.iceBoatRacing.checkpoint.CheckpointCommand;
 import fr.mattmunich.iceBoatRacing.checkpoint.CheckpointManager;
+import fr.mattmunich.iceBoatRacing.stats.StatsManager;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
@@ -37,6 +38,10 @@ public final class Main extends JavaPlugin {
     PitBoxManager pitBoxManager;
     PitBoxCreator pitBoxCreator;
     LiveScoreManager liveScoreManager;
+    StatsManager statsManager;
+
+    /** Maximum number of lap records kept per player per race (configurable). */
+    public static int STATS_MAX_HISTORY;
 
 //    public Objective liveSidebar;
 
@@ -90,12 +95,16 @@ public final class Main extends JavaPlugin {
         return raceManager;
     }
 
+    public StatsManager getStatsManager() {
+        return statsManager;
+    }
+
     private void registerListeners() {
         PluginManager pm = Bukkit.getPluginManager();
         pm.registerEvents(new CarListener(raceManager),this);
         pm.registerEvents(carCreator, this);
         pm.registerEvents(new Connection(this, raceManager, carManager, liveScoreManager),this);
-        pm.registerEvents(new RaceListener(raceManager, pitBoxManager, liveScoreManager),this);
+        pm.registerEvents(new RaceListener(raceManager, pitBoxManager, liveScoreManager, statsManager),this);
         pm.registerEvents(raceCreator, this);
         pm.registerEvents(new WorldLoad(this, raceManager), this);
         pm.registerEvents(pitBoxCreator, this);
@@ -119,6 +128,9 @@ public final class Main extends JavaPlugin {
 
         //Remove car on logout
         REMOVE_CAR_ON_LOGOUT = getConfig().getBoolean("race.removeCarWhenLoggingOut");
+
+        // Statistics
+        STATS_MAX_HISTORY = getConfig().getInt("stats.maxLapHistory", 100);
     }
 
     public void loadConfigs() {
@@ -151,6 +163,10 @@ public final class Main extends JavaPlugin {
         raceManager = new RaceManager(this,carManager, checkpointManager, pitBoxManager, liveScoreManager);
         log("Done loading managers!");
 
+        // Statistics manager (depends on STATS_MAX_HISTORY set by loadConfigs)
+        statsManager = new StatsManager(this, STATS_MAX_HISTORY);
+        log("StatsManager loaded.");
+
         //Initialize race manager in car and checkpoint manager
         carManager.setRaceManager(raceManager);
         checkpointManager.setRaceManager(raceManager);
@@ -176,7 +192,7 @@ public final class Main extends JavaPlugin {
         // Brigadier API commands
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             Commands registrar = event.registrar();
-            registrar.register(new RaceCommand(raceManager, raceCreator).build(), "Command to manage the race");
+            registrar.register(new RaceCommand(raceManager, raceCreator, statsManager).build(), "Command to manage the race");
             registrar.register(new CheckpointCommand(checkpointManager, raceManager, autoTraceManager, raceCreator, liveScoreManager).build(), "Command to manage checkpoints");
             registrar.register(new CarCommand(carManager, raceManager, carCreator).build(), "Command to manage cars");
             registrar.register(new PitBoxCommand(raceManager, pitBoxManager, pitBoxCreator).build(), "Command to manage pit boxes");
@@ -188,6 +204,7 @@ public final class Main extends JavaPlugin {
     public void onDisable() {
         super.onDisable();
         raceManager.saveAllRaces();
+        statsManager.saveAll();
     }
 
     public void reload() {
@@ -197,6 +214,7 @@ public final class Main extends JavaPlugin {
         // Reload in-memory data
         raceManager.updateAllRaces();
         liveScoreManager = liveScoreManager.reload();
+        if (statsManager != null) statsManager.saveAll();
     }
 
     public static void log(String message) {

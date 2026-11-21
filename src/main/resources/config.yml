@@ -51,3 +51,10 @@ race:
       x: 123456789
       y: 123456789
       z: 123456789
+
+# Configure the race statistics system.
+stats:
+  # Maximum number of individual lap records stored per player per race.
+  # Older entries are dropped when the limit is exceeded.
+  # Set to a higher value to retain more history for ghost replay in the future.
+  maxLapHistory: 100

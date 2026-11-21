@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static fr.mattmunich.iceBoatRacing.Main.err;
+import static fr.mattmunich.iceBoatRacing.Main.log;
 import static fr.mattmunich.iceBoatRacing.Messages.*;
 
 public class PitBoxManager {
@@ -47,7 +48,7 @@ public class PitBoxManager {
 
         YamlConfiguration config = race.getConfig();
         if (config == null) {
-            main.log("§cPit box " + id + " for race " + race.getName() + " wasn't saved, see cause above.");
+            log("§cPit box " + id + " for race " + race.getName() + " wasn't saved, see cause above.");
             return null;
         }
 
@@ -79,7 +80,7 @@ public class PitBoxManager {
     public boolean setAllowed(Race race, PitBox box, List<UUID> allowed) {
         YamlConfiguration config = race.getConfig();
         if (config == null) {
-            main.log("§cAllowed list for pit box " + box.getId() + " on race " + race.getName() + " wasn't updated, see cause above.");
+            log("§cAllowed list for pit box " + box.getId() + " on race " + race.getName() + " wasn't updated, see cause above.");
             return false;
         }
 
@@ -102,7 +103,7 @@ public class PitBoxManager {
     public boolean setColor(Race race, PitBox box, PitBoxColor color) {
         YamlConfiguration config = race.getConfig();
         if (config == null) {
-            main.log("§cColor for pit box " + box.getId() + " on race " + race.getName() + " wasn't updated, see cause above.");
+            log("§cColor for pit box " + box.getId() + " on race " + race.getName() + " wasn't updated, see cause above.");
             return false;
         }
 
@@ -124,7 +125,7 @@ public class PitBoxManager {
 
         YamlConfiguration config = race.getConfig();
         if (config == null) {
-            main.log("§cPit box " + box.getId() + " for race " + race.getName() + " wasn't removed, see cause above.");
+            log("§cPit box " + box.getId() + " for race " + race.getName() + " wasn't removed, see cause above.");
             return false;
         }
 
@@ -141,7 +142,7 @@ public class PitBoxManager {
     public void loadRacePitBoxes(Race race) {
         YamlConfiguration config = race.getConfig();
         if (config == null) {
-            main.log("§cPit boxes for race " + race.getName() + " were not loaded, see cause above.");
+            log("§cPit boxes for race " + race.getName() + " were not loaded, see cause above.");
             return;
         }
 

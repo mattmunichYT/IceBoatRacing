@@ -192,6 +192,7 @@ race:
   \n§3->§a setStartRotation [name] <0-360 or n/w/s/e> §8-§7 Set the starting angle
   \n§3->§a setPitStops [name] <number> §8-§7 Set the number of required pit stops
   \n§3->§a setLights [name] §8-§7 Set the starting lights
+  \n§3->§a stats [player] [race] §8-§7 View race statistics
   "
 
   #In race events
@@ -246,6 +247,20 @@ race:
     error:
       noRacers: "§4Couldn't send the race ranking:§c no players found."
       noRanking: "§4Couldn't send the race ranking:§c no ranking available."
+
+  #/race stats command messages
+  stats:
+    header: "§x§0§0§A§D§F§F§l▬▬▬▬ §x§5§5§D§D§F§F§lStats §8— §b%player% §8on §b%race% §x§0§0§A§D§F§F§l▬▬▬▬§r"
+    races: "§bCompleted races: §3%count%"
+    laps: "§bCompleted laps: §3%count%"
+    personalBest: "§bPersonal best lap: §a%time%"
+    averageLap: "§bAverage lap: §3%time%"
+    fastestRace: "§bFastest race: §a%time%"
+    footer: "§x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
+    noData: "§cNo statistics found for §4%player% §con race §4%race%§c."
+    noDataAny: "§cNo statistics found for §4%player%§c."
+    summaryHeader: "§x§0§0§A§D§F§F§l▬▬▬▬ §x§5§5§D§D§F§F§lStats summary §8— §b%player% §x§0§0§A§D§F§F§l▬▬▬▬§r"
+    summaryRow: "§b%race% §8» §3%races% race(s) §8| §3%laps% lap(s) §8| PB: §a%pb%"
 
   select: "§bSelect a race:"
   create:
@@ -416,6 +431,7 @@ car:
 
 #Some basic error messages
 error:
+  noPermission: "§cYou do not have permission to execute this command."
   invalidNumber: "§cInvalid number"
   playerNotFound: "§cPlayer not found"
   playerNeverJoined: "§cThe player §4%name%§c has never joined this server and therefore cannot be found."
