@@ -3,7 +3,6 @@ package fr.mattmunich.iceBoatRacing.cars;
 import fr.mattmunich.iceBoatRacing.race.Race;
 import fr.mattmunich.iceBoatRacing.race.Racer;
 import fr.mattmunich.iceBoatRacing.race.RaceManager;
-import org.bukkit.Location;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -14,8 +13,6 @@ import org.bukkit.event.vehicle.VehicleMoveEvent;
 import org.bukkit.util.Vector;
 
 import java.util.List;
-
-import static fr.mattmunich.iceBoatRacing.Main.log;
 
 public class CarListener implements Listener {
 

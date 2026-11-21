@@ -186,6 +186,10 @@ race:
   \n§3->§a start [name] §8-§7 Start the race
   \n§3->§a prepare [name] §8-§7 Prepare the players
   \n§7§oℹ Automatically places players in their cars
+  \n§3->§a train [name] §8-§7 Start a training session
+  \n§3->§a train leave §8-§7 Leave training session
+  \n§3->§a train restart §8-§7 Restart training session
+  \n§3->§a train ghost §8-§7 Toggle ghost replay
   \n§3->§a end [name] §8-§7 End the race
   \n§3->§a delete [name] §8-§7 Delete the race
   \n§3->§a setLapCount [name] <number> §8-§7 Set the lap count
@@ -194,6 +198,28 @@ race:
   \n§3->§a setLights [name] §8-§7 Set the starting lights
   \n§3->§a stats [player] [race] §8-§7 View race statistics
   "
+
+  #Training mode messages
+  train:
+    start: "§aTraining session started on track §3%race%§a! Complete laps to set your personal best."
+    leave: "§aYou left the training session on track §3%race%§a."
+    restart: "§aRestarting training session on track §3%race%§a..."
+    alreadyTraining: "§cYou are already in a training session! Use §e/race train leave §cto exit or §e/race train restart §cto restart."
+    notTraining: "§cYou are not currently in a training session."
+    inOfficialRace: "§cYou cannot start training while participating in an official race."
+    noCars: "§cCannot start training: track §4%race% §chas no cars or starting positions defined."
+    ghostEnabled: "§aGhost replay §2enabled§a."
+    ghostDisabled: "§cGhost replay §4disabled§a."
+    actionBar:
+      withGhost: "§bLap §3%currentLap% §8| §bTime: §3%time% §8| %delta% §8(§7PB: §f%pb%§8)"
+      noGhost: "§bLap §3%currentLap% §8| §bTime: §3%time% §8| §7PB: %pb%"
+    onCompleteLap:
+      message: "§3[Training] §bLap #§3%ID%§b completed in §3%time%§b §8(§7PB: §f%pb%§8, %delta%§8)"
+      messagePB: "§3[Training] §a§lNEW PERSONAL BEST! §bLap #§3%ID%§b in §a%time%§b §8(§a-%delta%§8)!"
+      title: "§6Lap %lap%"
+      subtitle: "§a%time%"
+      titlePB: "§a§lNEW PERSONAL BEST!"
+      subtitlePB: "§e%time%"
 
   #In race events
   actionBar:
@@ -256,6 +282,9 @@ race:
     personalBest: "§bPersonal best lap: §a%time%"
     averageLap: "§bAverage lap: §3%time%"
     fastestRace: "§bFastest race: §a%time%"
+    trainingLaps: "§bTraining laps: §3%count%"
+    trainingPB: "§bTraining best lap: §a%time%"
+    trainingAverage: "§bTraining average: §3%time%"
     footer: "§x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
     noData: "§cNo statistics found for §4%player% §con race §4%race%§c."
     noDataAny: "§cNo statistics found for §4%player%§c."

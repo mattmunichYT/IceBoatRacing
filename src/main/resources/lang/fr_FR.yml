@@ -185,6 +185,10 @@ race:
   \n§3->§a start [nom] §8-§7 Lancer la course
   \n§3->§a prepare [nom] §8-§7 Préparer les joueurs
   \n§7§oℹ Placement automatique des joueurs dans leurs voitures
+  \n§3->§a train [nom] §8-§7 Démarrer une session d'entraînement
+  \n§3->§a train leave §8-§7 Quitter la session d'entraînement
+  \n§3->§a train restart §8-§7 Redémarrer l'entraînement
+  \n§3->§a train ghost §8-§7 Activer/désactiver le fantôme
   \n§3->§a end [nom] §8-§7 Finir la course
   \n§3->§a delete [nom] §8-§7 Supprimer la course
   \n§3->§a setLapCount [nom] <nombre> §8-§7 Définir le nombre de tours
@@ -193,6 +197,28 @@ race:
   \n§3->§a setLights [nom] §8-§7 Définir les feux de départ
   \n§3->§a stats [joueur] [course] §8-§7 Afficher les statistiques de course
   "
+
+  #Training mode messages
+  train:
+    start: "§aSession d'entraînement démarrée sur le circuit §3%race%§a ! Enchaînez les tours pour battre votre record."
+    leave: "§aVous avez quitté la session d'entraînement sur le circuit §3%race%§a."
+    restart: "§aRedémarrage de la session d'entraînement sur le circuit §3%race%§a..."
+    alreadyTraining: "§cVous êtes déjà dans une session d'entraînement ! Utilisez §e/race train leave §cpour quitter ou §e/race train restart §cpour redémarrer."
+    notTraining: "§cVous n'êtes actuellement pas dans une session d'entraînement."
+    inOfficialRace: "§cVous ne pouvez pas vous entraîner pendant une course officielle."
+    noCars: "§cImpossible de démarrer l'entraînement : aucun emplacement de départ défini pour §4%race%§c."
+    ghostEnabled: "§aFantôme §2activé§a."
+    ghostDisabled: "§cFantôme §4désactivé§a."
+    actionBar:
+      withGhost: "§bTour §3%currentLap% §8| §bTemps : §3%time% §8| %delta% §8(§7Record : §f%pb%§8)"
+      noGhost: "§bTour §3%currentLap% §8| §bTemps : §3%time% §8| §7Record : %pb%"
+    onCompleteLap:
+      message: "§3[Entraînement] §bTour #§3%ID%§b terminé en §3%time%§b §8(§7Record : §f%pb%§8, %delta%§8)"
+      messagePB: "§3[Entraînement] §a§lNouveau record personnel ! §bTour #§3%ID%§b en §a%time%§b §8(§a-%delta%§8) !"
+      title: "§6Tour %lap%"
+      subtitle: "§a%time%"
+      titlePB: "§a§lNouveau record personnel !"
+      subtitlePB: "§e%time%"
 
   #In race events
   actionBar:
@@ -255,6 +281,9 @@ race:
     personalBest: "§bMeilleur tour personnel : §a%time%"
     averageLap: "§bTour moyen : §3%time%"
     fastestRace: "§bCourse la plus rapide : §a%time%"
+    trainingLaps: "§bTours d'entraînement : §3%count%"
+    trainingPB: "§bMeilleur tour entraînement : §a%time%"
+    trainingAverage: "§bTour moyen entraînement : §3%time%"
     footer: "§x§0§0§A§D§F§F§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
     noData: "§cAucune statistique trouvée pour §4%player% §csur la course §4%race%§c."
     noDataAny: "§cAucune statistique trouvée pour §4%player%§c."

@@ -12,10 +12,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.OptionalLong;
-import java.util.UUID;
+import java.util.*;
 
 import static fr.mattmunich.iceBoatRacing.CommandUtil.*;
 import static fr.mattmunich.iceBoatRacing.Main.formatTime;
@@ -62,7 +59,7 @@ public class StatsCommand {
                         .suggests((ctx, builder) -> {
                             List<String> options = new ArrayList<>(raceManager.getRaces().stream().map(Race::getName).toList());
                             if (ctx.getSource().getSender().hasPermission(PERM_STATS_OTHER)) {
-                                options.addAll(Bukkit.getOnlinePlayers().stream().map(Player::getName).toList());
+                                options.addAll(Arrays.stream(Bukkit.getOfflinePlayers()).toList().stream().map(OfflinePlayer::getName).toList());
                             }
                             return suggest(options, builder);
                         })
@@ -157,29 +154,49 @@ public class StatsCommand {
     /** Shows full stats for one player on one race. */
     private int showStats(CommandSender sender, UUID uuid, String playerName, Race race) {
         PlayerRaceStats stats = statsManager.getOfficialStats(uuid, race.getName());
+        PlayerRaceStats trainingStats = statsManager.getTrainingStats(uuid, race.getName());
 
-        if (stats == null || stats.getCompletedLaps() == 0) {
+        int officialLaps = stats != null ? stats.getCompletedLaps() : 0;
+        int trainingLaps = trainingStats != null ? trainingStats.getCompletedLaps() : 0;
+
+        if (officialLaps == 0 && trainingLaps == 0) {
             sender.sendMessage(getMessage("race.stats.noData",
                     formatArguments("player", playerName, "race", race.getName())));
             return Command.SINGLE_SUCCESS;
         }
 
-        OptionalLong pb      = stats.getPersonalBestLapMs();
-        OptionalLong avg     = stats.getAverageLapMs();
-        OptionalLong fastest = stats.getFastestRaceMs();
-
         sender.sendMessage(getMessage("race.stats.header",
                 formatArguments("player", playerName, "race", race.getName())));
-        sender.sendMessage(getMessage("race.stats.races",
-                formatArguments("count", stats.getCompletedRaces())));
-        sender.sendMessage(getMessage("race.stats.laps",
-                formatArguments("count", stats.getCompletedLaps())));
-        sender.sendMessage(getMessage("race.stats.personalBest",
-                formatArguments("time", pb.isPresent() ? formatTime(pb.getAsLong()) : "N/A")));
-        sender.sendMessage(getMessage("race.stats.averageLap",
-                formatArguments("time", avg.isPresent() ? formatTime(avg.getAsLong()) : "N/A")));
-        sender.sendMessage(getMessage("race.stats.fastestRace",
-                formatArguments("time", fastest.isPresent() ? formatTime(fastest.getAsLong()) : "N/A")));
+
+        if (stats != null && officialLaps > 0) {
+            OptionalLong pb      = stats.getPersonalBestLapMs();
+            OptionalLong avg     = stats.getAverageLapMs();
+            OptionalLong fastest = stats.getFastestRaceMs();
+
+            sender.sendMessage(getMessage("race.stats.races",
+                    formatArguments("count", stats.getCompletedRaces())));
+            sender.sendMessage(getMessage("race.stats.laps",
+                    formatArguments("count", stats.getCompletedLaps())));
+            sender.sendMessage(getMessage("race.stats.personalBest",
+                    formatArguments("time", pb.isPresent() ? formatTime(pb.getAsLong()) : "N/A")));
+            sender.sendMessage(getMessage("race.stats.averageLap",
+                    formatArguments("time", avg.isPresent() ? formatTime(avg.getAsLong()) : "N/A")));
+            sender.sendMessage(getMessage("race.stats.fastestRace",
+                    formatArguments("time", fastest.isPresent() ? formatTime(fastest.getAsLong()) : "N/A")));
+        }
+
+        if (trainingStats != null && trainingLaps > 0) {
+            OptionalLong tPb = trainingStats.getPersonalBestLapMs();
+            OptionalLong tAvg = trainingStats.getAverageLapMs();
+
+            sender.sendMessage(getMessage("race.stats.trainingLaps",
+                    formatArguments("count", trainingLaps)));
+            sender.sendMessage(getMessage("race.stats.trainingPB",
+                    formatArguments("time", tPb.isPresent() ? formatTime(tPb.getAsLong()) : "N/A")));
+            sender.sendMessage(getMessage("race.stats.trainingAverage",
+                    formatArguments("time", tAvg.isPresent() ? formatTime(tAvg.getAsLong()) : "N/A")));
+        }
+
         sender.sendMessage(getMessage("race.stats.footer"));
 
         return Command.SINGLE_SUCCESS;
@@ -188,8 +205,9 @@ public class StatsCommand {
     /** Shows a summary across all races (personal bests only). */
     private int showSummary(CommandSender sender, UUID uuid, String playerName) {
         var allStats = statsManager.getAllOfficialStats(uuid);
+        var allTrainingStats = statsManager.getAllTrainingStats(uuid);
 
-        if (allStats.isEmpty()) {
+        if (allStats.isEmpty() && allTrainingStats.isEmpty()) {
             sender.sendMessage(getMessage("race.stats.noDataAny",
                     formatArguments("player", playerName)));
             return Command.SINGLE_SUCCESS;
@@ -200,14 +218,23 @@ public class StatsCommand {
 
         for (Race race : raceManager.getRaces()) {
             PlayerRaceStats s = allStats.get(race.getName());
-            if (s == null || s.getCompletedLaps() == 0) continue;
-            OptionalLong pb = s.getPersonalBestLapMs();
+            PlayerRaceStats ts = allTrainingStats.get(race.getName());
+            int officialLaps = s != null ? s.getCompletedLaps() : 0;
+            int trainingLaps = ts != null ? ts.getCompletedLaps() : 0;
+            if (officialLaps == 0 && trainingLaps == 0) continue;
+
+            OptionalLong pb = s != null ? s.getPersonalBestLapMs() : OptionalLong.empty();
+            String pbStr = pb.isPresent() ? formatTime(pb.getAsLong()) : "N/A";
+            if (ts != null && ts.getPersonalBestLapMs().isPresent()) {
+                pbStr += " §8(§7Train: §f" + formatTime(ts.getPersonalBestLapMs().getAsLong()) + "§8)";
+            }
+
             sender.sendMessage(getMessage("race.stats.summaryRow",
                     formatArguments(
                             "race",  race.getName(),
-                            "races", s.getCompletedRaces(),
-                            "laps",  s.getCompletedLaps(),
-                            "pb",    pb.isPresent() ? formatTime(pb.getAsLong()) : "N/A"
+                            "races", s != null ? s.getCompletedRaces() : 0,
+                            "laps",  officialLaps + trainingLaps,
+                            "pb",    pbStr
                     )));
         }
 
@@ -219,7 +246,6 @@ public class StatsCommand {
     // Utility
     // -------------------------------------------------------------------------
 
-    @SuppressWarnings("deprecation")
     private UUID resolveUUID(CommandSender sender, String name) {
         // Check online players first
         Player online = Bukkit.getPlayer(name);

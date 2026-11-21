@@ -15,6 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static fr.mattmunich.iceBoatRacing.Main.log;
+import static fr.mattmunich.iceBoatRacing.Main.warn;
+
 public class WorldLoad implements Listener {
 
     private final Main main;
@@ -35,9 +38,9 @@ public class WorldLoad implements Listener {
                 String raceName = unloadedRace.getValue();
                 boolean success = raceManager.loadRace(raceName);
                 if(success) {
-                    main.log("Successfully loaded " + raceName + " after world load.");
+                    log("Successfully loaded " + raceName + " after world load.");
                 } else {
-                    main.warn("Could not load race " + raceName + " after world load, see error above.");
+                    warn("Could not load race " + raceName + " after world load, see error above.");
                 }
             }
         });
@@ -53,12 +56,12 @@ public class WorldLoad implements Listener {
                 race.end(false);
                 race.saveConfig();
             } catch (IOException e) {
-                main.warn("Could not save race " + race.getName() + " on world unload, see error above.");
+                warn("Could not save race " + race.getName() + " on world unload, see error above.");
                 continue;
             } catch (Exception ignored) {}
 
             raceManager.races.remove(race);
-            main.log("Successfully saved " + race.getName() + " on world unload.");
+            log("Successfully saved " + race.getName() + " on world unload.");
         }
     }
 }

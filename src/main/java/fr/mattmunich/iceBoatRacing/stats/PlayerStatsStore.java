@@ -142,7 +142,6 @@ public class PlayerStatsStore {
     // Internal helpers
     // -------------------------------------------------------------------------
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     private File getPlayerFile(UUID uuid) {
         return new File(new File(main.getDataFolder(), "stats"), uuid + ".yml");
     }

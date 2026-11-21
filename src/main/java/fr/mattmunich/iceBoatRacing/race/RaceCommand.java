@@ -9,11 +9,12 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import fr.mattmunich.iceBoatRacing.Main;
 import fr.mattmunich.iceBoatRacing.Messages;
 import fr.mattmunich.iceBoatRacing.Result;
 import fr.mattmunich.iceBoatRacing.stats.StatsCommand;
 import fr.mattmunich.iceBoatRacing.stats.StatsManager;
+import fr.mattmunich.iceBoatRacing.training.TrainingCommand;
+import fr.mattmunich.iceBoatRacing.training.TrainingManager;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import org.bukkit.Location;
@@ -60,15 +61,21 @@ public class RaceCommand {
     private final RaceManager raceManager;
     private final RaceCreator raceCreator;
     private final StatsCommand statsCommand;
+    private final TrainingCommand trainingCommand;
 
     public RaceCommand(RaceManager raceManager, RaceCreator raceCreator) {
-        this(raceManager, raceCreator, null);
+        this(raceManager, raceCreator, null, null);
     }
 
     public RaceCommand(RaceManager raceManager, RaceCreator raceCreator, StatsManager statsManager) {
+        this(raceManager, raceCreator, statsManager, null);
+    }
+
+    public RaceCommand(RaceManager raceManager, RaceCreator raceCreator, StatsManager statsManager, TrainingManager trainingManager) {
         this.raceManager = raceManager;
         this.raceCreator = raceCreator;
         this.statsCommand = statsManager != null ? new StatsCommand(statsManager, raceManager) : null;
+        this.trainingCommand = trainingManager != null ? new TrainingCommand(trainingManager, raceManager) : null;
     }
 
     // ------------------------------------------------------------------
@@ -91,7 +98,7 @@ public class RaceCommand {
 
     public LiteralCommandNode<CommandSourceStack> build() {
         var builder = Commands.literal("race")
-                .requires(perm(PERM_BASE, PERM_START, PERM_END, PERM_DELETE, PERM_MODIFY))
+                .requires(perm(PERM_BASE, PERM_START, PERM_END, PERM_DELETE, PERM_MODIFY, TrainingCommand.PERMISSION_TRAIN))
                 .executes(ctx -> help(ctx, "race.help"))
                 .then(raceAction("start", PERM_START, this::start))
                 .then(raceAction("prepare", PERM_START, (sender, race) -> race.togglePrepare(sender)))
@@ -107,6 +114,10 @@ public class RaceCommand {
 
         if (statsCommand != null) {
             builder.then(statsCommand.build());
+        }
+
+        if (trainingCommand != null) {
+            builder.then(trainingCommand.build());
         }
 
         return builder.build();

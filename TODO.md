@@ -24,11 +24,5 @@
 	* <s> Add a way to get a checkpoint's ID</s> 
 	* <s> Add a way to view checkpoints</s>
 	* Add IDs to the view ?
-* Add training system (base system maybe ~ same time as pit boxes)
-	* `/race train <race>`
-	* Allows to train solo on a race
-	* Multiple players at the same time
-	* Customize number of allowed trainings (pit boxes will be done before this ^^')
-		* Infinite, 1/day,... (as permissions like `ibr(.race?).train.(bypass/limited)`?)
-		* Add more with command
+
 

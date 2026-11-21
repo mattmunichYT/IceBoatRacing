@@ -23,6 +23,12 @@ permissions:
     description: All the permissions of the plugin
     children:
       iceboatracing.command.*: true
+      iceboatracing.train: true
+
+  iceboatracing.train:
+    description: The permission to start and participate in individual race training sessions
+    default: op
+
   iceboatracing.command.*:
     default: op
     description: The permission for all commands

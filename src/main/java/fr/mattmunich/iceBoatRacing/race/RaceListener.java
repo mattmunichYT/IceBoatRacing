@@ -134,7 +134,7 @@ public class RaceListener implements Listener {
      * around to the start/finish line so the lap can actually be closed.
      * @return the next checkpoint, or null if the race has no checkpoints / no start/finish line
      */
-    private static Checkpoint checkpointAfter(Race race, int afterId) {
+    public static Checkpoint checkpointAfter(Race race, int afterId) {
         Checkpoint next = null;
         Checkpoint first = null;
         for (Checkpoint cp : race.getCheckpoints()) {
@@ -145,7 +145,7 @@ public class RaceListener implements Listener {
         return first != null && first.getType() == Checkpoint.Type.START_FINISH ? first : null;
     }
 
-    private static int firstCheckpointId(Race race) {
+    public static int firstCheckpointId(Race race) {
         return race.getCheckpoints().stream().mapToInt(Checkpoint::getId).min().orElse(1);
     }
 

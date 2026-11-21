@@ -68,8 +68,10 @@ public class BoatCollisionSuppressor extends PacketListenerAbstract {
         }
 
         Racer racer = raceManager.getRacer(player.getUniqueId());
-        if (racer.race != null && (racer.race.isPreparing() || racer.race.isStarting() || racer.pittingBox != null)) {
-            return; //cancel mvt correction
+        if (!main.getTrainingManager().isTraining(player.getUniqueId())) {
+            if (racer == null || racer.race != null && (racer.race.isPreparing() || racer.race.isStarting() || racer.pittingBox != null)) {
+                return; //cancel mvt correction
+            }
         }
 
         // Confirming the wrapper parses cleanly is mostly a sanity check here;
