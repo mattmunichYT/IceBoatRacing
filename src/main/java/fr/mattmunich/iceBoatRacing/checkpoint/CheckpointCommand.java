@@ -96,7 +96,8 @@ public class CheckpointCommand {
                 .then(removeNode("delete"))
                 .then(Commands.literal("view")
                         .requires(perm(PERM_VIEW))
-                        .then(raceArgument("race", raceManager).executes(this::view)))
+                        .executes(ctx -> view(ctx, false))
+                        .then(raceArgument("race", raceManager).executes(ctx -> view(ctx, true))))
                 .then(Commands.literal("list")
                         .requires(perm(PERM_LIST))
                         .executes(ctx -> list(ctx, 1))
@@ -292,9 +293,18 @@ public class CheckpointCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    private int view(CommandContext<CommandSourceStack> ctx) {
+    private int view(CommandContext<CommandSourceStack> ctx, boolean named) {
         Player p = player(ctx);
-        Race race = getRace(ctx, "race", raceManager);
+        List<Race> races = raceManager.getRaces();
+        Race race;
+        if (named) {
+            race = getRace(ctx, "race", raceManager);
+        } else if (races.size() == 1) {
+            race = races.getFirst();
+        } else {
+            p.sendMessage(getMessage(races.isEmpty() ? "race.notFound" : "checkpoint.help"));
+            return 0;
+        }
         if (race == null) return 0;
 
         boolean nowOn = checkpointManager.toggleViewCheckpoints(p, race);

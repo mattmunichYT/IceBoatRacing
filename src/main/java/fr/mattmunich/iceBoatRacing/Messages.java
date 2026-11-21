@@ -202,6 +202,8 @@ public class Messages {
 
     private static boolean addPrefix(String identifier) {
         return
+                identifier.contains("checkpoint.") ||
+                identifier.equalsIgnoreCase("race.info.checkpoints") ||
         (
                 !identifier.contains("noPrefix") //Currently used for join/quit and liveSidebarTitle
                 && !identifier.equals("prefix") //Don't add prefix after prefix
@@ -223,7 +225,11 @@ public class Messages {
                 && !identifier.contains("bestSectorTimesTop")
                 && !identifier.contains("bottom")
                 && !identifier.contains("sectorFormat")
-        )
-                || identifier.contains("checkpoint.");
+                && !identifier.contains("statusActive")
+                && !identifier.contains("statusStarting")
+                && !identifier.contains("statusPreparing")
+                && !identifier.contains("statusRacing")
+                && !identifier.contains("statusIdle")
+        );
     }
 }

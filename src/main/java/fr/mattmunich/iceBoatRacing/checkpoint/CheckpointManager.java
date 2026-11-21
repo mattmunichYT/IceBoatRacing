@@ -3,12 +3,15 @@ package fr.mattmunich.iceBoatRacing.checkpoint;
 import fr.mattmunich.iceBoatRacing.Main;
 import fr.mattmunich.iceBoatRacing.race.Race;
 import fr.mattmunich.iceBoatRacing.race.RaceManager;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.TextDisplay;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
@@ -24,6 +27,7 @@ public class CheckpointManager {
     private  RaceManager raceManager;
 
     private final Map<Player,BukkitTask> viewingCheckpoints = new HashMap<>();
+    private final Map<Player, List<TextDisplay>> checkpointLabels = new HashMap<>();
 
     public CheckpointManager(Main main) {
         this.main = main;
@@ -459,13 +463,28 @@ public class CheckpointManager {
         BukkitTask existing = viewingCheckpoints.remove(p);
         if (existing != null) {
             existing.cancel();
+            removeCheckpointLabels(p);
             return false;
         }
 
+        List<TextDisplay> labels = new ArrayList<>();
+        for (Checkpoint checkpoint : race.getCheckpoints()) {
+            Location labelLocation = checkpoint.getCenter().clone().add(0, 0.5, 0);
+            TextDisplay label = labelLocation.getWorld().spawn(labelLocation, TextDisplay.class, display -> {
+                display.text(Component.text("#" + checkpoint.getId()));
+                display.setBillboard(Display.Billboard.CENTER);
+                display.setSeeThrough(true);
+                display.setShadowed(true);
+                display.setDefaultBackground(false);
+                display.setPersistent(false);
+            });
+            labels.add(label);
+        }
+        checkpointLabels.put(p, labels);
+
         BukkitTask task = Bukkit.getScheduler().runTaskTimer(main, () -> {
             if (race.getCheckpoints().isEmpty()) {
-                BukkitTask t = viewingCheckpoints.remove(p);
-                if (t != null) t.cancel();
+                stopViewingCheckpoints(p);
                 return;
             }
             for (Checkpoint c : race.getCheckpoints()) drawCheckpointOutline(c);
@@ -473,6 +492,18 @@ public class CheckpointManager {
 
         viewingCheckpoints.put(p, task);
         return true;
+    }
+
+    private void stopViewingCheckpoints(Player player) {
+        BukkitTask task = viewingCheckpoints.remove(player);
+        if (task != null) task.cancel();
+        removeCheckpointLabels(player);
+    }
+
+    private void removeCheckpointLabels(Player player) {
+        List<TextDisplay> labels = checkpointLabels.remove(player);
+        if (labels == null) return;
+        for (TextDisplay label : labels) label.remove();
     }
 
     private void drawCheckpointOutline(Checkpoint c) {
