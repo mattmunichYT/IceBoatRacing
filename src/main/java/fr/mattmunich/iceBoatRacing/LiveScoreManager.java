@@ -1,7 +1,6 @@
 package fr.mattmunich.iceBoatRacing;
 
 import fr.mattmunich.iceBoatRacing.race.Racer;
-import io.papermc.paper.scoreboard.numbers.NumberFormat;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -27,10 +26,17 @@ public class LiveScoreManager {
 //        liveScore.numberFormat(NumberFormat.blank());
     }
 
-    public void clear() {
+    public LiveScoreManager reload() {
+        reset();
+        register();
+        return this;
+    }
+
+    public void reset() {
         if (liveScore == null) return;
         try { liveScore.unregister(); } catch (Exception ignored) {}
         liveScore = null;
+        scoreboard = null;
     }
 
     public void empty() {

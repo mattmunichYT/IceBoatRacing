@@ -196,8 +196,7 @@ public final class Main extends JavaPlugin {
 
         // Reload in-memory data
         raceManager.updateAllRaces();
-        liveScoreManager.clear();
-        liveScoreManager = new LiveScoreManager();
+        liveScoreManager = liveScoreManager.reload();
     }
 
     public static void log(String message) {

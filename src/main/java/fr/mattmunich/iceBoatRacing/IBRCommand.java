@@ -3,7 +3,10 @@ package fr.mattmunich.iceBoatRacing;
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -42,12 +45,14 @@ public class IBRCommand implements BasicCommand {
                             \s
                             """
             );
+        } else if (args.length == 1 && args[0].equalsIgnoreCase("wand") && s instanceof Player p) {
+            p.give(new ItemStack(Material.WOODEN_SHOVEL));
         } else {
             s.sendMessage(
                             """
                             §3---§b /iceboatracing §3---
                             §3- reload §7- §bReloads the plugin
-                             \
+                            §3- wand §7- §bGives you the plugin's wand
                             §3- info   §7- §bSome basic info
                             """
             );
@@ -59,7 +64,7 @@ public class IBRCommand implements BasicCommand {
 
     @Override
     public @NonNull Collection<String> suggest(@NonNull CommandSourceStack commandSourceStack, String @NonNull [] args) {
-        return List.of("reload","info");
+        return List.of("reload","info","wand");
     }
 
     @Override
