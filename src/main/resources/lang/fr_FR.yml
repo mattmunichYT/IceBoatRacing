@@ -182,10 +182,30 @@ race:
   lightsDisabled: "§cLes feux de départ sont désactivés. §8ℹ Réactivez-les dans le fichier de configuration de cette course."
   updatedLights: "§bLe feux de départ pour la course §3%race%§b ont été définis de §3%x1%§b, §3%y1%§b, §3%z1%§b à §3%x2%§b, §3%y2%§b, §3%z2%§b."
 
+  info:
+    header: "§3--------- §b§lCourse : %race%§r §3---------"
+    status: "§bStatut : §3%status%"
+    statusStarting: "§eDémarrage"
+    statusRacing: "§aEn course"
+    statusPreparing: "§ePréparation"
+    statusActive: "§bActive"
+    statusIdle: "§7Inactive"
+    world: "§bMonde : §3%world%"
+    laps: "§bTours : §3%laps%"
+    pitStops: "§bArrêts aux stands obligatoires : §3%pitStops%"
+    rotation: "§bRotation de départ : §3%rotation%°"
+    checkpoints: "§bCheckpoints : §3%count%"
+    pitBoxes: "§bBoxes des stands : §3%count%"
+    cars: "§bVoitures : §3%count%"
+    lightsUnset: "§bFeux de départ : §7non définis"
+    lightsDisabled: "§bFeux de départ : §cdésactivés"
+    lightsEnabled: "§bFeux de départ : §aactivés §7(%x1%, %y1%, %z1% → %x2%, %y2%, %z2%)"
+
   #Help message
   help: "§3--------- §b§l/race§r §3---------
   \n§3->§a leave §8-§7 Quitter la course en spectateur (DSQ)
   \n§3->§a start [nom] §8-§7 Lancer la course
+  \n§3->§a info [nom] §8-§7 Afficher les détails de la course
   \n§3->§a prepare [nom] §8-§7 Préparer les joueurs
   \n§7§oℹ Placement automatique des joueurs dans leurs voitures
   \n§3->§a train [nom] §8-§7 Démarrer une session d'entraînement

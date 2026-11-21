@@ -103,6 +103,7 @@ public class RaceCommand {
                 .executes(ctx -> help(ctx, "race.help"))
                 .then(raceAction("start", PERM_START, this::start))
                 .then(raceAction("prepare", PERM_START, (sender, race) -> race.togglePrepare(sender)))
+                .then(raceAction("info", PERM_BASE, this::info))
                 .then(raceAction("end", PERM_END, this::end))
                 .then(raceAction("delete", PERM_DELETE, this::delete))
                 .then(Commands.literal("leave")
@@ -229,6 +230,39 @@ public class RaceCommand {
         sender.sendMessage(getMessage("race.start", Messages.formatArguments("race", race.getName())));
         Result result = race.start();
         if (result == Result.ERROR) sender.sendMessage(getMessage("error.unknown"));
+    }
+
+    private void info(CommandSender sender, Race race) {
+        String statusKey;
+        if (race.isStarting()) statusKey = "statusStarting";
+        else if (race.hasStarted()) statusKey = "statusRacing";
+        else if (race.isPreparing()) statusKey = "statusPreparing";
+        else if (raceManager.activeRaces.contains(race)) statusKey = "statusActive";
+        else statusKey = "statusIdle";
+
+        sender.sendMessage(getMessage("race.info.header", Messages.formatArguments("race", race.getName())));
+        sender.sendMessage(getMessage("race.info.status", Map.of(), Messages.formatComponentArguments(
+                "status", getMessage("race.info." + statusKey)
+        )));
+        sender.sendMessage(getMessage("race.info.world", Messages.formatArguments("world", race.getWorld().getName())));
+        sender.sendMessage(getMessage("race.info.laps", Messages.formatArguments("laps", race.getLapCount())));
+        sender.sendMessage(getMessage("race.info.pitStops", Messages.formatArguments("pitStops", race.getRequiredPitStops())));
+        sender.sendMessage(getMessage("race.info.rotation", Messages.formatArguments("rotation", race.getStartRotation())));
+        sender.sendMessage(getMessage("race.info.checkpoints", Messages.formatArguments("count", race.getCheckpoints().size())));
+        sender.sendMessage(getMessage("race.info.pitBoxes", Messages.formatArguments("count", race.getPitBoxes().size())));
+        sender.sendMessage(getMessage("race.info.cars", Messages.formatArguments("count", race.getCars().size())));
+
+        Race.Lights lights = race.getLights();
+        if (lights == null) {
+            sender.sendMessage(getMessage("race.info.lightsUnset"));
+        } else if (!lights.enabled()) {
+            sender.sendMessage(getMessage("race.info.lightsDisabled"));
+        } else {
+            sender.sendMessage(getMessage("race.info.lightsEnabled", Messages.formatArguments(
+                    "x1", lights.from().getBlockX(), "y1", lights.from().getBlockY(), "z1", lights.from().getBlockZ(),
+                    "x2", lights.to().getBlockX(), "y2", lights.to().getBlockY(), "z2", lights.to().getBlockZ()
+            )));
+        }
     }
 
     private int leave(CommandSender sender) {

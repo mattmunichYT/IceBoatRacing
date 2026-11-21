@@ -183,10 +183,30 @@ race:
   lightsDisabled: "§cThe starting lights are disabled. §8ℹ Re-enable them in this race's configuration file."
   updatedLights: "§bThe starting lights for race §3%race%§b have been set from §3%x1%§b, §3%y1%§b, §3%z1%§b to §3%x2%§b, §3%y2%§b, §3%z2%§b."
 
+  info:
+    header: "§3--------- §b§lRace: %race%§r §3---------"
+    status: "§bStatus: §3%status%"
+    statusStarting: "§eStarting"
+    statusRacing: "§aRacing"
+    statusPreparing: "§ePreparing"
+    statusActive: "§bActive"
+    statusIdle: "§7Idle"
+    world: "§bWorld: §3%world%"
+    laps: "§bLaps: §3%laps%"
+    pitStops: "§bRequired pit stops: §3%pitStops%"
+    rotation: "§bStart rotation: §3%rotation%°"
+    checkpoints: "§bCheckpoints: §3%count%"
+    pitBoxes: "§bPit boxes: §3%count%"
+    cars: "§bCars: §3%count%"
+    lightsUnset: "§bStarting lights: §7not set"
+    lightsDisabled: "§bStarting lights: §cdisabled"
+    lightsEnabled: "§bStarting lights: §aenabled §7(%x1%, %y1%, %z1% → %x2%, %y2%, %z2%)"
+
   #Help message
   help: "§3--------- §b§l/race§r §3---------
   \n§3->§a leave §8-§7 Leave the race as a spectator (DSQ)
   \n§3->§a start [name] §8-§7 Start the race
+  \n§3->§a info [name] §8-§7 Show race details
   \n§3->§a prepare [name] §8-§7 Prepare the players
   \n§7§oℹ Automatically places players in their cars
   \n§3->§a train [name] §8-§7 Start a training session
