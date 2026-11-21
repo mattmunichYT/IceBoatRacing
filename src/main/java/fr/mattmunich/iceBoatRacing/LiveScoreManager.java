@@ -29,10 +29,12 @@ public class LiveScoreManager {
 
     /** The racers currently shown on the sidebar. Their lines are all refreshed together, as one racer moving changes everyone's ranking/gaps. */
     private final Map<UUID, Racer> tracked = new LinkedHashMap<>();
+    /** Scoreboards replaced while a player has hidden the shared race sidebar. */
+    private final Map<UUID, Scoreboard> hiddenSidebarScoreboards = new HashMap<>();
 
     Scoreboard scoreboard;
     Objective liveScore;
-    private String entryFormat(Racer racer) { return "liveScore-" + racer.getPlayer().getName(); }
+    private String entryFormat(Racer racer) { return "liveScore-" + racer.getPlayerName(); }
 
     public LiveScoreManager(Plugin plugin) {
         this.plugin = plugin;
@@ -97,12 +99,12 @@ public class LiveScoreManager {
         }
         s.customName(formatScore(racer, new Standings(racer.getRace())));
         s.setScore(0);
-        tracked.put(racer.getPlayer().getUniqueId(), racer);
+        tracked.put(racer.uniqueId, racer);
     }
 
     public void removeRacer(Racer racer) {
         if (liveScore == null) return;
-        tracked.remove(racer.getPlayer().getUniqueId());
+        tracked.remove(racer.uniqueId);
         Score s = liveScore.getScore(entryFormat(racer));
         s.resetScore();
     }
@@ -116,13 +118,32 @@ public class LiveScoreManager {
         } catch (Exception ignored) {}
     }
 
+    /** Toggles the race sidebar for one player without changing the shared scoreboard. */
+    public boolean toggleSidebar(Player player) {
+        UUID playerId = player.getUniqueId();
+        Scoreboard previous = hiddenSidebarScoreboards.remove(playerId);
+        if (previous != null) {
+            player.setScoreboard(previous);
+            return false;
+        }
+
+        hiddenSidebarScoreboards.put(playerId, player.getScoreboard());
+        player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+        return true;
+    }
+
+    /** Drops per-session sidebar state when the player disconnects. */
+    public void forgetSidebar(Player player) {
+        hiddenSidebarScoreboards.remove(player.getUniqueId());
+    }
+
     /**
      * Call when a racer's progress changed. Refreshes the whole race's lines, not just this racer's,
      * because the ranking and the gaps of the other racers may have changed too.
      */
     public void updateRacer(Racer racer) {
         if (liveScore == null) return;
-        tracked.putIfAbsent(racer.getPlayer().getUniqueId(), racer);
+        tracked.putIfAbsent(racer.uniqueId, racer);
         refreshRace(racer.getRace());
     }
 
@@ -190,7 +211,7 @@ public class LiveScoreManager {
 
         return getMessage("liveScore.format", formatArguments(
                 "ranking", known ? String.valueOf(ranking) : NO_VALUE,
-                "player", racer.getPlayer().getName(),
+                "player", racer.disqualified ? racer.getPlayerName() + " §cDSQ" : racer.getPlayerName(),
                 "raceTime", formatTime(raceTime),
                 "lastLapTime", lastLapTime,
                 "bestLapTime", bestLapTime,
@@ -258,8 +279,12 @@ public class LiveScoreManager {
 
             List<Racer> racing = new ArrayList<>();
             for (Racer racer : race.racing) {
-                if (!finished.contains(racer)) racing.add(racer);
+                if (!finished.contains(racer) && !racer.disqualified) racing.add(racer);
             }
+
+            List<Racer> disqualified = race.racers.values().stream()
+                    .filter(racer -> racer.disqualified && !finished.contains(racer))
+                    .toList();
 
             if (race.hasStarted()) assignGridPositions(race);
 
@@ -274,6 +299,7 @@ public class LiveScoreManager {
 
             order.addAll(finished);
             order.addAll(racing);
+            order.addAll(disqualified);
             playersRemaining = racing.size();
 
             lap = new ArrayList<>(race.getCheckpoints());
@@ -336,8 +362,8 @@ public class LiveScoreManager {
             // How far along the stretch to the next checkpoint (the last one leads back to the start/finish line)
             Location from = lap.get(passed - 1).getCenter();
             Location to = lap.get(passed % lap.size()).getCenter();
-            Location position = racer.getPlayer().getLocation();
-            if (position.getWorld() != null && position.getWorld().equals(from.getWorld()) && position.getWorld().equals(to.getWorld())) {
+            Location position = racer.getPlayer() == null || !racer.getPlayer().isOnline() ? null : racer.getPlayer().getLocation();
+            if (position != null && position.getWorld() != null && position.getWorld().equals(from.getWorld()) && position.getWorld().equals(to.getWorld())) {
                 Vector stretch = to.toVector().subtract(from.toVector());
                 double lengthSquared = stretch.lengthSquared();
                 if (lengthSquared > 0) {

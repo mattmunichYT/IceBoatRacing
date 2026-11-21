@@ -50,6 +50,7 @@ public class RaceCommand {
     private static final String PERM_END = PERM_BASE + ".end";
     private static final String PERM_DELETE = PERM_BASE + ".delete";
     private static final String PERM_MODIFY = PERM_BASE + ".modify";
+    private static final String PERM_LEAVE = PERM_BASE + ".leave";
 
     private static final Map<String, Float> DIRECTIONS = Map.of(
             "north", 180f, "n", 180f,
@@ -98,12 +99,15 @@ public class RaceCommand {
 
     public LiteralCommandNode<CommandSourceStack> build() {
         var builder = Commands.literal("race")
-                .requires(perm(PERM_BASE, PERM_START, PERM_END, PERM_DELETE, PERM_MODIFY, TrainingCommand.PERMISSION_TRAIN))
+                .requires(perm(PERM_BASE, PERM_START, PERM_END, PERM_DELETE, PERM_MODIFY, PERM_LEAVE, TrainingCommand.PERMISSION_TRAIN))
                 .executes(ctx -> help(ctx, "race.help"))
                 .then(raceAction("start", PERM_START, this::start))
                 .then(raceAction("prepare", PERM_START, (sender, race) -> race.togglePrepare(sender)))
                 .then(raceAction("end", PERM_END, this::end))
                 .then(raceAction("delete", PERM_DELETE, this::delete))
+                .then(Commands.literal("leave")
+                        .requires(playerPerm(PERM_LEAVE))
+                        .executes(ctx -> leave(ctx.getSource().getSender())))
                 .then(create())
                 .then(setting("setLapCount", IntegerArgumentType.integer(1), Integer.class,
                         this::showLapCount, this::setLapCount))
@@ -225,6 +229,16 @@ public class RaceCommand {
         sender.sendMessage(getMessage("race.start", Messages.formatArguments("race", race.getName())));
         Result result = race.start();
         if (result == Result.ERROR) sender.sendMessage(getMessage("error.unknown"));
+    }
+
+    private int leave(CommandSender sender) {
+        Player player = (Player) sender;
+        if (!raceManager.leaveRace(player)) {
+            player.sendMessage(getMessage("race.leave.notRacing"));
+            return 0;
+        }
+        player.sendMessage(getMessage("race.leave.success"));
+        return Command.SINGLE_SUCCESS;
     }
 
     private void end(CommandSender sender, Race race) {

@@ -278,7 +278,7 @@ public class Race {
      */
     public void sendRanking() throws Exception {
         if (racers.isEmpty()) throw new Exception("NO_RACERS");
-        if (rankings.isEmpty()) throw new Exception("NO_RANKING");
+        if (rankings.isEmpty() && racers.values().stream().noneMatch(r -> r.disqualified)) throw new Exception("NO_RANKING");
 
         Bukkit.broadcast(getMessage("race.onEnd.top"));
 
@@ -293,6 +293,9 @@ public class Race {
             if (data.disqualified) disqualified.add(data);
             else qualified.add(data);
         }
+        for (Racer racer : racers.values()) {
+            if (racer.disqualified && !rankings.containsValue(racer)) disqualified.add(racer);
+        }
 
         long previousTime = -1;
         int displayRank = 1;
@@ -301,14 +304,14 @@ public class Race {
             if (displayRank == 1) {
                 Bukkit.broadcast(getMessage("race.onEnd.winnerFormat", formatArguments(
                         "ranking", displayRank + "",
-                        "player", data.player == null ? "OFFLINE" : data.player.getName(),
+                        "player", data.getPlayerName(),
                         "raceTime", formatTime(raceTime)
                 )));
             } else {
                 long gap = raceTime - previousTime;
                 Bukkit.broadcast(getMessage("race.onEnd.playerFormat", formatArguments(
                         "ranking", displayRank + "",
-                        "player", data.player == null ? "OFFLINE" : data.player.getName(),
+                        "player", data.getPlayerName(),
                         "raceTime", formatTime(raceTime),
                         "gapToNext", formatTime(gap)
                 )));
@@ -319,7 +322,7 @@ public class Race {
 
         for (Racer data : disqualified) {
             Bukkit.broadcast(getMessage("race.onEnd.disqualifiedFormat", formatArguments(
-                    "player", data.player == null ? "OFFLINE" : data.player.getName(),
+                    "player", data.getPlayerName(),
                     "raceTime", formatTime(data.getRaceTime())
             )));
         }

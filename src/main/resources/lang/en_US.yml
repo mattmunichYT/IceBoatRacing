@@ -36,6 +36,10 @@ liveScore:
   # Values that don't exist (yet) show up as "-"
   format: "§b%player% §7- §3Laps: §b%completedLapCount%§3/§b%lapCount% §7- §3Pits: §b%completedPitStops%§3/§b%requiredPitStops%"
 
+sidebar:
+  hidden: "§aRace sidebar hidden. Use /sidebar to show it again."
+  visible: "§aRace sidebar shown."
+
 noPrefix:
   #Join and leave messages
   join: "§7[§a+§7] §b%player%"
@@ -161,6 +165,9 @@ race:
   start: "§aRace %race% starting..." #Displayed when '/race start <name>' is used
   notFound: "§cRace not found." #Displayed when the inputted race is invalid
   end: "§cThe race has ended!" #Displayed when '/race end' is used
+  leave:
+    success: "§aYou left the race and were disqualified."
+    notRacing: "§cYou are not currently racing."
 
   #Only displayed to the command executor
   prepare: "§aPlayers will be placed automatically." #Displayed when '/race prepare' is used (and prepare toggled OFF)
@@ -190,6 +197,7 @@ race:
 
   #Help message
   help: "§3--------- §b§l/race§r §3---------
+  \n§3->§a leave §8-§7 Leave the race as a spectator (DSQ)
   \n§3->§a start [name] §8-§7 Start the race
   \n§3->§a prepare [name] §8-§7 Prepare the players
   \n§7§oℹ Automatically places players in their cars

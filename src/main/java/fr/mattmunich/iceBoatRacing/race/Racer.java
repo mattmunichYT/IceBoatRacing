@@ -10,10 +10,13 @@ import java.util.*;
 
 public class Racer {
     public Player player;
+    public String playerName;
+    public final UUID uniqueId;
 
     public boolean racing = false;
     public int ranking = -1;
     public boolean disqualified = false;
+    public boolean leftRace = false;
     public int checkpointIndex = 0;
     public int lapCount = -1;
     public Location from;
@@ -48,9 +51,13 @@ public class Racer {
 
     public Racer(Player player) {
         this.player = player;
+        this.playerName = player.getName();
+        this.uniqueId = player.getUniqueId();
     }
 
     public Player getPlayer() { return player; }
+
+    public String getPlayerName() { return player != null ? player.getName() : playerName; }
 
     public Race getRace() { return race; }
 

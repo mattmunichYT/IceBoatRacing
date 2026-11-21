@@ -46,6 +46,12 @@ public class Connection implements Listener {
         for(Race race : raceManager.races) {
             Racer racer = race.racers.get(p.getUniqueId());
             if (racer == null) continue;
+            if (race.hasStarted() && (racer.leftRace || !main.getConfig().getBoolean("race.allowRejoin"))) {
+                racer.player = p;
+                p.setGameMode(GameMode.SPECTATOR);
+                liveScoreManager.updateRacer(racer);
+                continue;
+            }
             if(race.isPreparing() && race.racers.containsKey(p.getUniqueId())) {
                 //Logs in when race is preparing
                 final Car[] car = new Car[1];
@@ -65,9 +71,10 @@ public class Connection implements Listener {
                     err("Couldn't prepare " + p.getName() + " for the race " + race.getName() +  " when they rejoined", ex);
                     p.sendMessage(getMessage("error.unknown"));
                 }
-            } else if (race.hasStarted() && race.racers.containsKey(p.getUniqueId()) && main.getConfig().getBoolean("allowRejoin")) {
+            } else if (race.hasStarted() && race.racers.containsKey(p.getUniqueId())) {
                 //Logs back in when race is still going
                 p.setGameMode(GameMode.ADVENTURE);
+                if (racer.car == null) continue;
 
                 Location logOutLocation = racer.getLogoutLocation();
                 if(logOutLocation == null) {
@@ -77,10 +84,16 @@ public class Connection implements Listener {
 
                 //Always remove and place back car to prevent bugs
                 Car car = racer.car;
-                carManager.spawnCar(race, car, racer.player, logOutLocation);
+                carManager.spawnCar(race, car, p, logOutLocation);
 
                 //Add racer back to racing list
+                racer.player = p;
+                racer.playerName = p.getName();
+                racer.disqualified = false;
+                racer.racing = true;
+                racer.from = p.getLocation().clone();
                 race.racing.add(racer);
+                liveScoreManager.updateRacer(racer);
             } else {
                 //Means player logged out during race and logged back in when it was ended
                 racer.car.destroy();
@@ -93,6 +106,7 @@ public class Connection implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         Player p = e.getPlayer();
+        liveScoreManager.forgetSidebar(p);
         e.quitMessage(getMessage("noPrefix.quit",formatArguments("player", p.getName())));
 
         if (main.getStatsManager() != null) {
@@ -101,24 +115,34 @@ public class Connection implements Listener {
 
         for (Race race : new ArrayList<>(raceManager.activeRaces)) {
             Racer racer = race.racers.get(p.getUniqueId());
-            if(racer == null) return;
+            if(racer == null) continue;
             racer.racing = false;
             Car car = racer.car;
-            if (car != null) {
-                race.racing.remove(racer);
-                if (main.getConfig().getBoolean("allowRejoin")) {
-                    racer.setLogoutLocation(car.getLocation());
-                    if (REMOVE_CAR_ON_LOGOUT) {
-                        car.destroy();
-                    }
-                } else {
-                    car.destroy();
-                    liveScoreManager.removeRacer(p);
-                    race.racers.remove(p.getUniqueId());
-                }
-            } else {
-                liveScoreManager.removeRacer(p);
+            if (racer.leftRace) {
+                racer.player = null;
+                continue;
             }
+            if (!racer.racing && race.rankings.containsValue(racer)) {
+                racer.player = null;
+                continue;
+            }
+            if (!race.hasStarted()) {
+                if (car != null && main.getConfig().getBoolean("race.allowRejoin")) {
+                    racer.setLogoutLocation(car.getLocation());
+                    if (REMOVE_CAR_ON_LOGOUT) car.destroy();
+                }
+                continue;
+            }
+            race.racing.remove(racer);
+            racer.disqualified = true;
+            if (car != null && main.getConfig().getBoolean("race.allowRejoin")) {
+                racer.setLogoutLocation(car.getLocation());
+                if (REMOVE_CAR_ON_LOGOUT) car.destroy();
+            } else if (car != null) {
+                car.destroy();
+            }
+            liveScoreManager.updateRacer(racer);
+            racer.player = null;
 
             //Auto end race if the last racer leaves
             if(race.racing.isEmpty()) {

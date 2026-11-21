@@ -200,6 +200,7 @@ public final class Main extends JavaPlugin {
         log("Registering commands...");
         // Basic command
         registerCommand("iceboatracing", "Command to manage the plugin", List.of("ibr"), new IBRCommand(this));
+        registerCommand("sidebar", "Toggle your race sidebar", List.of(), new SidebarCommand(this));
 
         // Brigadier API commands
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {

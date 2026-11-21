@@ -34,7 +34,11 @@ liveScore:
   # %completedPitStops%, %remainingPitStops%, %requiredPitStops%,
   # %positionChange% (places gagnées/perdues depuis le départ), %playersRemaining%, %isLeader% (true/false)
   # Les valeurs qui n'existent pas (encore) s'affichent "-"
-  format: "§b%player% §7- §3Tours: §b%completedLapCount%§3/§b%lapCount% §7- §3Stands: §b%completedPitStops%§3/§b%requiredPitStops%"
+  format: "%ranking%§7| %gapToNext% §8// §b%player% §7- §3Stands: §b%completedPitStops%§3/§b%requiredPitStops% §7| §b%lapProgress%"
+
+sidebar:
+  hidden: "§aSidebar de course masquée. Utilisez /sidebar pour l'afficher à nouveau."
+  visible: "§aSidebar de course affichée."
 
 noPrefix:
   #Join and leave messages
@@ -160,6 +164,9 @@ race:
   start: "§aCourse %race% démarre..." #Displayed when '/race start <name>' is used
   notFound: "§cCourse non trouvée." #Displayed when the inputted race is invalid
   end: "§cLa course est terminée !" #Displayed when '/race end' is used
+  leave:
+    success: "§aVous avez quitté la course et êtes disqualifié."
+    notRacing: "§cVous ne participez pas actuellement à une course."
 
   #Only displayed to the command executor
   prepare: "§aLes joueurs seront placés automatiquement." #Displayed when '/race prepare' is used (and prepare toggled OFF)
@@ -189,6 +196,7 @@ race:
 
   #Help message
   help: "§3--------- §b§l/race§r §3---------
+  \n§3->§a leave §8-§7 Quitter la course en spectateur (DSQ)
   \n§3->§a start [nom] §8-§7 Lancer la course
   \n§3->§a prepare [nom] §8-§7 Préparer les joueurs
   \n§7§oℹ Placement automatique des joueurs dans leurs voitures

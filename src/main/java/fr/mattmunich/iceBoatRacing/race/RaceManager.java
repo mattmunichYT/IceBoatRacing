@@ -407,6 +407,33 @@ public class RaceManager {
         return getRacers().containsKey(player.getUniqueId()) && getRacers().get(player.getUniqueId()).racing;
     }
 
+    /** Marks a participant as disqualified and removes them from the active race. */
+    public boolean leaveRace(Player player) {
+        Racer racer = getRacer(player.getUniqueId());
+        if (racer == null || racer.race == null || !racer.race.hasStarted() || !racer.racing) return false;
+
+        Race race = racer.race;
+        racer.disqualified = true;
+        racer.leftRace = true;
+        racer.racing = false;
+        race.racing.remove(racer);
+        if (racer.pittingBox != null) pitBoxManager.cancelSession(player, racer.pittingBox);
+        if (racer.car != null) racer.car.destroy();
+        player.leaveVehicle();
+        player.setGameMode(GameMode.SPECTATOR);
+        liveScoreManager.updateRacer(racer);
+
+        if (race.racing.isEmpty()) {
+            try {
+                race.end(true);
+            } catch (Exception e) {
+                player.sendMessage(getMessage("error.unknown"));
+                err("Could not send ranking after /race leave", e);
+            }
+        }
+        return true;
+    }
+
     //Race start/end/...
 
     /**
@@ -615,19 +642,17 @@ public class RaceManager {
         if (announce) Bukkit.broadcast(getMessage("race.end", Messages.formatArguments("name", race.getName())));
         for (Car car : race.getCars()) {
             Player owner = Bukkit.getPlayer(car.getOwner());
-            if (owner == null) continue;
-            if (SPECTATE_ON_FINISH && wasStarted) owner.setGameMode(GameMode.SPECTATOR);
-            Racer data = race.racers.get(owner.getUniqueId());
-            if (data != null && data.pittingBox != null) pitBoxManager.cancelSession(owner, data.pittingBox);
+            Racer data = race.racers.get(car.getOwner());
+            if (owner != null) {
+                if (SPECTATE_ON_FINISH && wasStarted) owner.setGameMode(GameMode.SPECTATOR);
+                if (data != null && data.pittingBox != null) pitBoxManager.cancelSession(owner, data.pittingBox);
+            }
 
             car.destroy();
-            race.racers.remove(owner.getUniqueId());
         }
 
         liveScoreManager.empty();
-        if(!race.racers.isEmpty()) {
-            race.racing.clear();
-        }
+        race.racers.clear();
 
         if (wasStarted && main.getStatsManager() != null) {
             main.getStatsManager().saveDirtyAsync();

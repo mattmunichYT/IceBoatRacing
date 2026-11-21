@@ -38,6 +38,11 @@ permissions:
       iceboatracing.command.race: true
       iceboatracing.command.pitbox: true
       iceboatracing.command.plugin: true
+      iceboatracing.command.sidebar: true
+
+  iceboatracing.command.sidebar:
+    description: The permission for the /sidebar command
+    default: true
 
   # ---- /race ----
   iceboatracing.command.race:
@@ -48,6 +53,7 @@ permissions:
       iceboatracing.command.race.end: true
       iceboatracing.command.race.delete: true
       iceboatracing.command.race.modify: true
+      iceboatracing.command.race.leave: true
       iceboatracing.command.race.stats: true
       iceboatracing.command.race.stats.other: true
   iceboatracing.command.race.start:
@@ -62,6 +68,9 @@ permissions:
   iceboatracing.command.race.modify:
     description: The permission for /race create, setLights, setPitStops, setStartRotation, setLapCount
     default: op
+  iceboatracing.command.race.leave:
+    description: The permission for /race leave
+    default: true
   iceboatracing.command.race.stats:
     description: The permission for /race stats (own stats)
     default: true
